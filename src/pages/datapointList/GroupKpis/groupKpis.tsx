@@ -1,43 +1,55 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { SpinnerIcon } from "@/components/shared/Icons";
-import { Fragment, useEffect, useState } from "react";
-import { TableTooltip } from "@/components/shared/DataTable/tableTooltip";
-import { Button } from "@/components/ui/button";
-import { useDdAllKpiList } from "@/features/api/KpiList";
+import { useState, useEffect } from "react";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { Edit, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
-import { getUserDetail } from "@/features/selectors/auth.selector";
-import { useDeleteKPIMerge } from "@/features/api/companyDatapoint";
+import {
+  useDeleteKPIMerge,
+  useGetAllKpiMerge,
+} from "@/features/api/companyDatapoint";
 import ConfirmationDeleteModal from "@/components/shared/Modal/ConfirmationDeleteModal/ConfirmationDeleteModal";
+import TableData from "@/components/shared/DataTable/DataTableKpi";
+import { formatFrequencyType, getInitials } from "@/features/utils/app.utils";
+import { getColorFromName } from "@/features/utils/formatting.utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+
+const validationOptions = [
+  { value: "EQUAL_TO", label: "= Equal to" },
+  { value: "GREATER_THAN_OR_EQUAL_TO", label: ">= Greater than or equal to" },
+  { value: "GREATER_THAN", label: "> Greater than" },
+  { value: "LESS_THAN", label: "< Less than" },
+  { value: "LESS_THAN_OR_EQUAL_TO", label: "<= Less than or equal to" },
+  { value: "BETWEEN", label: "Between" },
+  { value: "YES_NO", label: "Yes/No" },
+];
+
+function getValidationLabel(value: string) {
+  const found = validationOptions.find((opt) => opt.value === value);
+  return found ? found.label : value;
+}
+
+function getValidationSymbol(value: string) {
+  const found = validationOptions.find((opt) => opt.value === value);
+  if (!found) return value;
+  const label = found.label;
+  const symbolMatch = label.match(/^[^a-zA-Z\s]+/);
+  return symbolMatch ? symbolMatch[0].trim() : label;
+}
 
 export default function GroupKpis() {
   const navigate = useNavigate();
-  const { data: datpointData, isLoading } = useDdAllKpiList({
-    filter: { mergeFlag: true },
-    enable: true,
-  });
+  const { data: apiData, isLoading } = useGetAllKpiMerge();
   const { setBreadcrumbs } = useBreadcrumbs();
 
-  const userData = useSelector(getUserDetail);
-  const isSuperAdmin =
-    userData?.isSuperAdmin === true ||
-    String(userData?.isSuperAdmin) === "true";
   const deleteMutation = useDeleteKPIMerge();
 
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [groupIdToDelete, setGroupIdToDelete] = useState<string | null>(null);
   const [groupNameToDelete, setGroupNameToDelete] = useState("");
-
-  const selectedKpis: string[] = [];
 
   const onDeleteClick = (groupId: string, groupName: string) => {
     setGroupIdToDelete(groupId);
@@ -61,32 +73,107 @@ export default function GroupKpis() {
     setBreadcrumbs([{ label: "KPI Group", href: "" }]);
   }, [setBreadcrumbs]);
 
-  const groupedData = datpointData?.data?.reduce(
-    (acc, item) => {
-      if (!item.kpiId) return acc;
-
-      const masterId = item.kpiMergeId || "undefined-group";
-      if (!acc[masterId]) acc[masterId] = [];
-      acc[masterId].push(item);
-      return acc;
-    },
-    {} as Record<string, KPIFormData[]>,
-  );
-
-  const isGroupSelected = (masterId: string) => {
-    if (!groupedData || !groupedData[masterId]) return false;
-    return groupedData[masterId].some((item) =>
-      selectedKpis.includes(item.kpiId!),
-    );
-  };
-
   const onEditClick = (groupId: string) => {
     navigate(`/dashboard/kpi/group-kpis/edit/${groupId}`);
   };
 
+  const columnToggleOptions = [
+    {
+      key: "KPIName",
+      label: "KPI Name",
+      visible: true,
+      tooltipColumn: "KPILabel",
+    },
+    {
+      key: "tag",
+      label: "Tag",
+      visible: true,
+    },
+    {
+      key: "employeeName",
+      label: "Assigned",
+      visible: true,
+      tooltipColumn: "employeeFullName",
+    },
+    {
+      key: "isBase",
+      label: "Base KPI",
+      visible: true,
+    },
+    {
+      key: "validationType",
+      label: "Validation",
+      visible: true,
+      tooltipColumn: "validationTypeFullLabel",
+    },
+    {
+      key: "goal",
+      label: "Goal",
+      visible: true,
+    },
+    {
+      key: "unit",
+      label: "Unit",
+      visible: true,
+    },
+    {
+      key: "frequencyType",
+      label: "Frequency",
+      visible: true,
+    },
+  ];
+
+  const visibleColumns = columnToggleOptions.reduce(
+    (acc, col) => {
+      if (col.visible) {
+        acc[col.key] = {
+          label: col.label,
+          tooltipColumn: col.tooltipColumn,
+        };
+      }
+      return acc;
+    },
+    {} as Record<string, { label: string; tooltipColumn?: string }>,
+  );
+
+  const formattedData = (apiData || []).flatMap((group) => {
+    const baseKpiIds = group.baseKpiIds || [];
+
+    return (group.kpis || []).map((item) => {
+      const isBase = baseKpiIds.includes(item.kpiId);
+
+      return {
+        ...item,
+        kpiMergeId: group.kpiMergeId,
+        kpiMergeName: group.kpiMergeName,
+        kpiMergeNameCombined: group.kpiMergeName,
+
+        // Mapped fields that TableData expects
+        isBase: isBase ? "	Base KPI" : "-",
+        validationType: getValidationSymbol(item.validationType),
+        validationTypeFullLabel: getValidationLabel(item.validationType),
+        frequencyType: formatFrequencyType(item.frequencyType),
+        goal:
+          item.validationType === "YES_NO"
+            ? item.value1 === "1"
+              ? "Yes"
+              : "No"
+            : item.value2
+              ? `${item.value1} to ${item.value2}`
+              : `${item.value1 ?? " - "}`,
+        employeeName: getInitials(item.employeeName || ""),
+        employeeFullName: item.employeeName,
+        createdByFullName: item.createdBy,
+        createdByEmployeeName: getInitials(item.createdBy || ""),
+
+        isActive: !item.isDelete,
+      };
+    });
+  });
+
   return (
     <div className="w-full px-2 overflow-x-auto sm:px-4 py-6">
-      <div className="w-full text-right">
+      <div className="w-full text-right shrink-0">
         <Button
           className="py-2 w-fit mb-5"
           onClick={() => navigate("/dashboard/kpi/group-kpis/add")}
@@ -95,131 +182,50 @@ export default function GroupKpis() {
         </Button>
       </div>
 
-      <div className="flex h-[calc(100vh-195px)] flex-col overflow-hidden">
-        <Table className="min-w-full h-full table-fixed">
-          <TableHeader className="sticky top-0 z-15 bg-primary shadow-sm">
-            <TableRow>
-              <TableHead className="w-[60px] sticky left-0 z-20 bg-primary">
-                Sr No
-              </TableHead>
-              <TableHead className="min-w-[200px]">KPI Name</TableHead>
-              <TableHead className="min-w-[200px]">KPI Label</TableHead>
-              <TableHead className="min-w-[200px]">Core Parameter</TableHead>
-              <TableHead className="min-w-[150px]">Tag</TableHead>
-              <TableHead className="min-w-[150px]">Validation Type</TableHead>
-              <TableHead className="min-w-[150px]">Frequency</TableHead>
-              <TableHead className="min-w-[100px]">Unit</TableHead>
-              <TableHead className="min-w-[150px]">Value1</TableHead>
-              <TableHead className="min-w-[150px]">Value2</TableHead>
-              <TableHead className="text-end w-16">Action</TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {isLoading ? (
-              <TableRow>
-                <TableCell colSpan={11}>
-                  <div className="flex justify-center items-center h-20 animate-spin">
-                    <SpinnerIcon />
-                  </div>
-                </TableCell>
-              </TableRow>
-            ) : groupedData && Object.keys(groupedData).length ? (
-              Object.entries(groupedData).map(([masterId, groupItems]) => (
-                <Fragment key={masterId}>
-                  <TableRow className="bg-gray-100">
-                    <TableCell
-                      colSpan={11}
-                      className="font-semibold left-0 bg-gray-100 relative"
-                    >
-                      <div className="flex justify-between items-center">
-                        <div>
-                          {groupItems[0]?.kpiMergeName || "Unnamed Group"} - (
-                          {groupItems[0].coreParameterName})
-                          {isGroupSelected(masterId) && (
-                            <span className="ml-2 text-sm text-green-600">
-                              (Selected)
-                            </span>
-                          )}
+      <div className="flex h-[calc(100vh-195px)] flex-col overflow-hidden bg-white rounded-md shadow-sm">
+        <TableData
+          tableHeightClass="flex-1"
+          key={formattedData.length}
+          tableData={formattedData}
+          columns={visibleColumns}
+          primaryKey="kpiId"
+          groupBy="kpiMergeNameCombined"
+          onGroupEdit={(_groupName, firstItem) => {
+            onEditClick(firstItem.kpiMergeId as string);
+          }}
+          onGroupDelete={(_groupName, firstItem) => {
+            onDeleteClick(firstItem.kpiMergeId as string, firstItem.kpiMergeName as string);
+          }}
+          isLoading={isLoading}
+          isActionButton={() => true}
+          permissionKey="users"
+          moduleKey="DATAPOINT_LIST"
+          showActionsColumn={true}
+          extraColumns={[
+            {
+              label: "Added",
+              width: "w-[80px]",
+              render: (row) => {
+                return (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div
+                          className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(row.createdBy as string)}`}
+                        >
+                          {row.createdByEmployeeName}
                         </div>
-                        <div className="relative flex items-center space-x-2 text-gray-600 hover:text-gray-900">
-                          <Edit
-                            size={16}
-                            className="cursor-pointer"
-                            onClick={() => onEditClick(masterId)}
-                          />
-                          {isSuperAdmin && (
-                            <Trash2
-                              size={16}
-                              className="cursor-pointer text-red-600 hover:text-red-800"
-                              onClick={() =>
-                                onDeleteClick(
-                                  masterId,
-                                  groupItems[0]?.kpiMergeName ||
-                                    "Unnamed Group",
-                                )
-                              }
-                            />
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-
-                  {groupItems.map((item, index) => (
-                    <TableRow
-                      key={index}
-                      className={index % 2 === 0 ? "bg-gray-25" : "bg-white"}
-                    >
-                      <TableCell>{item.srNo}</TableCell>
-                      <TableCell className="truncate">
-                        <TableTooltip text={String(item.KPIName ?? " - ")} />
-                      </TableCell>
-                      <TableCell className="truncate">
-                        <TableTooltip text={String(item.KPILabel ?? " - ")} />
-                      </TableCell>
-                      <TableCell className="truncate">
-                        <TableTooltip
-                          text={String(item.coreParameterName ?? " - ")}
-                        />
-                      </TableCell>
-                      <TableCell className="truncate">
-                        <TableTooltip text={String(item.tag ?? " - ")} />
-                      </TableCell>
-                      <TableCell className="truncate">
-                        <TableTooltip
-                          text={String(item.validationType ?? " - ")}
-                        />
-                      </TableCell>
-                      <TableCell className="truncate">
-                        <TableTooltip
-                          text={String(item.frequencyType ?? " - ")}
-                        />
-                      </TableCell>
-                      <TableCell className="truncate">
-                        <TableTooltip text={String(item.unit ?? " - ")} />
-                      </TableCell>
-                      <TableCell className="truncate">
-                        <TableTooltip text={String(item.value1 ?? " - ")} />
-                      </TableCell>
-                      <TableCell className="truncate">
-                        <TableTooltip text={String(item.value2 ?? " - ")} />
-                      </TableCell>
-                      <TableCell></TableCell>
-                    </TableRow>
-                  ))}
-                </Fragment>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell colSpan={11} className="text-center">
-                  No Data Available
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
+                      </TooltipTrigger>
+                      <TooltipContent>{row.createdBy as string}</TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                );
+              },
+            },
+          ]}
+        />
       </div>
+
       <ConfirmationDeleteModal
         title="Delete Group KPI"
         label="Are you sure you want to delete this Group KPI?"

@@ -571,13 +571,10 @@ export default function useBlueprint() {
   };
 
   // User Permissions
-  const userPermissions = useSelector(getUserPermission);
-  const blueprintPerm = (userPermissions as any)?.BLUEPRINT;
+  const permission = useSelector(getUserPermission)?.BLUEPRINT || {};
   const hasBlueprintPermission = (() => {
-    if (!userPermissions) return true;
-    if ((userPermissions as any)?.BLUEPRINT === undefined) return true;
-    if (typeof blueprintPerm === "boolean") return blueprintPerm;
-    if (typeof blueprintPerm === "object") return Boolean(blueprintPerm?.View ?? blueprintPerm?.view ?? true);
+    if (typeof permission === "boolean") return permission;
+    if (typeof permission === "object") return Boolean(permission?.View ?? permission?.view ?? true);
     return true;
   })();
 
@@ -585,6 +582,7 @@ export default function useBlueprint() {
 
   return {
     hasBlueprintPermission,
+    permission,
     isLoading,
     saveBlueprintMutation,
     handleSave,

@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { FormProvider, useForm } from "react-hook-form";
+import { useSelector } from "react-redux";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 
 import TableData from "@/components/shared/DataTable/DataTable";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
@@ -19,9 +21,11 @@ import { Button } from "@/components/ui/button";
 // import { Trash } from "lucide-react";
 import CreateRequestModal from "./createRequestModal";
 import ViewRequestModal from "./viewRequestModal";
+import PageNotAccess from "../PageNoAccess";
 
 export default function Request() {
   const { setBreadcrumbs } = useBreadcrumbs();
+  const permission = useSelector(getUserPermission).TICKET || {};
 
   useEffect(() => {
     setBreadcrumbs([{ label: "My Ticket", href: "" }]);
@@ -99,7 +103,9 @@ export default function Request() {
       value: "REJECTED",
     },
   ];
-
+  if (permission && permission.View === false) {
+    return <PageNotAccess />;
+  }
   return (
     <FormProvider {...methods}>
       <div className="w-full h-full px-2 sm:px-4 py-4 flex flex-col overflow-hidden">
@@ -139,9 +145,11 @@ export default function Request() {
                 </Tooltip>
               </TooltipProvider>
             )}
-            <Button className="py-2 w-fit" onClick={handleRequestModalOpen}>
-              New Request
-            </Button>
+            {permission.Add && (
+              <Button className="py-2 w-fit" onClick={handleRequestModalOpen}>
+                New Request
+              </Button>
+            )}
           </div>
         </div>
 
@@ -179,10 +187,13 @@ export default function Request() {
             paginationDetails={mapPaginationDetails(reqData)}
             setPaginationFilter={setPaginationFilter}
             isLoading={isLoading}
-            moduleKey=""
+            moduleKey="TICKET"
             showIndexColumn={false}
             // showActionsColumn={false}
-            isEditDeleteShow={true}
+            // isEditDeleteShow={true}
+ isEditDeleteShow={false}
+            isActionButton={() => true}
+
             permissionKey="users"
             actionColumnWidth="w-24"
           />

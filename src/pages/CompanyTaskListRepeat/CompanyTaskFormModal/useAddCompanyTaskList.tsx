@@ -112,16 +112,22 @@ export default function useAddEmployee() {
     currentPage: 1,
     pageSize: 25,
     search: "",
-  });
+  }); 
 
   const { data: projectListdata } = useGetCompanyProject({
-    filter: projectPagination,
+    filter: {
+      ...projectPagination,
+      projectId: taskdata?.projectId || undefined,
+    },
     enable: !!projectPagination,
   });
 
   const { data: meetingData, isLoading: meetingLoading } =
     useGetBothCompanyMeeting({
-      filter: localPagination,
+      filter: {
+        ...localPagination,
+        meetingId: taskdata?.meetingId || undefined,
+      },
     });
 
 interface GroupedCompanyMeetings {

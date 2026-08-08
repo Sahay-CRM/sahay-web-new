@@ -12,3 +12,5 @@ export { default as useGetKpiMergeById } from "./useGetKpimergeById";
 export { default as useUpdateKPIFocus } from "./useUpdateKPIFocus";
 export { default as useDuplicateKPI } from "./useDuplicateKPI";
 export { default as useDeleteKPIMerge } from "./useDeleteKPIMerge";
+export { default as useGetAllKpiMerge } from "./useGetAllKpiMerge";
+export type { GroupKpiItem, GroupKpiSubItem } from "./useGetAllKpiMerge";

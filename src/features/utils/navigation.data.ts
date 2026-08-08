@@ -154,13 +154,13 @@ export const companyNavigationData = [
         permission: "View",
         moduleKey: "ROUTINE_TASK",
       },
-      {
-        id: 3,
-        label: "Reports Library",
-        link: "/dashboard/company-reports",
-        permission: "View",
-        moduleKey: "TASK",
-      },
+      // {
+      //   id: 3,
+      //   label: "Reports Library",
+      //   link: "/dashboard/company-reports",
+      //   permission: "View",
+      //   moduleKey: "TASK",
+      // },
     ],
   },
   {
@@ -237,8 +237,8 @@ export const companyNavigationData = [
     icon: "Presentation",
     label: "Other",
     permission: "View",
-    moduleKey: ["TASK", "FORM", "REQUESTMASTER", "HANDOVER"],
-    // link: "/dashboard/meeting",
+    moduleKey: ["TICKET", "FORM", "REQUESTMASTER", "HANDOVER"],
+  
     items: [
       {
         id: 1,
@@ -246,7 +246,7 @@ export const companyNavigationData = [
         label: "My Ticket",
         link: "/dashboard/requests",
         permission: "View",
-        moduleKey: "TASK",
+        moduleKey: "TICKET",
       },
       {
         id: 2,

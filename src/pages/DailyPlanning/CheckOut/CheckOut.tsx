@@ -1,151 +1,467 @@
-import { useEffect, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { FormProvider, useForm } from "react-hook-form";
-import { dateFnsLocalizer, Calendar as BigCalendar } from "react-big-calendar";
-import { format, parse, startOfWeek, getDay } from "date-fns";
-import { enUS } from "date-fns/locale";
-import { Lock, ClipboardCheck, ArrowRight } from "lucide-react";
-
-import { useTimeSlotSelection, EventData, ALLOW_OVERLAPPING_TIME_LOGS } from "./useTimeSlotSelection";
-import TimeSlotDrawer from "./TimeSlotDrawer";
-import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { getUserDetail } from "@/features/selectors/auth.selector";
-import { useCheckTodaySubmitPlan } from "@/features/api/dailyPlan";
-import Loader from "@/components/shared/Loader/Loader";
+import { 
+  ArrowRight, 
+  ArrowRightLeft,
+  Plus, 
+  CheckCircle2, 
+  Clock,
+  Info,
+  Calendar
+} from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+// import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import ModalData from "@/components/shared/Modal/ModalData";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import { format } from "date-fns";
+import { formatMinutesToHours } from "@/features/utils/formatting.utils";
+import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
+import { getUserId } from "@/features/selectors/auth.selector";
+import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
+import useCheckOutDailyPlan from "@/features/api/dailyPlan/useCheckOutDailyPlan";
+import useAddDailyPlanItem from "@/features/api/dailyPlan/useAddDailyPlanItem";
+import useAllCompanyTask from "@/features/api/companyTask/useAllCompanyTask";
+import useGetGanttItems from "@/features/api/gantt/useGetGanttItems";
+import Loader from "@/components/shared/Loader/Loader";
 
-import "react-big-calendar/lib/css/react-big-calendar.css";
+interface CheckoutItem {
+  id: string;
+  title: string;
+  plannedTimeMinutes: number;
+  actualHours: number | "";
+  actualMinutes: number | "";
+  taskId?: string;
+  meetingId?: string;
+  ganttItemId?: string;
+  isExtra?: boolean;
+  dueDate?: string | null;
+  ganttStartDate?: string | null;
+  ganttEndDate?: string | null;
+  meetingStartTime?: string | null;
+  meetingEndTime?: string | null;
+  remarks?: string;
+  joiners?: string[];
+  isDetailMeeting?: boolean;
+}
 
-const locales = {
-  "en-US": enUS,
-};
-
-const localizer = dateFnsLocalizer({
-  format,
-  parse,
-  startOfWeek,
-  getDay,
-  locales,
-});
-
-function CustomEventComponent({ event }: { event: EventData }) {
-  const bgColor = event.bgColor || "#2f328b";
-  const textColor = event.textColor || "#ffffff";
-
-  const startStr = event.start ? format(new Date(event.start), "h:mm a") : "";
-  const endStr = event.end ? format(new Date(event.end), "h:mm a") : "";
-
-  return (
-    <div className="custom-event-inner h-full w-full">
-      <div
-        className="custom-event-day-week flex flex-col h-full rounded-sm px-2 py-1 shadow-xs transition-all hover:brightness-95 select-none overflow-hidden border border-white/10"
-        style={{ backgroundColor: bgColor, color: textColor }}
-      >
-        <div className="text-[11px] font-semibold leading-snug truncate">
-          {event.title}
-          {startStr && endStr && (
-            <span className="font-normal opacity-80 ml-1">
-              ({startStr} – {endStr})
-            </span>
-          )}
-        </div>
-        {event.description && event.description !== event.title && (
-          <div className="text-[9px] opacity-75 truncate mt-0.5">
-            {event.description}
-          </div>
-        )}
-      </div>
-    </div>
-  );
+interface ExtendedDailyPlanItem extends DailyPlanItem {
+  ganttItem?: {
+    ganttItemId?: string;
+    itemName?: string;
+    itemDeadline?: string | null;
+    actualStartDate?: string | null;
+    actualEndDate?: string | null;
+  } | null;
+  gantItem?: {
+    ganttItemId: string;
+    itemName: string;
+    itemDeadline?: string | null;
+    actualStartDate?: string | null;
+    actualEndDate?: string | null;
+  } | null;
 }
 
 export default function CheckOut() {
-  const methods = useForm();
   const { setBreadcrumbs } = useBreadcrumbs();
   const navigate = useNavigate();
-
-  const {
-    isFeatureEnabled,
-    currentView,
-    setCurrentView,
-    selectedSlot,
-    editingEvent,
-    isDrawerOpen,
-    customEvents,
-    handleSelectSlot,
-    handleSelectEvent,
-    saveEvent,
-    deleteEvent,
-    closeDrawer,
-    isCheckoutWindowExpired,
-    checkoutDeadlineStr,
-  } = useTimeSlotSelection();
 
   useEffect(() => {
     setBreadcrumbs([
       { label: "Daily Planning", href: "" },
       { label: "Check-out", href: "" },
     ]);
-    // Force Day view for checkout timesheet logging
-    setCurrentView("day");
-  }, [setBreadcrumbs, setCurrentView]);
+  }, [setBreadcrumbs]);
 
-  const todayDate = useMemo(() => new Date(), []);
+  const employeeId = useSelector(getUserId);
+  const todayDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
 
-  // Company check-in / check-out times from Redux user detail
-  const user = useSelector(getUserDetail);
-
-  const { data: planStatusData, isLoading: isPlanStatusLoading } = useCheckTodaySubmitPlan();
+  // Fetch today's daily plan from backend
+  const { data: planData, isLoading, refetch } = useGetDailyPlan(employeeId, todayDate);
+  const { mutate: submitCheckout, isPending: isSubmitting } = useCheckOutDailyPlan();
+  const { mutate: addItem, isPending: isAddingItem } = useAddDailyPlanItem();
 
   const isPlanSubmitted = useMemo(() => {
-    if (!planStatusData) return false;
-    if (typeof planStatusData.data === "boolean") {
-      return planStatusData.data;
+    return Boolean(
+      planData?.data?.isAutoSubmit ||
+      planData?.data?.isFinalSubmit
+    );
+  }, [planData]);
+
+  const dailyPlanItems = useMemo(() => {
+    if (Array.isArray(planData?.data)) {
+      return planData.data;
     }
-    return planStatusData.data?.isSubmitted === true;
-  }, [planStatusData]);
+    return planData?.data?.dailyPlanItems || [];
+  }, [planData]);
 
-  const companyTimesMinutes = useMemo(() => {
-    const parse = (timeStr?: string | null) => {
-      if (!timeStr) return null;
-      const [h, m] = timeStr.split(":").map(Number);
-      if (isNaN(h) || isNaN(m)) return null;
-      return h * 60 + m;
-    };
-    return {
-      checkIn: parse(user?.companyStartTime),
-      checkOut: parse(user?.companyEndTime),
-    };
-  }, [user?.companyStartTime, user?.companyEndTime]);
+  const timeLogId = useMemo(() => {
+    return planData?.data?.timeLogId || planData?.data?.timeLog?.timeLogId || planData?.data?.id;
+  }, [planData]);
 
-  const placeholderEvent = useMemo(() => {
-    if (selectedSlot && isDrawerOpen && !editingEvent) {
-      return {
-        eventId: "placeholder",
-        title: "(Logging Time...)",
-        description: "",
-        start: selectedSlot.start,
-        end: selectedSlot.end,
-        bgColor: "#2e3195",
-        textColor: "#ffffff",
-        eventType: "placeholder",
-      } as EventData;
-    }
-    return null;
-  }, [selectedSlot, isDrawerOpen, editingEvent]);
-
-  const mergedEvents = useMemo(() => {
-    const list = customEvents;
-    if (placeholderEvent) {
-      return [...list, placeholderEvent];
-    }
-    return list;
-  }, [customEvents, placeholderEvent]);
-
-  if (isPlanStatusLoading) {
+  const backendRating = useMemo(() => {
     return (
-      <div className="w-full h-full flex justify-center items-center py-20">
+      planData?.data?.dayRating ||
+      planData?.data?.timeLog?.dayRating ||
+      planData?.data?.timeLog?.rating ||
+      planData?.data?.rating ||
+      null
+    );
+  }, [planData]);
+
+  const isAlreadyCheckedOut = useMemo(() => {
+    return Boolean(
+      planData?.data?.checkoutTime ||
+      planData?.data?.timeLog?.checkoutTime ||
+      planData?.data?.isCheckoutSubmitted
+    );
+  }, [planData]);
+
+  // List of checkout tasks/items
+  const [items, setItems] = useState<CheckoutItem[]>([]);
+  const [rating, setRating] = useState<number | null>(null);
+  const [isSubmitted, setIsSubmitted] = useState(false);
+
+  // Sync rating state with fetched backend rating
+  useEffect(() => {
+    if (backendRating !== null) {
+      setRating(backendRating);
+    }
+  }, [backendRating]);
+
+  const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
+
+  // Extra Task Form State
+  const [extraTaskHours, setExtraTaskHours] = useState("");
+  const [extraTaskMinutes, setExtraTaskMinutes] = useState("");
+
+  const [extraTaskTab, setExtraTaskTab] = useState<"pending" | "gantt">("pending");
+  const [selectedPendingTaskId, setSelectedPendingTaskId] = useState("");
+  const [selectedGanttItemId, setSelectedGanttItemId] = useState("");
+
+  // Fetch pending tasks from backend
+  const { data: pendingTasksData, isLoading: isLoadingPendingTasks } = useAllCompanyTask({
+    filter: {
+      isNotCompleteCancel: true,
+      dailyplantasknotinclude: true,
+      employeeId: employeeId || "",
+    },
+  });
+
+  const pendingTasksList = useMemo(() => {
+    return pendingTasksData?.data || [];
+  }, [pendingTasksData]);
+
+  // Fetch Gantt tasks from backend
+  const { data: ganttResponse, isLoading: isLoadingGantt } = useGetGanttItems({
+    date: todayDate,
+  });
+
+  const ganttTasksList = useMemo(() => {
+    return ganttResponse?.data || [];
+  }, [ganttResponse]);
+
+  // Filtered dropdown lists (excluding tasks already added/logged today)
+  const availablePendingTasks = useMemo(() => {
+    return pendingTasksList.filter(
+      (task: TaskGetPaging) => !items.some((i) => i.taskId === task.taskId)
+    );
+  }, [pendingTasksList, items]);
+
+  const availableGanttTasks = useMemo(() => {
+    return ganttTasksList.filter(
+      (task: TodayGanttItem) => !items.some((i) => i.ganttItemId === task.ganttItemId)
+    );
+  }, [ganttTasksList, items]);
+
+  const pendingOptions = useMemo(() => {
+    return availablePendingTasks.map((t) => ({
+      label: t.taskName || "Unnamed Task",
+      value: t.taskId || "",
+    }));
+  }, [availablePendingTasks]);
+
+  const ganttOptions = useMemo(() => {
+    return availableGanttTasks.map((t) => ({
+      label: t.itemName || "Unnamed Gantt Task",
+      value: t.ganttItemId || "",
+    }));
+  }, [availableGanttTasks]);
+
+  const [notes, setNotes] = useState("");
+
+  const totalPlannedMinutes = useMemo(() => {
+    return items.reduce((acc, item) => acc + item.plannedTimeMinutes, 0);
+  }, [items]);
+
+  const totalActualMinutes = useMemo(() => {
+    return items.reduce((acc, item) => {
+      const h = typeof item.actualHours === "number" ? Number(item.actualHours) : 0;
+      const m = typeof item.actualMinutes === "number" ? Number(item.actualMinutes) : 0;
+      return acc + (h * 60 + m);
+    }, 0);
+  }, [items]);
+
+  const completedItemsCount = useMemo(() => {
+    return items.filter(
+      (item) => (Number(item.actualHours) > 0 || Number(item.actualMinutes) > 0)
+    ).length;
+  }, [items]);
+
+  const progressPercent = useMemo(() => {
+    return items.length > 0
+      ? Math.round((completedItemsCount / items.length) * 100)
+      : 0;
+  }, [completedItemsCount, items.length]);
+
+
+
+
+
+  const formatMeetingTimeRange = (startStr?: string | null, endStr?: string | null) => {
+    if (!startStr) return "";
+    try {
+      const startDate = new Date(startStr);
+      const startFormatted = format(startDate, "hh:mm a");
+      if (endStr) {
+        const endDate = new Date(endStr);
+        return `${startFormatted} - ${format(endDate, "hh:mm a")}`;
+      }
+      return startFormatted;
+    } catch {
+      return "";
+    }
+  };
+
+  const formatItemDate = (dateStr?: string | null) => {
+    if (!dateStr) return "";
+    try {
+      return format(new Date(dateStr), "dd/MM/yyyy");
+    } catch {
+      return "";
+    }
+  };
+
+  // Sync state with fetched daily plan items
+  useEffect(() => {
+    if (dailyPlanItems.length > 0) {
+      setItems(
+        (dailyPlanItems as ExtendedDailyPlanItem[]).map((item) => {
+          let derivedType = item.type;
+          if (!derivedType) {
+            if (item.meetingId || item.meeting) derivedType = "MEETING";
+            else if (item.ganttItemId || item.gantItem) derivedType = "GANTT";
+            else derivedType = "TASK";
+          }
+
+          let estTimeSec = (item.planTime !== undefined && item.planTime !== null) ? item.planTime : item.estimatedTime;
+          if (derivedType === "MEETING" && item.meeting?.meetingDateTime && item.meeting?.endDate) {
+            const start = new Date(item.meeting.meetingDateTime).getTime();
+            const end = new Date(item.meeting.endDate).getTime();
+            if (end > start) {
+              estTimeSec = Math.round((end - start) / 1000);
+            }
+          }
+
+          // Convert seconds from backend to minutes for UI fields
+          const plannedMinutes = estTimeSec ? Math.round(estTimeSec / 60) : 0;
+          const actualMinutes = item.actualTime ? Math.round(item.actualTime / 60) : 0;
+
+          const actualH = actualMinutes > 0 ? (Math.floor(actualMinutes / 60) || "") : "";
+          const actualM = actualMinutes > 0 ? ((actualMinutes % 60) || "") : "";
+          const isDetailM = Boolean(item.meetingId && item.meeting?.detailMeetingStatus);
+
+          return {
+            id: item.planItemId,
+            title: item.title || item.task?.taskName || item.meeting?.meetingName || item.ganttItem?.itemName || item.gantItem?.itemName || "Plan Item",
+            plannedTimeMinutes: plannedMinutes,
+            actualHours: actualH,
+            actualMinutes: actualM,
+            taskId: item.taskId || item.task?.taskId || undefined,
+            meetingId: item.meetingId || item.meeting?.meetingId || undefined,
+            ganttItemId: item.ganttItemId || item.gantItem?.ganttItemId || item.ganttItem?.ganttItemId || undefined,
+            isExtra: item.isPlaned === false,
+            dueDate: item.task?.taskDeadline || item.task?.dueDate || item.ganttItem?.itemDeadline || item.gantItem?.itemDeadline || null,
+            ganttStartDate: item.ganttItem?.actualStartDate || item.gantItem?.actualStartDate || null,
+            ganttEndDate: item.ganttItem?.actualEndDate || item.gantItem?.actualEndDate || item.ganttItem?.itemDeadline || item.gantItem?.itemDeadline || null,
+            meetingStartTime: item.meeting?.meetingDateTime || null,
+            meetingEndTime: item.meeting?.endDate || null,
+            remarks: item.remarks || "",
+            joiners: item.meeting?.joiners?.map((j: string | DailyPlanUserRef) => typeof j === "string" ? j : j.employeeName || j.name || "") || [],
+            isDetailMeeting: isDetailM,
+          };
+        })
+      );
+    }
+  }, [dailyPlanItems]);
+
+  useEffect(() => {
+    if (backendRating !== null) {
+      setRating(backendRating);
+    }
+  }, [backendRating]);
+
+  // Copy all planned times into actual times
+  const handleCopyAll = () => {
+    setItems((prevItems) =>
+      prevItems.map((item) => {
+        if (item.isDetailMeeting) return item; // Skip detail meetings
+        if (item.isExtra) {
+          // Extra tasks have no planTime on this side, so set to ""
+          return {
+            ...item,
+            actualHours: "",
+            actualMinutes: "",
+          };
+        }
+        const hours = Math.floor(item.plannedTimeMinutes / 60) || "";
+        const mins = (item.plannedTimeMinutes % 60) || "";
+        return {
+          ...item,
+          actualHours: hours,
+          actualMinutes: mins,
+        };
+      })
+    );
+  };
+
+  // Copy single planned time to actual time
+  const handleCopySingle = (id: string) => {
+    setItems((prevItems) =>
+      prevItems.map((item) => {
+        if (item.id === id) {
+          if (item.isDetailMeeting || item.isExtra) return item; // Skip detail or extra meetings
+          const hours = Math.floor(item.plannedTimeMinutes / 60) || "";
+          const mins = (item.plannedTimeMinutes % 60) || "";
+          return {
+            ...item,
+            actualHours: hours,
+            actualMinutes: mins,
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  // Handle manual input changes
+  const handleHoursChange = (id: string, val: string) => {
+    const num = val === "" || val === "0" ? "" : Math.max(0, parseInt(val) || 0);
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, actualHours: num } : item))
+    );
+  };
+
+  const handleMinutesChange = (id: string, val: string) => {
+    const num = val === "" || val === "0" ? "" : Math.max(0, Math.min(59, parseInt(val) || 0));
+    setItems((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, actualMinutes: num } : item))
+    );
+  };
+
+  // Add Extra Task
+  const handleAddExtraTask = () => {
+    let type: "TASK" | "GANTT" = "TASK";
+    let taskId: string | undefined = undefined;
+    let ganttItemId: string | undefined = undefined;
+
+    if (extraTaskTab === "pending") {
+      if (!selectedPendingTaskId) {
+        toast.error("Please select a pending task");
+        return;
+      }
+      taskId = selectedPendingTaskId;
+      type = "TASK";
+    } else if (extraTaskTab === "gantt") {
+      if (!selectedGanttItemId) {
+        toast.error("Please select a Gantt task");
+        return;
+      }
+      ganttItemId = selectedGanttItemId;
+      type = "GANTT";
+    }
+
+    const h = parseInt(extraTaskHours) || 0;
+    const m = parseInt(extraTaskMinutes) || 0;
+    const totalMinutes = h * 60 + m;
+
+    // if (totalMinutes <= 0) {
+    //   toast.error("Please enter a valid estimated time");
+    //   return;
+    // }
+
+    addItem(
+      {
+        date: todayDate,
+        type,
+        planTime: totalMinutes * 60, 
+        taskId,
+        ganttItemId,
+        isPlaned: false, 
+        isExtra: true, 
+      },
+      {
+        onSuccess: () => {
+          setIsExtraModalOpen(false);
+          setExtraTaskHours("");
+          setExtraTaskMinutes("");
+          setSelectedPendingTaskId("");
+          setSelectedGanttItemId("");
+          refetch(); // Refetch the daily plan to update list
+        },
+      }
+    );
+  };
+
+  // Submit Checkout Plan
+  const handleSubmitCheckout = () => {
+    if (rating === null) {
+      toast.error("Please rate your today's experience (1 to 10)");
+      return;
+    }
+
+     const payloadItems = items.map((item) => {
+       const h = item.actualHours === "" ? 0 : Number(item.actualHours) || 0;
+       const m = item.actualMinutes === "" ? 0 : Number(item.actualMinutes) || 0;
+       const actualMins = h * 60 + m;
+ 
+      return {
+        planItemId: item.isExtra ? undefined : item.id,
+        taskId: item.taskId,
+        meetingId: item.meetingId,
+        ganttItemId: item.ganttItemId,
+        planTime: item.plannedTimeMinutes * 60, // Convert minutes to seconds
+        actualTime: actualMins * 60, // Convert minutes to seconds
+        remarks: item.remarks || item.title,
+        isPlaned: !item.isExtra,
+      };
+    });
+
+  
+
+    submitCheckout(
+      {
+        timeLogId,
+        checkinDate: todayDate,
+        checkoutTime: new Date().toISOString(),
+        isFinalSubmit: true,
+        dayRating: rating,
+        items: payloadItems,
+      },
+      {
+        onSuccess: () => {
+          setIsSubmitted(true);
+          refetch();
+        },
+      }
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-slate-50/50 min-h-[400px]">
         <Loader />
       </div>
     );
@@ -156,20 +472,20 @@ export default function CheckOut() {
       <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/50 p-6 min-h-[500px]">
         <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-8 text-center shadow-md flex flex-col items-center">
           <div className="w-16 h-16 rounded-full bg-amber-50 border border-amber-100 flex items-center justify-center text-amber-500 mb-5 shadow-inner">
-            <ClipboardCheck className="h-8 w-8" />
+            <Info className="h-8 w-8" />
           </div>
           
-          <h2 className="text-xl font-bold text-slate-900 mb-2">Plan Submission Required</h2>
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Daily Plan Not Submitted</h2>
           
           <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-            Please submit your daily plan before checking out. You must finalize today's check-in plan first.
+            You cannot check out because you have not submitted your daily plan for today. Please complete your check-in and submit your plan first.
           </p>
 
           <Button
             onClick={() => navigate("/dashboard/daily-planning/check-in")}
-            className="w-full py-2 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg flex items-center justify-center gap-2 transition-all shadow-xs cursor-pointer border-none"
+            className="w-full h-11 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md border-none cursor-pointer text-sm"
           >
-            <span>Go to Check In</span>
+            <span>Go to Check-In Page</span>
             <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
@@ -177,251 +493,480 @@ export default function CheckOut() {
     );
   }
 
-  return (
-    <FormProvider {...methods}>
-      <div className="w-full h-full px-2 sm:px-4 py-4 flex flex-col overflow-hidden">
-        <style>{`
-          /* Grid View Layout - Google Calendar Day View style */
-          .rbc-time-view {
-            border: none !important;
-            background-color: #ffffff !important;
-            font-family: inherit !important;
-          }
-          /* Hide library's own header - we render our own */
-          .rbc-time-header {
-            display: none !important;
-          }
-          .rbc-time-content {
-            border-top: 1px solid #dadce0 !important;
-            border-bottom: none !important;
-            padding-bottom: 52px !important;
-          }
-          .rbc-time-content > * + * {
-            border-left: 1px solid #dadce0 !important;
-          }
-          .rbc-timeslot-group {
-            border-bottom: 1px solid #f1f3f4 !important;
-            min-height: 56px !important;
-          }
-          .rbc-day-slot .rbc-time-slot {
-            border-top: none !important;
-          }
-          /* Gutter must have SAME height as day column groups to keep labels aligned */
-          .rbc-time-gutter .rbc-timeslot-group {
-            border-bottom: 1px solid transparent !important;
-          }
-          .rbc-label {
-            font-size: 10px !important;
-            color: #70757a !important;
-            font-weight: 500 !important;
-            padding: 0 10px !important;
-            text-transform: uppercase !important;
-            display: block !important;
-            transform: translateY(-50%) !important;
-          }
-          .rbc-time-gutter .rbc-timeslot-group:first-child .rbc-label {
-            transform: none !important;
-          }
-          .rbc-day-slot .rbc-event {
-            pointer-events: none !important;
-            background-color: transparent !important;
-            border: none !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-          }
-          .rbc-day-slot .rbc-event-label {
-            display: none !important;
-          }
-          .rbc-day-slot .rbc-event .custom-event-inner {
-            pointer-events: auto !important;
-            width: calc(100% - 12px) !important;
-            height: 100%;
-          }
-          .rbc-day-slot .rbc-slot-selection {
-            width: calc(100% - 12px) !important;
-            background-color: rgba(46, 49, 149, 0.2) !important;
-            border: 1.5px solid #2e3195 !important;
-            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
-          }
-          .custom-event-day-week {
-            border-radius: 4px !important;
-            border: 1px solid #ffffff !important;
-            box-shadow: 0 1px 2px 0 rgba(60,64,67,0.3) !important;
-            height: 100% !important;
-            display: flex !important;
-            flex-direction: column !important;
-          }
-          /* Company Start Time marker - light green line */
-          .rbc-day-slot .rbc-time-slot.rbc-company-checkin-line {
-            position: relative !important;
-            overflow: visible !important;
-          }
-          .rbc-day-slot .rbc-time-slot.rbc-company-checkin-line::after {
-            content: '' !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            height: 1.5px !important;
-            background-color: rgba(34, 197, 94, 0.6) !important;
-            z-index: 4 !important;
-            pointer-events: none !important;
-          }
-          .rbc-time-gutter .rbc-time-slot.rbc-company-checkin-line {
-            position: relative !important;
-          }
-          .rbc-time-gutter .rbc-time-slot.rbc-company-checkin-line::after {
-            content: 'In' !important;
-            position: absolute !important;
-            top: -8px !important;
-            right: 2px !important;
-            font-size: 8px !important;
-            font-weight: 700 !important;
-            color: #16a34a !important;
-            background: #dcfce7 !important;
-            border-radius: 3px !important;
-            padding: 0 3px !important;
-            line-height: 14px !important;
-            z-index: 5 !important;
-            letter-spacing: 0.3px !important;
-          }
+  const isSubmittedView = isSubmitted;
 
-          /* Company End Time marker - light orange line */
-          .rbc-day-slot .rbc-time-slot.rbc-company-checkout-line {
-            position: relative !important;
-            overflow: visible !important;
-          }
-          .rbc-day-slot .rbc-time-slot.rbc-company-checkout-line::after {
-            content: '' !important;
-            position: absolute !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            height: 1.5px !important;
-            background-color: rgba(249, 115, 22, 0.6) !important;
-            z-index: 4 !important;
-            pointer-events: none !important;
-          }
-          .rbc-time-gutter .rbc-time-slot.rbc-company-checkout-line {
-            position: relative !important;
-          }
-          .rbc-time-gutter .rbc-time-slot.rbc-company-checkout-line::after {
-            content: 'Out' !important;
-            position: absolute !important;
-            top: -8px !important;
-            right: 2px !important;
-            font-size: 8px !important;
-            font-weight: 700 !important;
-            color: #ea580c !important;
-            background: #ffedd5 !important;
-            border-radius: 3px !important;
-            padding: 0 3px !important;
-            line-height: 14px !important;
-            z-index: 5 !important;
-            letter-spacing: 0.3px !important;
-          }
-        `}</style>
+  if (isSubmittedView) {
+    return (
+      <div className="w-full h-full flex flex-col items-center justify-center bg-slate-50/50 p-6 min-h-[500px]">
+        <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-8 text-center shadow-md flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-5 shadow-inner">
+            <CheckCircle2 className="h-8 w-8" />
+          </div>
+          
+          <h2 className="text-xl font-bold text-slate-900 mb-2">Check-out Submitted!</h2>
+          
+          <p className="text-sm text-slate-500 mb-6 leading-relaxed">
+            Thank you! Your daily check-out plan, actual logged times, and experience rating ({rating}/10) have been submitted.
+          </p>
 
-
-
-        {/* Google Calendar Day-view Container */}
-        <div className="flex-1 border border-[#dadce0] rounded-lg overflow-hidden flex flex-col bg-white">
-          {/* Custom Header Row - replaces library's collapsed header */}
-          <div
-            className="flex shrink-0 bg-white border-b border-[#dadce0] overflow-hidden"
-            style={{ height: "52px" }}
-          >
-            {/* Gutter area - matches rbc-time-gutter width (~65px) */}
-            <div
-              className="flex items-center justify-center text-[10px] text-gray-500 font-bold select-none border-r border-[#dadce0] shrink-0"
-              style={{ width: "65px" }}
-            >
-              GMT+05:30
+          <div className="w-full bg-slate-50 rounded-lg p-3 mb-6 text-left border border-slate-100 space-y-2">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-500">Rating:</span>
+              <span className="font-semibold text-slate-800">{rating}/10</span>
             </div>
-            {/* Date column */}
-            <div className="flex-1 flex items-center gap-3 px-5">
-              <span
-                className="flex items-center justify-center w-9 h-9 rounded-full text-white text-sm font-bold shrink-0"
-                style={{ backgroundColor: "var(--color-primary, #2e3195)" }}
-              >
-                {format(todayDate, "d")}
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-500">Total Items:</span>
+              <span className="font-semibold text-slate-800">{items.length}</span>
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-500">Actual Hours Logged:</span>
+              <span className="font-semibold text-slate-800">
+                {formatMinutesToHours(
+                  items.reduce((acc, item) => {
+                    const h = typeof item.actualHours === "number" ? item.actualHours : 0;
+                    const m = typeof item.actualMinutes === "number" ? item.actualMinutes : 0;
+                    return acc + (h * 60 + m);
+                  }, 0)
+                )}
               </span>
-              <div className="flex flex-col leading-tight">
-                <span className="text-[13px] font-semibold text-slate-800">
-                  {format(todayDate, "EEEE")}
-                </span>
-                <span className="text-[11px] text-gray-500">
-                  {format(todayDate, "MMMM yyyy")}
-                </span>
-              </div>
-              {/* Hint - flex end */}
-              {isCheckoutWindowExpired ? (
-                <div className="ml-auto flex items-center gap-1 text-[10px] font-semibold text-red-500 pr-2">
-                  <Lock className="h-3 w-3 text-red-500 animate-pulse" />
-                  <span>Checkout window expired at {checkoutDeadlineStr}. Time logging is locked.</span>
-                </div>
-              ) : (
-                <div className="ml-auto flex items-center gap-1 text-[10px] text-slate-400 font-medium pr-2">
-                  <Lock className="h-3 w-3" />
-                  <span>Double click or drag on time slot grid to log time (Allowed until {checkoutDeadlineStr})</span>
-                </div>
-              )}
             </div>
           </div>
 
-          <BigCalendar
-            localizer={localizer}
-            events={mergedEvents}
-            startAccessor="start"
-            endAccessor="end"
-            className="flex-1"
-            selectable={isFeatureEnabled && !isDrawerOpen && currentView === "day" && !isCheckoutWindowExpired}
-            onSelectSlot={handleSelectSlot}
-            onSelecting={(range) => {
-              if (ALLOW_OVERLAPPING_TIME_LOGS) return true;
-
-              // Check if the currently dragging range overlaps with any customEvents
-              const hasOverlap = customEvents.some((event) =>
-                event.eventId !== editingEvent?.eventId &&
-                range.start < event.end && range.end > event.start
-              );
-              return !hasOverlap;
+          <Button
+            onClick={() => {
+              setIsSubmitted(false);
+              setRating(null);
             }}
-            longPressThreshold={250}
-            view="day"
-            views={["day"]}
-            toolbar={false}
-            step={15}
-            timeslots={4}
-            components={{ event: CustomEventComponent }}
-            slotPropGetter={(date: Date) => {
-              const slotMinutes = date.getHours() * 60 + date.getMinutes();
-              const isCheckIn = companyTimesMinutes.checkIn !== null && slotMinutes === companyTimesMinutes.checkIn;
-              const isCheckOut = companyTimesMinutes.checkOut !== null && slotMinutes === companyTimesMinutes.checkOut;
-              if (isCheckIn) return { className: "rbc-company-checkin-line" };
-              if (isCheckOut) return { className: "rbc-company-checkout-line" };
-              return {};
-            }}
-            onSelectEvent={(event: EventData) => {
-              handleSelectEvent(event);
-            }}
-            defaultDate={todayDate}
-            date={todayDate}
-          />
+            variant="outline"
+            className="w-full py-2 border-slate-200 text-slate-700 font-semibold rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
+          >
+            <span>Log Check-out Again</span>
+          </Button>
         </div>
+      </div>
+    );
+  }
 
-        {/* TimeSlot Selection Drawer */}
-        {isDrawerOpen && (
-          <TimeSlotDrawer
-            isOpen={isDrawerOpen}
-            onClose={closeDrawer}
-            selectedSlot={selectedSlot}
-            editingEvent={editingEvent}
-            onSave={saveEvent}
-            onDelete={deleteEvent}
-          />
+  return (
+    <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 bg-slate-50/50 overflow-y-auto lg:overflow-hidden">
+      
+      {/* Title Header */}
+      <div className="flex items-center gap-4 mb-6 shrink-0">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-800">Check-out</h1>
+        {!isAlreadyCheckedOut && (
+          <Button
+            onClick={() => setIsExtraModalOpen(true)}
+            className="h-9 px-4 bg-primary hover:bg-primary/95 text-white font-semibold text-xs cursor-pointer rounded-lg flex items-center gap-1.5 shadow-sm border-none"
+          >
+            <Plus className="h-4 w-4" /> Extra Task
+          </Button>
         )}
       </div>
-    </FormProvider>
+
+      {/* Main Grid: 2 Columns */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start lg:items-stretch flex-1 min-h-0 overflow-y-auto lg:overflow-hidden pb-4">
+        
+        {/* LEFT COLUMN: Today's Items List */}
+        <div className="lg:col-span-8 bg-white border border-slate-200 rounded-xl overflow-hidden flex flex-col lg:h-full shadow-3xs">
+          
+          <div className="overflow-x-auto lg:overflow-y-auto lg:flex-1">
+            <table className="w-full text-left border-collapse min-w-[550px]">
+              <thead className="sticky top-0 z-10 bg-primary">
+                <tr className="bg-primary text-white text-sm font-semibold">
+                  <th className="py-3.5 pl-5 pr-4 text-left font-semibold">Item Name</th>
+                  <th className="py-3.5 px-4 text-left font-semibold">Deadline / Time</th>
+                  <th className="py-3.5 px-4 text-center font-semibold">Est. Time</th>
+                  <th className="py-3.5 px-2 text-center font-semibold w-[160px]">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCopyAll}
+                      disabled={items.length === 0 || isAlreadyCheckedOut}
+                      className="h-8 text-white hover:bg-white/10 text-xs font-bold cursor-pointer rounded-lg flex items-center gap-1.5 mx-auto px-3"
+                    >
+                      <ArrowRightLeft className="h-3.5 w-3.5" /> 
+                    </Button>
+                  </th>
+                  <th className="py-3.5 pr-5 pl-4 text-center font-semibold min-w-[130px]">Actual Time</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 text-black text-sm">
+                {items.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-16 text-center text-slate-400">
+                      <Clock className="h-10 w-10 text-slate-300 mx-auto mb-2" />
+                      <p className="text-sm font-semibold">No planned tasks for today.</p>
+                      <p className="text-sm text-slate-400 mt-1">Click "+ Extra Task" to add tasks manually.</p>
+                    </td>
+                  </tr>
+                ) : (
+                  items.map((item) => {
+                    const isMeeting = Boolean(item.meetingId);
+                    const isGantt = Boolean(item.ganttItemId);
+                    
+                    const isLogged = Number(item.actualHours) > 0 || Number(item.actualMinutes) > 0;
+
+                    return (
+                      <>
+                        <tr 
+                          key={item.id} 
+                          className={`hover:bg-slate-50/30 transition-colors ${
+                            isLogged ? "bg-emerald-50/5" : ""
+                          }`}
+                        >
+                          {/* Item Name */}
+                          <td className="py-3.5 text-sm pl-5 pr-4 text-black text-left truncate max-w-[200px]" title={item.title}>
+                            {item.title}
+                          </td>
+
+                          {/* Deadline / Time */}
+                          <td className="py-3.5 px-4 text-sm text-left text-black">
+                            {isMeeting ? (
+                              formatMeetingTimeRange(item.meetingStartTime, item.meetingEndTime)
+                            ) : isGantt ? (
+                              item.ganttStartDate && item.ganttEndDate ? (
+                                `${formatItemDate(item.ganttStartDate)} to ${formatItemDate(item.ganttEndDate)}`
+                              ) : (
+                                formatItemDate(item.dueDate)
+                              )
+                            ) : (
+                              item.dueDate ? `${formatItemDate(item.dueDate)}` : "-"
+                            )}
+                          </td>
+
+                          {/* Est. Time (Planned) */}
+                          <td className="py-3.5 text-sm px-4 text-center">
+                            {item.isExtra ? (
+                              <span className="text-slate-350 font-medium">-</span>
+                            ) : (
+                              <span className="inline-block rounded px-2 py-0.5">
+                                {formatMinutesToHours(item.plannedTimeMinutes)}
+                              </span>
+                            )}
+                          </td>
+
+                          {/* Copy `=` button in the middle */}
+                          <td className="py-3.5 px-2 text-sm text-center">
+                             {!item.isExtra && !item.isDetailMeeting && !isAlreadyCheckedOut && (
+                              <button
+                                type="button"
+                                onClick={() => handleCopySingle(item.id)}
+                                className="h-7 w-7 mx-auto border border-slate-200 hover:border-primary/50 text-slate-400 hover:text-primary rounded-full inline-flex items-center justify-center transition-colors cursor-pointer bg-white shadow-3xs"
+                                title="Copy planned to actual"
+                              >
+                                <ArrowRight className="h-4 w-4 text-primary" />
+                              </button>
+                            )}
+                          </td>
+
+                          {/* Actual Time Inputs */}
+                          <td className="py-3.5 text-sm pr-5 pl-4">
+                            <div className="flex items-center justify-center gap-1">
+                              <input
+                                type="number"
+                                min={0}
+                                value={item.actualHours}
+                                onChange={(e) => handleHoursChange(item.id, e.target.value)}
+                                disabled={item.isDetailMeeting || isAlreadyCheckedOut}
+                                className={`w-8 h-7 text-center text-sm font-bold text-primary bg-transparent focus:outline-none border-b focus:border-primary transition-colors disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                                  item.isDetailMeeting || isAlreadyCheckedOut ? "border-slate-200 text-slate-400" : "border-slate-350"
+                                }`}
+                              />
+                              <span className="text-primary text-sm pr-1">hr</span>
+                              
+                              
+                              <input
+                                type="number"
+                                min={0}
+                                max={59}
+                                value={item.actualMinutes}
+                                onChange={(e) => handleMinutesChange(item.id, e.target.value)}
+                                disabled={item.isDetailMeeting || isAlreadyCheckedOut}
+                                className={`w-8 h-7 text-center text-sm font-bold text-primary bg-transparent focus:outline-none border-b focus:border-primary transition-colors disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                                  item.isDetailMeeting || isAlreadyCheckedOut ? "border-slate-200 text-slate-400" : "border-slate-350"
+                                }`}
+                              />
+                              <span className="text-primary text-sm">min</span>
+                            </div>
+                          </td>
+
+                        </tr>
+                      </>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+
+          </div>
+
+        </div>
+
+        {/* RIGHT COLUMN: Summary and Checkout Submission */}
+        <div className="lg:col-span-4 space-y-4 lg:h-full lg:overflow-y-auto lg:pr-1 shrink-0 pb-4">
+          
+          <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-3xs flex flex-col h-full text-left gap-6">
+            
+            {/* Top Details Group */}
+            <div className="flex flex-col flex-1 min-h-0 gap-6">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
+                <h2 className="text-base font-bold text-slate-800">Check-out Summary</h2>
+                <span className="text-sm text-primary font-bold flex items-center gap-1">
+                  <Calendar className="h-5 w-5 " />
+                  {format(new Date(), "dd MMM yyyy")}
+                </span>
+              </div>
+
+               {/* Progress Circular SVG and details in a 50-50 split */}
+              <div className="grid grid-cols-2 gap-4 items-center shrink-0">
+                {/* Left Half: Centered SVG Ring */}
+                <div className="flex items-center justify-center">
+                  <div className="relative w-36 h-36 flex items-center justify-center">
+                    <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        className="fill-slate-50/80"
+                      />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        className="stroke-slate-100"
+                        strokeWidth="8"
+                        fill="transparent"
+                      />
+                      <circle
+                        cx="50"
+                        cy="50"
+                        r="40"
+                        className="stroke-primary transition-all duration-300"
+                        strokeWidth="8"
+                        fill="transparent"
+                        strokeDasharray={251.2}
+                        strokeDashoffset={251.2 - (progressPercent / 100) * 251.2}
+                        strokeLinecap="round"
+                      />
+                    </svg>
+                    <div className="absolute flex flex-col items-center justify-center text-center">
+                      <span className="text-2xl font-extrabold text-slate-800">{progressPercent}%</span>
+                      <span className="text-sm font-bold text-slate-400 uppercase tracking-wider">Completed</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Right Half: Stat Values */}
+                <div className="space-y-4 min-w-0">
+                  <div className="flex items-center gap-5 text-sm">
+                    <span className="text-primary text-sm font-bold tracking-wider w-28 shrink-0">Total Planned</span>
+                    <span className="font-extrabold text-slate-800 text-base">{formatMinutesToHours(totalPlannedMinutes)}</span>
+                  </div>
+                  
+                  <div className="flex items-center gap-5 text-sm">
+                    <span className="text-primary text-sm font-bold tracking-wider w-28 shrink-0">Total Logged</span>
+                    <span className="font-extrabold text-slate-800 text-base">
+                      {totalActualMinutes > 0 ? formatMinutesToHours(totalActualMinutes) : "-"}
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-5 text-sm">
+                    <span className="text-primary text-sm font-bold tracking-wider w-28 shrink-0">Total Items</span>
+                    <span className="font-extrabold text-slate-800 text-base">{items.length}</span>
+                  </div>
+
+                  <div className="flex items-center gap-5 text-sm">
+                    <span className="text-primary text-sm font-bold tracking-wider w-28 shrink-0">Completed</span>
+                    <span className="font-extrabold text-slate-800 text-base">{completedItemsCount}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Productivity Rating Section */}
+              <div className="space-y-3 pt-2 shrink-0">
+                <div>
+                  <h2 className="text-base font-bold text-slate-800">Rate Your Day</h2>
+                  <p className="text-sm text-slate-400 font-medium">How was your productivity today? <span className="text-rose-500">*</span></p>
+                </div>
+                
+                <div className="flex items-center justify-between gap-1 flex-wrap">
+                  {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                    <button
+                      key={num}
+                      type="button"
+                      disabled={isAlreadyCheckedOut}
+                      onClick={() => setRating(num)}
+                      className={`w-9 h-9 rounded-full border flex items-center justify-center text-sm font-semibold cursor-pointer transition-all ${
+                        rating === num
+                          ? "bg-primary text-white border-primary shadow-xs scale-105"
+                          : isAlreadyCheckedOut
+                            ? "bg-slate-50 text-slate-400 border-slate-100 cursor-not-allowed"
+                            : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+                      }`}
+                    >
+                      {num}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes (Optional) Section */}
+              <div className="space-y-2 pt-2 flex flex-col flex-1 min-h-0">
+                <h2 className="text-base font-bold text-slate-800 shrink-0">Notes</h2>
+                <textarea
+                  placeholder="Write your thoughts for today..."
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                  disabled={isAlreadyCheckedOut}
+                  className="w-full text-sm p-3 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-primary flex-1 min-h-[140px] bg-slate-50/30 text-slate-800 placeholder:text-slate-400 font-medium resize-none disabled:bg-slate-50 disabled:text-slate-500 disabled:cursor-not-allowed"
+                />
+              </div>
+            </div>
+
+            {/* Bottom Actions Group */}
+            <div className="pt-2 shrink-0">
+              <Button
+                onClick={handleSubmitCheckout}
+                disabled={isSubmitting || isAlreadyCheckedOut}
+                className="w-full h-12 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md border-none cursor-pointer text-base disabled:opacity-50"
+              >
+                <span>{isAlreadyCheckedOut ? "Checked Out" : isSubmitting ? "Submitting Check-out..." : "Submit Checkout"}</span>
+                {!isAlreadyCheckedOut && <ArrowRight className="h-4 w-4" />}
+              </Button>
+            </div>
+
+          </div>
+
+
+        </div>
+
+      </div>
+
+      {/* Extra Task Dialog */}
+      <ModalData
+        isModalOpen={isExtraModalOpen}
+        modalTitle="Add Extra Checkout Task"
+        modalClose={() => setIsExtraModalOpen(false)}
+        buttons={[
+          {
+            btnText: "Cancel",
+            buttonCss: "py-1.5 px-5 bg-transparent text-slate-700 border hover:bg-slate-50 text-sm font-semibold",
+            btnClick: () => setIsExtraModalOpen(false),
+          },
+          {
+            btnText: "Add Task",
+            buttonCss: `py-1.5 px-5 cursor-pointer text-sm font-semibold ${
+              ((extraTaskTab === "pending" && !selectedPendingTaskId) ||
+               (extraTaskTab === "gantt" && !selectedGanttItemId))
+                ? "opacity-50 pointer-events-none"
+                : ""
+            }`,
+            btnClick: handleAddExtraTask,
+            isLoading: isAddingItem,
+          },
+        ]}
+      >
+        <div className="space-y-5 py-2 text-left">
+          {/* Radio Button Selector */}
+          <div className="flex items-center gap-6 py-2 border-b border-slate-100 pb-3">
+            <label className="flex items-center gap-2 cursor-pointer text-md text-primary font-semibold ">
+              <input
+                type="radio"
+                name="extraTaskTab"
+                value="pending"
+                checked={extraTaskTab === "pending"}
+                onChange={() => setExtraTaskTab("pending")}
+                className="w-4.5 h-4.5 text-primary border-slate-300 focus:ring-primary cursor-pointer"
+              />
+              Pending Tasks
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer text-md text-primary font-semibold  ">
+              <input
+                type="radio"
+                name="extraTaskTab"
+                value="gantt"
+                checked={extraTaskTab === "gantt"}
+                onChange={() => setExtraTaskTab("gantt")}
+                className="w-4.5 h-4.5 text-primary border-slate-300 focus:ring-primary cursor-pointer"
+              />
+              Gantt Tasks
+            </label>
+          </div>
+
+          {/* Tab Contents */}
+          {extraTaskTab === "pending" && (
+            <div className="grid gap-1.5">
+              <Label className="text-md  ">Select Pending Task <span className="text-rose-500">*</span></Label>
+              {isLoadingPendingTasks ? (
+                <div className="text-sm text-slate-400 py-2">Loading pending tasks...</div>
+              ) : availablePendingTasks.length === 0 ? (
+                <div className="text-sm text-slate-400 py-2.5 border border-dashed border-slate-200 rounded-xl px-3 text-center">
+                  No pending tasks available
+                </div>
+              ) : (
+                <SearchDropdown
+                  options={pendingOptions}
+                  selectedValues={selectedPendingTaskId ? [selectedPendingTaskId] : []}
+                  onSelect={(item) => setSelectedPendingTaskId(item.value)}
+                  placeholder="Choose a Pending Task"
+                  onSearchChange={() => {}}
+                />
+              )}
+            </div>
+          )}
+
+          {extraTaskTab === "gantt" && (
+            <div className="grid gap-1.5">
+              <Label className="text-md">Select Gantt Task <span className="text-rose-500">*</span></Label>
+              {isLoadingGantt ? (
+                <div className="text-sm text-slate-400 py-2">Loading Gantt tasks...</div>
+              ) : availableGanttTasks.length === 0 ? (
+                <div className="text-sm text-slate-400 py-2.5 border border-dashed border-slate-200 rounded-xl px-3 text-center">
+                  No Gantt tasks available for today
+                </div>
+              ) : (
+                <SearchDropdown
+                  options={ganttOptions}
+                  selectedValues={selectedGanttItemId ? [selectedGanttItemId] : []}
+                  onSelect={(item) => setSelectedGanttItemId(item.value)}
+                  placeholder="Choose a Gantt Task"
+                  onSearchChange={() => {}}
+                  className="text-sm text-slate-800"
+                />
+              )}
+            </div>
+          )}
+
+          {/* <div className="grid gap-1.5">
+            <Label className="text-md ">Estimated Time <span className="text-rose-500">*</span></Label>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 flex-1">
+                <Input
+                  type="number"
+                  min={0}
+                  value={extraTaskHours}
+                  onChange={(e) => setExtraTaskHours(Math.max(0, parseInt(e.target.value) || 0).toString())}
+                  placeholder="0"
+                  className="h-10 text-center  border-slate-200 text-black font-semibold text-sm"
+                />
+                <span className="text-sm  font-medium">hr</span>
+              </div>
+              <div className="flex items-center gap-1.5 flex-1">
+                <Input
+                  type="number"
+                  min={0}
+                  max={59}
+                  value={extraTaskMinutes}
+                  onChange={(e) => setExtraTaskMinutes(Math.max(0, Math.min(59, parseInt(e.target.value) || 0)).toString())}
+                  placeholder="0"
+                  className="h-10 text-center  border-slate-200 text-black font-semibold text-sm"
+                />
+                <span className="text-sm  font-medium">min</span>
+              </div>
+            </div>
+          </div> */}
+        </div>
+      </ModalData>
+    </div>
   );
 }

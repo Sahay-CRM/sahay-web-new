@@ -2025,11 +2025,20 @@ interface DailyPlanItemGantRef {
   itemDescription?: string;
 }
 
+interface DailyPlanUserRef {
+  employeeId?: string;
+  employeeName?: string;
+  name?: string;
+  avatar?: string | null;
+}
+
 interface DailyPlanItemTaskRef {
   taskId: string;
   taskName: string;
   taskDescription?: string;
   taskDeadline?: string | null;
+  dueDate?: string | null;
+  assignees?: (string | DailyPlanUserRef)[] | null;
 }
 
 interface DailyPlanItemMeetingRef {
@@ -2037,6 +2046,9 @@ interface DailyPlanItemMeetingRef {
   meetingName: string;
   meetingDescription?: string;
   meetingDateTime?: string | null;
+  joiners?: (string | DailyPlanUserRef)[] | null;
+  endDate?: string | null;
+  detailMeetingStatus?: string | null;
 }
 
 interface DailyPlanItemHistoryRecord {
@@ -2059,6 +2071,9 @@ interface DailyPlanItem {
   taskId?: string | null;
   meetingId?: string | null;
   ganttItemId?: string | null;
+  isPlaned?:boolean;
+  planTime?: number | null;
+  isExtra?: boolean;
   gantItem?: DailyPlanItemGantRef | null;
   estimatedTime: number;
   actualTime?: number | null;
@@ -2078,11 +2093,28 @@ interface DailyPlanItem {
   updatedDatetime?: string;
 }
 
+interface DailyPlanTimeLog {
+  timeLogId?: string;
+  rating?: number | null;
+  dayRating?: number | null;
+  checkoutTime?: string | null;
+}
+
 interface DailyPlan {
   planId: string;
   employeeId: string;
   date: string;
   dailyPlanItems: DailyPlanItem[];
+  timeLogId?: string;
+  checkoutTime?: string | null;
+  submitTime?: string | null;
+  isFinalSubmit?: boolean;
+  isAutoSubmit?: boolean;
+  rating?: number | null;
+  dayRating?: number | null;
+  timeLog?: DailyPlanTimeLog;
+  isCheckoutSubmitted?: boolean;
+  id?: string;
 }
 
 interface DailyPlanResponse {
@@ -2093,34 +2125,27 @@ interface DailyPlanResponse {
 }
 
 interface AddDailyPlanItemPayload {
-  employeeId?: string;
   date: string;
   type: DailyPlanItemType;
-  title?: string;
-  priority?: string;
   taskId?: string;
   meetingId?: string;
   ganttItemId?: string;
-  estimatedTime: number;
+  planTime: number;
   remarks?: string;
+  isPlaned: boolean;
+  isExtra?: boolean;
 }
 
 interface UpdateDailyPlanItemPayload {
   planItemId: string;
-  planId?: string;
-  title?: string;
-  type?: DailyPlanItemType;
-  priority?: string;
-  status?: PlanningStatus;
-  estimatedTime?: number;
+  planTime?: number;
   actualTime?: number;
+  remarks?: string;
+  sequence?: number;
+  isPlaned?: boolean;
+  status?: PlanningStatus;
   startTime?: string;
   completionTime?: string;
-  remarks?: string;
-  isFinalSubmit?: boolean;
-  taskId?: string;
-  meetingId?: string;
-  ganttItemId?: string;
 }
 
 interface TodayGanttItem {

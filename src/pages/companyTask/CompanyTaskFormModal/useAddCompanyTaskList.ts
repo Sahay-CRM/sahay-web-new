@@ -139,15 +139,21 @@ export const useAddCompanyTask = () => {
 
   const { data: employeedata, isLoading: employeeLoading } = getEmployee({
     filter: { ...paginationFilterEmployee, isDeactivated: false },
-  });
+  }); 
   const { data: projectListdata, isLoading: projectLoading } =
     useGetCompanyProject({
-      filter: paginationFilterProject,
+      filter: {
+        ...paginationFilterProject,
+        projectId: taskDataById?.data?.projectId || undefined,
+      },
       enable: !!paginationFilterProject,
     });
   const { data: meetingData, isLoading: meetingLoading } =
     useGetBothCompanyMeeting({
-      filter: paginationFilterMeeting,
+      filter: {
+        ...paginationFilterMeeting,
+        meetingId: taskDataById?.data?.meetingId || undefined,
+      },
     });
 
   const taskStatusOptions = taskStatus

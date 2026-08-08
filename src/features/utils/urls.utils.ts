@@ -276,6 +276,7 @@ const Urls = {
   createKPIMerge: () => `${baseUrl}/company/kpi-merge/create`,
   updateKPIMerge: (id: string) => `${baseUrl}/company/kpi-merge/update/${id}`,
   deleteKPIMerge: (id: string) => `${baseUrl}/company/kpi-merge/delete/${id}`,
+  getAllKpiMerge: () => `${baseUrl}/company/kpi-merge/get-all`,
 
   deleteCompanyMeetingNote: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/delete/${id}`,
@@ -548,6 +549,8 @@ const Urls = {
     `${baseUrl}/company/employee/daily-plan/final-submit`,
   checkTodaySubmitPlan: () =>
     `${baseUrl}/company/employee/daily-plan/check-today-submit`,
+  checkInDailyPlan: () => `${baseUrl}/company/employee/daily-plan/check-in`,
+  checkOutDailyPlan: () => `${baseUrl}/company/employee/daily-plan/check-out`,
 
   // Blueprint Endpoints
   blueprintCoreValueGetAll: () => `${baseUrl}/blueprint-core-value/get-all`,

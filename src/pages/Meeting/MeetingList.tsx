@@ -199,7 +199,7 @@ export default function MeetingList() {
                 "dd/MM/yyyy hh:mm a",
               ),
               endDate: format(
-                new Date(item.meetingDateTime ?? 0),
+                new Date(item.endDate ?? 0),
                 "dd/MM/yyyy hh:mm a",
               ),
               joinerNames:

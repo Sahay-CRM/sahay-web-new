@@ -220,7 +220,7 @@ export default function RequestMasterList() {
                 )}
               </>
             )}
-            actionColumnWidth="w-[80px]"
+            actionColumnWidth="w-[110px]"
             isEditDeleteShow={false}
           />
         </div>

@@ -2,57 +2,43 @@
 import { useMemo, useState } from "react";
 import { format } from "date-fns";
 import { FormProvider, useForm } from "react-hook-form";
-import { Plus, Clock, ListTodo, Presentation, Layers, CheckCheck, AlertTriangle, Hourglass, ChevronLeft, ChevronRight } from "lucide-react";
+import { 
+  ChevronDown,
+  ChevronUp,
+  Trash2,
+  Edit2,
+  Plus,
+  AlertTriangle
+} from "lucide-react";
 
-import TableData, { ColumnConfig } from "@/components/shared/DataTable/DataTable";
-import SearchInput from "@/components/shared/SearchInput";
-import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-import SingleCalendarDatePicker from "@/components/shared/FormDateTimePicker/SingleCalendarDatePicker";
 import { Button } from "@/components/ui/button";
 import { formatMinutesToHours } from "@/features/utils/formatting.utils";
-import { isColorDark } from "@/features/utils/color.utils";
 import useCheckIn from "./useCheckIn";
+import useGetGanttItems from "@/features/api/gantt/useGetGanttItems";
 import AddEditCheckInModal from "./CheckInFormModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import ConfirmSubmitPlanModal from "./ConfirmSubmitPlanModal";
 import CalendarAddTaskDrawer from "@/pages/DailyPlanning/CalendarAddTaskDrawer";
 import MeetingDrawer from "@/pages/companyTask/CompanyTaskFormModal/meetingDrawer";
-import useAddDailyPlanItem from "@/features/api/dailyPlan/useAddDailyPlanItem";
-import { getUserId, getUserPermission } from "@/features/selectors/auth.selector";
+import { getUserPermission } from "@/features/selectors/auth.selector";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import PageNotAccess from "@/pages/PageNoAccess";
+
 
 export default function CheckIn() {
   const {
-    todayDate,
     selectedDate,
-    setSelectedDate,
-    minDate,
-    maxDate,
-    goToDate,
-    shiftDay,
     items,
     filteredItems,
     isLoading,
-    paginationFilter,
-    setPaginationFilter,
     totalItems,
     totalEstimatedTime,
-    totalActualTime,
-    totalTasks,
-    totalMeetings,
     remainingTime,
     isOvertime,
     isEditWindowExpired,
     isSubmitted,
-    permission,
+    permission: activePermission = { View: true, Add: true, Edit: true, Delete: true },
     companyWorkingMinutes,
     isAddModalOpen,
     setIsAddModalOpen,
@@ -60,172 +46,118 @@ export default function CheckIn() {
     setEditingItem,
     deletingItem,
     setDeletingItem,
-    isSubmitModalOpen,
-    setIsSubmitModalOpen,
-
     handleConfirmDelete,
     isDeleting,
     handleSubmitPlan,
     handleConfirmSubmitPlan,
     isSubmitting,
+    isSubmitModalOpen,
+    setIsSubmitModalOpen,
     isCompanyTimeDefined,
+    handleDirectSubmitPlanningItem,
+    pendingTasks,
+    isLoadingPendingTasks,
   } = useCheckIn();
+
+  const { data: ganttResponse, isLoading: isLoadingGantt } = useGetGanttItems({
+    date: selectedDate,
+  });
+  const ganttItems = ganttResponse?.data || [];
 
   const navigate = useNavigate();
   const allPermissions = useSelector(getUserPermission);
   const canEditCompanyProfile = allPermissions?.COMPANY_PROFILE?.Edit;
 
-  const { mutate: addItem } = useAddDailyPlanItem();
-  const employeeId = useSelector(getUserId);
-  const todayDateStr = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
-
   const [isOpenTaskDrawer, setIsOpenTaskDrawer] = useState(false);
   const [isOpenMeetingDrawer, setIsOpenMeetingDrawer] = useState(false);
 
-  const handleDirectSubmitPlanningItem = async (payload: {
-    taskId?: string;
-    meetingId?: string;
-    ganttItemId?: string;
-    estimatedTime: number;
-    remarks: string;
-    title: string;
-  }) => {
-    addItem(
-      {
-        employeeId,
-        date: todayDateStr,
-        type: payload.taskId ? "TASK" : payload.meetingId ? "MEETING" : "GANTT",
-        title: payload.title,
-        priority: "Medium",
-        estimatedTime: payload.estimatedTime,
-        remarks: payload.remarks || undefined,
-        taskId: payload.taskId,
-        meetingId: payload.meetingId,
-        ganttItemId: payload.ganttItemId,
-      },
-      {
-        onSuccess: () => {
-          setIsAddModalOpen(false);
-          setEditingItem(null);
-        },
-      }
-    );
-  };
+  // Accordion open/collapse states
+  const [isRepetitiveExpanded, setIsRepetitiveExpanded] = useState(false);
+  const [isMeetingsExpanded, setIsMeetingsExpanded] = useState(false);
+  const [isExtraExpanded, setIsExtraExpanded] = useState(false);
 
-  const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
-    { key: "title", label: "Title", visible: true },
-    { key: "type", label: "Type", visible: true },
-    { key: "estimatedTimeFormatted", label: "Estimated Time", visible: true },
-    { key: "actualTimeTimeFormatted", label: "Actual Time", visible: true },
-    { key: "status", label: "Status", visible: true },
-    { key: "remarks", label: "Remarks", visible: true },
-  ]);
-
-  const visibleColumns = useMemo(() => {
-    return columnToggleOptions.reduce((acc, col) => {
-      if (col.visible) {
-        if (col.key === "status") {
-          acc[col.key] = {
-            label: col.label,
-            render: (_value, item: any) => {
-              const isInProgress = item.status === "PLANNED" && Boolean(item.startTime);
-              const statusName = isInProgress
-                ? "In Progress"
-                : item.status === "PLANNED"
-                ? "Planned"
-                : item.status === "COMPLETED"
-                ? "Completed"
-                : item.status === "FORWARDED"
-                ? "Forwarded"
-                : "Cancelled";
-
-              const color = isInProgress
-                ? "#0ea5e9"
-                : item.status === "PLANNED"
-                ? "#eee100"
-                : item.status === "COMPLETED"
-                ? "#10b981"
-                : item.status === "FORWARDED"
-                ? "#3b82f6"
-                : "#ef4444";
-
-              const textColor = isColorDark(color) ? "#FFFFFF" : "#000000";
-
-              return (
-                <span
-                  className="inline-flex items-center justify-center rounded-lg px-3 py-1.5 text-sm select-none min-w-[100px] h-8 text-center"
-                  style={{
-                    backgroundColor: color,
-                    color: textColor,
-                  }}
-                >
-                  {statusName}
-                </span>
-              );
-            },
-          };
-        } else if (col.key === "title") {
-          acc[col.key] = {
-            label: col.label,
-            render: (_value, item: any) => {
-              const displayTitle = item.title || (item.type === "TASK" ? item.task?.taskName : item.type === "MEETING" ? item.meeting?.meetingName : item.gantItem?.itemName) || "-";
-              return (
-                <div className="flex items-center gap-2 min-w-0 w-full">
-                  <span className="font-semibold text-slate-800 truncate" title={displayTitle}>
-                    {displayTitle}
-                  </span>
-                  {item.isPlanned === false && (
-                    <span className="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800 ring-1 ring-inset ring-amber-600/20 shadow-2xs select-none shrink-0">
-                      {item.type === "TASK" ? "Extra Task" : item.type === "MEETING" ? "Extra Meeting" : "Extra Gant Task"}
-                    </span>
-                  )}
-                </div>
-              );
-            },
-          };
-        } else if (col.key === "type") {
-          acc[col.key] = {
-            label: col.label,
-            render: (_value, item: any) => {
-              return item.type === "TASK"
-                ? "Task"
-                : item.type === "MEETING"
-                ? "Meeting"
-                : item.type === "GANTT"
-                ? "Gant Task"
-                : item.type || "-";
-            },
-          };
-        } else {
-          acc[col.key] = col.label;
-        }
-      }
-      return acc;
-    }, {} as Record<string, string | ColumnConfig>);
-  }, [columnToggleOptions]);
-
-  const onToggleColumn = (key: string) => {
-    setColumnToggleOptions((prev) =>
-      prev.map((col) =>
-        col.key === key ? { ...col, visible: !col.visible } : col
-      )
-    );
-  };
-
-  const canToggleColumns = columnToggleOptions.length > 3;
   const methods = useForm();
 
+  // Grouping items based on planning properties and createdBy source
+  const systemPlannedTasks = useMemo(() => {
+    return filteredItems.filter(item => item.isPlanned !== false && item.type !== "MEETING" && item.createdBy === "SYSTEM");
+  }, [filteredItems]);
+
+  const systemPlannedMeetings = useMemo(() => {
+    return filteredItems.filter(item => item.type === "MEETING" && item.createdBy === "SYSTEM");
+  }, [filteredItems]);
+
+  const manualPlannedTasks = useMemo(() => {
+    return filteredItems.filter(item => item.isPlanned !== false && item.type !== "MEETING" && item.createdBy !== "SYSTEM");
+  }, [filteredItems]);
+
+  const manualPlannedMeetings = useMemo(() => {
+    return filteredItems.filter(item => item.type === "MEETING" && item.createdBy !== "SYSTEM");
+  }, [filteredItems]);
+
+  const manualPlannedItems = useMemo(() => {
+    return [...manualPlannedTasks, ...manualPlannedMeetings].sort((a, b) => ((a as any).sequence || 0) - ((b as any).sequence || 0));
+  }, [manualPlannedTasks, manualPlannedMeetings]);
+
+  const extraTasks = useMemo(() => {
+    return filteredItems.filter(item => item.isPlanned === false);
+  }, [filteredItems]);
+
+  const systemEstimatedTime = useMemo(() => {
+    return [...systemPlannedTasks, ...systemPlannedMeetings].reduce((acc, item) => acc + (item.estimatedTime || 0), 0);
+  }, [systemPlannedTasks, systemPlannedMeetings]);
+
+  const manualEstimatedTime = useMemo(() => {
+    return manualPlannedItems.reduce((acc, item) => acc + (item.estimatedTime || 0), 0);
+  }, [manualPlannedItems]);
+
+  const isPlanningEditable = useMemo(() => {
+    return activePermission?.Edit && !isEditWindowExpired && !isSubmitted && isCompanyTimeDefined;
+  }, [activePermission, isEditWindowExpired, isSubmitted, isCompanyTimeDefined]);
+
+  const formatMeetingTime = (item: any) => {
+    const dateTime = item.meeting?.meetingDateTime;
+    if (!dateTime) return "";
+    try {
+      const d = new Date(dateTime);
+      const startStr = format(d, "hh:mm a");
+      
+      let endStr = "";
+      if (item.meeting?.endDate) {
+        endStr = format(new Date(item.meeting.endDate), "hh:mm a");
+      } else {
+        const endD = new Date(d.getTime() + (item.estimatedTime || 60) * 60000);
+        endStr = format(endD, "hh:mm a");
+      }
+      return `${startStr} - ${endStr}`;
+    } catch {
+      return "";
+    }
+  };
 
 
-  const activePermission = useMemo(() => {
-    return permission || {
-      View: true,
-      Add: true,
-      Edit: true,
-      Delete: true,
-    };
-  }, [permission]);
+
+  const getDeadlineText = (item: any) => {
+    const gant = item.ganttItem || item.gantItem;
+    if (gant) {
+      try {
+        const start = gant.actualStartDate ? format(new Date(gant.actualStartDate), "dd/MM/yyyy") : "";
+        const end = gant.actualEndDate ? format(new Date(gant.actualEndDate), "dd/MM/yyyy") : "";
+        if (start && end) return `${start} to ${end}`;
+        return start || end || "-";
+      } catch {
+        return "-";
+      }
+    }
+    const rawDate = item.task?.taskDeadline || item.meeting?.meetingDateTime || item.gantItem?.endDate;
+    if (!rawDate) return "-";
+    try {
+      const d = new Date(rawDate);
+      return format(d, "dd/MM/yyyy hh:mm a");
+    } catch {
+      return "-";
+    }
+  };
 
   if (activePermission.View === false) {
     return <PageNotAccess />;
@@ -233,291 +165,585 @@ export default function CheckIn() {
 
   if (isLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
+      <div className="w-full h-full flex items-center justify-center min-h-[400px]">
         <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
       </div>
     );
   }
 
- if (!isCompanyTimeDefined) {
-  return (
-    <div className="w-full h-full flex items-center justify-center p-4 bg-slate-50/30">
-      <div className="max-w-md w-full text-center space-y-5">
-        <div className="inline-flex p-4 bg-primary/10 rounded-full text-primary">
-          <AlertTriangle className="h-10 w-10" />
+  if (!isCompanyTimeDefined) {
+    return (
+      <div className="w-full h-full flex items-center justify-center p-4 bg-slate-50/30 min-h-[400px]">
+        <div className="max-w-md w-full text-center space-y-5">
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold text-slate-800 tracking-tight">
+              Working Hours Undefined
+            </h3>
+            <p className="text-slate-500 text-sm leading-relaxed">
+              Company has not defined their start time and end time. Please
+              provide this information first.
+            </p>
+          </div>
+          {canEditCompanyProfile && (
+            <Button onClick={() => navigate("/dashboard/company-profile")}>
+              Go to Company Profile
+            </Button>
+          )}
         </div>
-
-        <div className="space-y-2">
-          <h3 className="text-xl font-bold text-slate-800 tracking-tight">
-            Working Hours Undefined
-          </h3>
-
-          <p className="text-slate-500 text-sm leading-relaxed">
-            Company has not defined their start time and end time. Please
-            provide this information first.
-          </p>
-        </div>
-
-        {canEditCompanyProfile && (
-          <Button
-            onClick={() => navigate("/dashboard/company-profile")}
-            >
-            Go to Company Profile
-          </Button>
-        )}
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full h-full flex flex-col px-2 sm:px-4 py-4 overflow-hidden">
-        {/* Top Header Bar & Actions */}
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4 shrink-0">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <SearchInput
-              placeholder="Search planning..."
-              searchValue={paginationFilter.search}
-              setPaginationFilter={setPaginationFilter}
-              className="w-80"
-            />
+      <div className="w-full h-full flex flex-col px-2 sm:px-3 py-3 overflow-y-auto bg-slate-50/50">
+        
+        {/* Header content relocated to columns */}
 
-            {/* Date Switcher Box */}
-            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white  shadow-2xs">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => shiftDay(-1)}
-                disabled={selectedDate <= minDate}
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-
-              <SingleCalendarDatePicker
-                value={new Date(selectedDate)}
-                onChange={(date) => {
-                  if (date) {
-                    setSelectedDate(format(date, "yyyy-MM-dd"));
-                  }
-                }}
-                minDate={new Date(minDate)}
-                maxDate={new Date(maxDate)}
-                variant="ghost"
-              />
-
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-9 w-9"
-                onClick={() => shiftDay(1)}
-                disabled={selectedDate >= maxDate}
-              >
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-            </div>
-
-            {selectedDate !== todayDate && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 px-3 text-sm cursor-pointer"
-                onClick={() => goToDate(new Date())}
-              >
-                Today
-              </Button>
-            )}
-          </div>
-
-          <div className="flex items-center gap-3">
-            {isSubmitted && (
-              <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-md border border-emerald-200 text-sm font-bold shadow-2xs">
-                <CheckCheck className="h-4 w-4" />
-                <span>Plan Submitted</span>
-              </div>
-            )}
-
-            {canToggleColumns && (
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div>
-                      <DropdownSearchMenu
-                        columns={columnToggleOptions}
-                        onToggleColumn={onToggleColumn}
-                        columnIcon={true}
-                      />
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p className="text-sm text-white">Toggle Visible Columns</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            )}
-
-            {activePermission.Add && !isEditWindowExpired && !isSubmitted && isCompanyTimeDefined && (
-              <>
-                <Button
-                  onClick={() => setIsAddModalOpen(true)}
-                  className="py-2 w-fit gap-1.5"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add Item
-                </Button>
-                <Button
-                  onClick={handleSubmitPlan}
-                  disabled={totalItems === 0 || isSubmitting}
-                  className="py-2 w-fit gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white border-none cursor-pointer"
-                >
-                  <CheckCheck className="h-4 w-4" />
-                  Submit Plan
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-
-
-        {/* Summary Stat Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 mb-4 shrink-0">
-          <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
-            <div>
-              <p className="text-sm font-semibold text-slate-500  tracking-wider mb-0.5">
-                Total Items
-              </p>
-              <p className="text-lg font-bold text-slate-900">{totalItems}</p>
-            </div>
-            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-lg shrink-0">
-              <Layers className="h-5 w-5" />
-            </div>
-          </div>
-
-          <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
-            <div>
-              <p className="text-sm font-semibold text-slate-500  tracking-wider mb-0.5">
-                Est. Time
-              </p>
-              <p className="text-lg font-bold text-slate-900">
-                {formatMinutesToHours(totalEstimatedTime)}
-              </p>
-            </div>
-            <div className="p-2.5 bg-amber-50 text-amber-600 rounded-lg shrink-0">
-              <Clock className="h-5 w-5" />
-            </div>
-          </div>
-
-          <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
-            <div>
-              {isSubmitted ? (
-                <>
-                  <p className="text-sm font-semibold text-slate-500 tracking-wider mb-0.5">
-                    Actual Time
-                  </p>
-                  <p className="text-lg font-bold text-slate-900">
-                    {formatMinutesToHours(totalActualTime)}
-                  </p>
-                </>
-              ) : isOvertime ? (
-                <>
-                  <p className="text-sm font-semibold text-rose-600 tracking-wider mb-0.5 animate-pulse">
-                    Extra Hours
-                  </p>
-                  <p className="text-lg font-bold text-rose-700">
-                    {formatMinutesToHours(totalEstimatedTime - companyWorkingMinutes)}
-                  </p>
-                </>
-              ) : (
-                <>
-                  <p className="text-sm font-semibold text-slate-500 tracking-wider mb-0.5">
-                    Remaining Time
-                  </p>
-                  <p className="text-lg font-bold text-slate-900">
-                    {formatMinutesToHours(remainingTime)}
-                  </p>
-                </>
-              )}
-            </div>
-            {isSubmitted ? (
-              <div className="p-2.5 bg-sky-50 text-sky-600 rounded-lg shrink-0">
-                <Clock className="h-5 w-5" />
-              </div>
-            ) : isOvertime ? (
-              <div className="p-2.5 bg-rose-50 text-rose-600 rounded-lg shrink-0">
-                <AlertTriangle className="h-5 w-5" />
-              </div>
-            ) : (
-              <div className="p-2.5 bg-sky-50 text-sky-600 rounded-lg shrink-0">
-                <Hourglass className="h-5 w-5" />
-              </div>
-            )}
-          </div>
-
-          <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
-            <div>
-              <p className="text-sm font-semibold text-slate-500  tracking-wider mb-0.5">
-                Total Tasks
-              </p>
-              <p className="text-lg font-bold text-slate-900">{totalTasks}</p>
-            </div>
-            <div className="p-2.5 bg-emerald-50 text-emerald-600 rounded-lg shrink-0">
-              <ListTodo className="h-5 w-5" />
-            </div>
-          </div>
-
-          <div className="border border-slate-200 bg-white rounded-lg p-3.5 flex items-center justify-between shadow-2xs">
-            <div>
-              <p className="text-sm font-semibold text-slate-500  tracking-wider mb-0.5">
-                Total Meetings
-              </p>
-              <p className="text-lg font-bold text-slate-900">{totalMeetings}</p>
-            </div>
-            <div className="p-2.5 bg-purple-50 text-purple-600 rounded-lg shrink-0">
-              <Presentation className="h-5 w-5" />
-            </div>
-          </div>
-        </div>
-
-        {isOvertime && (
-          <div className="mb-4 p-3.5 bg-amber-50 border border-amber-200 rounded-lg text-sm text-amber-800 flex items-center gap-2.5 shadow-2xs shrink-0">
-            <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
+        {/* Overtime Warning Bar */}
+        {/* {isOvertime && (
+          <div className="mb-3.5 p-2 bg-amber-50/70 border border-amber-200/80 rounded-lg text-sm text-amber-800 flex items-center gap-2 shadow-2xs">
             <span>
-              <strong>Overtime Warning:</strong> Your total planned time exceeds the company's working hours. You are planning overtime.
+              <strong>Overtime Warning:</strong> Your total planned time exceeds the company's working hours.
             </span>
           </div>
-        )}
+        )} */}
 
-        {/* Main Table Data Container */}
-        <div className="flex-1 bg-white overflow-hidden flex flex-col tb:pt-4 border border-slate-200 rounded-lg">
-          <TableData
-            tableHeightClass="flex-1"
-            tableData={filteredItems.map((item, index) => ({
-              ...item,
-              estimatedTimeFormatted: formatMinutesToHours(item.estimatedTime || 0),
-              actualTimeTimeFormatted: formatMinutesToHours(item.actualTime || 0),
-              title: item.title || (item.type === "TASK" ? item.task?.taskName : item.type === "MEETING" ? item.meeting?.meetingName : item.gantItem?.itemName) || "-",
-              srNo: index + 1,
-            }))}
-            rowClassName={(item: any) =>
-              item.isPlanned === false
-                ? "bg-amber-50/40 hover:bg-amber-100/50 transition-colors"
-                : ""
-            }
-            columns={visibleColumns}
-            primaryKey="planItemId"
-            onEdit={(row) => setEditingItem(row as unknown as DailyPlanItem)}
-            onDelete={(row) => setDeletingItem(row as unknown as DailyPlanItem)}
-            isActionButton={() =>
-              columnToggleOptions.some((col) => col.visible)
-            }
-            isLoading={isLoading}
-            permissionKey="daily-planning"
-            moduleKey="DAILY_PLANNING"
-            isEditDeleteShow={activePermission.Edit && !isEditWindowExpired && !isSubmitted && isCompanyTimeDefined}
-            showActionsColumn={!isSubmitted && !isEditWindowExpired && isCompanyTimeDefined}
-            actionColumnWidth="w-[100px] overflow-hidden"
-          />
+        {/* Dashboard 2-Column Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 items-start">
+          
+          {/* LEFT COLUMN: Planned Content */}
+          <div className="lg:col-span-3 space-y-4">
+            
+            <div className="bg-slate-600 text-white border border-slate-700/20 rounded-xl p-3 shadow-xs flex flex-row items-center justify-between gap-3 flex-wrap">
+              <h2 className="text-base font-bold text-white shrink-0">My Day</h2>
+              
+              <div className="flex flex-row items-center gap-3.5 md:gap-5 flex-wrap">
+                <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-sm text-slate-100">
+                  
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-300">Working:</span>
+                    <span className="font-bold text-white">{formatMinutesToHours(companyWorkingMinutes)}</span>
+                  </div>
+                  <div className="h-3 w-px bg-white/20" />
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-300">Planned:</span>
+                    <span className="font-bold text-white">{formatMinutesToHours(systemEstimatedTime)}</span>
+                  </div>
+                </div>
+
+                {/* {isSubmitted && (
+                  <div className="flex items-center px-2 py-0.5 bg-emerald-500/20 text-emerald-100 rounded-md border border-emerald-500/30 text-xs font-semibold shadow-2xs shrink-0">
+                    <span>Plan Submitted</span>
+                  </div>
+                )} */}
+              </div>
+            </div>
+
+            {/* My Day Details Container */}
+            <div className="bg-white border border-slate-200 rounded-md shadow-2xs overflow-hidden divide-y divide-slate-100">
+              
+              {/* Repetitive Tasks Group */}
+              <div>
+                <div 
+                  className="flex items-center justify-between p-2.5 px-3 bg-slate-100 border-b border-slate-100 text-primary cursor-pointer hover:bg-slate-100/70 transition-colors"
+                  onClick={() => setIsRepetitiveExpanded(!isRepetitiveExpanded)}
+                >
+                  <div className="flex items-baseline gap-1.5 min-w-0">
+                    <span className="font-bold text-md text-primary">Repetitive Tasks</span>
+                     <span className="text-sm font-semibold px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                      {systemPlannedTasks.length}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                   
+                    {isRepetitiveExpanded ? <ChevronUp className="h-4 w-4 text-primary" /> : <ChevronDown className="h-4 w-4 text-primary" />}
+                  </div>
+                </div>
+
+                {isRepetitiveExpanded && (
+                  <div className="p-2 divide-y divide-slate-100 bg-white">
+                    {systemPlannedTasks.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-6 text-center text-black">
+                        <p className="text-sm font-medium">No tasks planned yet</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="hidden sm:flex items-center justify-between px-1.5 py-1.5 text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 bg-white rounded-t-md">
+                          <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                            <div className="col-span-6">TASK NAME</div>
+                            <div className="col-span-2">TYPE</div>
+                            <div className="col-span-4">DEADLINE</div>
+                          </div>
+                          <div className="w-36 shrink-0 text-right pr-2">EST. TIME</div>
+                        </div>
+                        {systemPlannedTasks.map((item) => {
+                          const displayTitle = item.title || item.task?.taskName || (item as any).ganttItem?.itemName || item.gantItem?.itemName || "-";
+                          const isRepetitiveType = displayTitle.toLowerCase().match(/(stand-up|sync|email|daily|update)/);
+                          const isItemEditable = item.createdBy !== "SYSTEM";
+                          const deadline = getDeadlineText(item);
+                          return (
+                            <div key={item.planItemId} className="group flex items-center justify-between py-2 px-1.5 hover:bg-slate-50/80 rounded-md transition-colors">
+                              <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                                <div className="col-span-6 min-w-0">
+                                  <p className="text-sm font-normal text-black truncate" title={displayTitle}>
+                                    {displayTitle}
+                                  </p>
+                                </div>
+                                <div className="col-span-2 text-sm font-normal text-black">
+                                  {item.type === "GANTT" ? "Gantt" : isRepetitiveType ? "Repetitive" : "Normal"}
+                                </div>
+                                <div className="col-span-4 text-sm text-black truncate" title={deadline}>
+                                  <span className="font-medium text-slate-400 mr-1 sm:hidden">DEADLINE:</span>
+                                  {deadline}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0 ml-3 w-36 justify-end">
+                                <span className="text-sm font-normal text-black bg-slate-50 border border-slate-100 rounded px-1.5 py-0.5 whitespace-nowrap">
+                                  {formatMinutesToHours(item.estimatedTime || 0)}
+                                </span>
+                                {isPlanningEditable && isItemEditable && (
+                                  <div className="flex items-center gap-0.5 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-6 w-6 text-slate-500 hover:text-slate-800 hover:bg-slate-100 cursor-pointer"
+                                      onClick={() => setEditingItem(item)}
+                                    >
+                                      <Edit2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-6 w-6 text-rose-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer"
+                                      onClick={() => setDeletingItem(item)}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Meetings Group */}
+              <div>
+                <div 
+                  className="flex items-center justify-between p-2.5 px-3 bg-slate-50 border-b border-slate-100 text-primary cursor-pointer hover:bg-slate-100/70 transition-colors"
+                  onClick={() => setIsMeetingsExpanded(!isMeetingsExpanded)}
+                >
+                  <div className="flex items-baseline gap-1.5 min-w-0">
+                    <span className="font-bold text-md text-primary">Meetings</span>
+                    <span className="text-sm font-semibold px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                      {systemPlannedMeetings.length} 
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-1.5 shrink-0">
+                    
+                    {isMeetingsExpanded ? <ChevronUp className="h-4 w-4 text-primary" /> : <ChevronDown className="h-4 w-4 text-primary" />}
+                  </div>
+                </div>
+
+                {isMeetingsExpanded && (
+                  <div className="p-2 divide-y divide-slate-100 bg-white">
+                    {systemPlannedMeetings.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center py-6 text-center text-black">
+                        <p className="text-sm font-medium">No meetings planned yet</p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="hidden sm:flex items-center justify-between px-1.5 py-1.5 text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 bg-white rounded-t-md">
+                          <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                            <div className="col-span-6">MEETING NAME</div>
+                            <div className="col-span-2">TYPE</div>
+                            <div className="col-span-4">MEETING TIME</div>
+                          </div>
+                          <div className="w-36 shrink-0 text-right pr-2">EST. TIME</div>
+                        </div>
+                        {systemPlannedMeetings.map((item) => {
+                          const displayTitle = item.title || item.meeting?.meetingName || "-";
+                          const timeStr = formatMeetingTime(item);
+                          const isItemEditable = item.createdBy !== "SYSTEM";
+                          const deadline = getDeadlineText(item);
+                          return (
+                            <div key={item.planItemId} className="group flex items-center justify-between py-2 px-1.5 hover:bg-slate-50/80 rounded-md transition-colors">
+                              <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                                <div className="col-span-6 min-w-0">
+                                  <p className="text-sm font-normal text-black truncate" title={displayTitle}>
+                                    {displayTitle}
+                                  </p>
+                                </div>
+                                <div className="col-span-2 text-sm font-normal text-black">
+                                  Meeting
+                                </div>
+                                <div className="col-span-4 text-sm text-black truncate" title={timeStr || deadline}>
+                                  <span className="font-medium text-black mr-1 sm:hidden">MEETING TIME:</span>
+                                  {timeStr || deadline}
+                                </div>
+                              </div>
+
+                              <div className="flex items-center gap-2 shrink-0 ml-3 w-36 justify-end">
+                                <span className="text-sm font-normal text-black bg-slate-50 border border-slate-100 rounded px-1.5 py-0.5 whitespace-nowrap">
+                                  {formatMinutesToHours(item.estimatedTime || 0)}
+                                </span>
+                                {isPlanningEditable && isItemEditable && (
+                                  <div className="flex items-center gap-0.5 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-6 w-6 text-slate-500 hover:text-slate-800 hover:bg-slate-100 cursor-pointer"
+                                      onClick={() => setEditingItem(item)}
+                                    >
+                                      <Edit2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-6 w-6 text-rose-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer"
+                                      onClick={() => setDeletingItem(item)}
+                                    >
+                                      <Trash2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="bg-slate-600 text-white border border-slate-700/20 rounded-xl p-3 shadow-xs flex flex-row items-center justify-between gap-3 flex-wrap">
+              <h2 className="text-base font-bold text-white shrink-0">My Plan Today</h2>
+              
+              <div className="flex flex-row items-center gap-3.5 md:gap-5 flex-wrap">
+                <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-sm text-slate-100">
+                  <div className="flex items-center gap-1">
+                    <span className="text-slate-300">Planned:</span>
+                    <span className="font-bold text-white">{formatMinutesToHours(manualEstimatedTime)}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* My Plan Today Details Container */}
+            <div className="bg-white border border-slate-200 rounded-md shadow-2xs overflow-hidden divide-y divide-slate-100">
+              
+              {/* Manual Planned Tasks Group */}
+              <div>
+                <div className="flex items-center justify-between p-2.5 px-3 bg-slate-50 border-b border-slate-100 text-primary">
+                  <div className="flex items-baseline gap-1.5 min-w-0">
+                    <span className="font-bold text-md text-primary">Planned Tasks</span>
+                    <span className="text-sm font-bold px-2 py-0.5 bg-primary/10 text-primary rounded-full">
+                      {manualPlannedItems.length}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="p-2 divide-y divide-slate-100 bg-white">
+                  {manualPlannedItems.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center py-6 text-center text-black">
+                      <p className="text-sm font-medium">No tasks planned yet</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="hidden sm:flex items-center justify-between px-1.5 py-1.5 text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 bg-white rounded-t-md">
+                        <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                          <div className="col-span-6">ITEM NAME</div>
+                          <div className="col-span-2">TYPE</div>
+                          <div className="col-span-4">DEADLINE / TIME</div>
+                        </div>
+                        <div className="w-36 shrink-0 text-right pr-2">EST. TIME</div>
+                      </div>
+                      {manualPlannedItems.map((item) => {
+                        const displayTitle = item.title || item.task?.taskName || item.meeting?.meetingName || (item as any).ganttItem?.itemName || item.gantItem?.itemName || "-";
+                        const isGantt = item.type === "GANTT" || Boolean(item.ganttItemId);
+                        const isMeeting = item.type === "MEETING";
+                        const deadline = getDeadlineText(item);
+                        const timeStr = isMeeting ? formatMeetingTime(item) : "";
+                        return (
+                          <div key={item.planItemId} className="group flex items-center justify-between py-2 px-1.5 hover:bg-slate-50/80 rounded-md transition-colors">
+                            <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                              <div className="col-span-6 min-w-0">
+                                <p className="text-sm font-normal text-black truncate" title={displayTitle}>
+                                  {displayTitle}
+                                </p>
+                              </div>
+                              <div className="col-span-2 text-sm font-normal text-black">
+                                {isGantt ? "Gantt" : isMeeting ? "Meeting" : "Normal"}
+                              </div>
+                              <div className="col-span-4 text-sm text-black truncate" title={timeStr || deadline}>
+                                <span className="font-medium text-slate-400 mr-1 sm:hidden">
+                                  {isMeeting ? "MEETING TIME:" : "DEADLINE:"}
+                                </span>
+                                {timeStr || deadline}
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 ml-3 w-36 justify-end">
+                              <span className="text-sm font-normal text-black bg-slate-50 border border-slate-100 rounded px-1.5 py-0.5 whitespace-nowrap">
+                                {formatMinutesToHours(item.estimatedTime || 0)}
+                              </span>
+                              {isPlanningEditable && (
+                                <div className="flex items-center gap-0.5 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                  {!isMeeting && (
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-6 w-6 text-slate-500 hover:text-slate-800 hover:bg-slate-100 cursor-pointer"
+                                      onClick={() => setEditingItem(item)}
+                                    >
+                                      <Edit2 className="h-3.5 w-3.5" />
+                                    </Button>
+                                  )}
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6 text-rose-500 hover:text-rose-700 hover:bg-rose-50 cursor-pointer"
+                                    onClick={() => setDeletingItem(item)}
+                                  >
+                                    <Trash2 className="h-3.5 w-3.5" />
+                                  </Button>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Extra Tasks Group */}
+              {extraTasks.length > 0 && (
+                <div>
+                  <div 
+                    className="flex items-center justify-between p-2.5 px-3 bg-slate-50 border-b border-slate-100 text-primary cursor-pointer hover:bg-slate-100/70 transition-colors"
+                    onClick={() => setIsExtraExpanded(!isExtraExpanded)}
+                  >
+                    <div className="flex items-baseline gap-1.5 min-w-0">
+                      <span className="font-bold text-sm text-primary">Extra Tasks</span>
+                      </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-sm font-semibold px-2 py-0.5 bg-primary/10 text-primary rounded">
+                        {extraTasks.length} Tasks
+                      </span>
+                      {isExtraExpanded ? <ChevronUp className="h-4 w-4 text-primary" /> : <ChevronDown className="h-4 w-4 text-primary" />}
+                    </div>
+                  </div>
+
+                  {isExtraExpanded && (
+                    <div className="p-2 divide-y divide-slate-100 bg-white">
+                      {extraTasks.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center py-6 text-center text-slate-400">
+                          <p className="text-sm font-medium">No extra tasks planned</p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="hidden sm:flex items-center justify-between px-1.5 py-1.5 text-sm font-bold text-slate-900 uppercase tracking-wider border-b border-slate-100 bg-white rounded-t-md">
+                            <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                              <div className="col-span-6">TASK NAME</div>
+                              <div className="col-span-2">TYPE</div>
+                              <div className="col-span-4">DEADLINE</div>
+                            </div>
+                          </div>
+                          {extraTasks.map((item) => {
+                            const displayTitle = item.title || item.task?.taskName || (item as any).ganttItem?.itemName || item.gantItem?.itemName || "-";
+                            const deadline = getDeadlineText(item);
+                            return (
+                              <div key={item.planItemId} className="group flex items-center justify-between py-2 px-1.5 hover:bg-slate-50/80 rounded-md transition-colors">
+                                <div className="min-w-0 flex-1 grid grid-cols-12 gap-2 items-center">
+                                  <div className="col-span-6 min-w-0">
+                                    <p className="text-sm font-normal text-black truncate" title={displayTitle}>
+                                      {displayTitle}
+                                    </p>
+                                  </div>
+                                  <div className="col-span-2 text-sm font-normal text-black">
+                                    {item.type === "GANTT" ? "Gantt Task" : " Task"}
+                                  </div>
+                                 <div className="col-span-4 text-sm text-black truncate" title={deadline}>
+                                   <span className="font-medium text-slate-400 mr-1 sm:hidden">DEADLINE:</span>
+                                   {deadline}
+                                 </div>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Sticky Planning Summary Container */}
+            <div className="sticky bottom-0 z-20 space-y-3 bg-slate-50/95 backdrop-blur-xs py-2.5 border-t border-slate-200/50">
+              {/* Planning Summary Stats Card */}
+              <div className="bg-primary text-white border border-primary/20 rounded-xl p-3 shadow-xs flex flex-row items-center justify-between gap-3 flex-wrap">
+               <div className="flex items-center gap-2">
+                <h2 className="text-lg  text-white shrink-0">Planning Summary</h2>
+                <span className="rounded-full bg-white font-bold items-center text-primary px-2 py-1 text-sm">{totalItems}</span>
+                </div>
+                <div className="flex flex-row items-center gap-3.5 md:gap-5 flex-wrap">
+                  <div className="flex flex-wrap items-center gap-x-3.5 gap-y-1.5 text-sm text-slate-100">
+                   
+                    <div className="flex items-center gap-1">
+                      <span className="text-slate-300">Planned Hours:</span>
+                      <span className="font-bold text-lg text-white">{formatMinutesToHours(totalEstimatedTime)}</span>
+                    </div>
+                  </div>
+
+                  {activePermission?.Add && isPlanningEditable && !isSubmitted && (
+                    <Button
+                      onClick={handleSubmitPlan}
+                      disabled={totalItems === 0 || isSubmitting}
+                      className="py-1 px-4 h-8.5 bg-emerald-600 hover:bg-emerald-700 text-white transition-all shadow-xs border-none cursor-pointer rounded-md text-sm font-semibold disabled:opacity-50"
+                    >
+                      Submit Plan
+                    </Button>
+                  )}
+                </div>
+              </div>
+
+              {/* Planning Summary Details Panel */}
+              <div className={`rounded-lg p-2.5 px-3 flex items-center gap-2 text-sm text-left border ${
+                isOvertime 
+                  ? 'bg-rose-50/40 border-rose-100 text-rose-800' 
+                  : 'bg-emerald-50/30 border-emerald-100 text-emerald-800'
+              }`}>
+                {isOvertime ? (
+                  <>
+                    <AlertTriangle className="h-4 w-4 text-rose-500 shrink-0" />
+                    <span className="leading-relaxed">
+                      <strong>Overtime warning:</strong> Planned time exceeds working hours by {formatMinutesToHours(totalEstimatedTime - companyWorkingMinutes)}.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                      <span className="leading-relaxed">
+                        <strong>Perfect fit:</strong> Planned schedule is within working hours. Remaining: {formatMinutesToHours(remainingTime)}.
+                      </span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+
+          </div>
+
+          {/* RIGHT COLUMN: Suggestive list */}
+          <div className="lg:col-span-2 space-y-4">
+            {/* Pending Tasks Panel */}
+            <div className="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+              <div className="p-3 border-b border-slate-100 bg-indigo-50/20 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-slate-800 text-sm">Pending Tasks</h3>
+                </div>
+                <span className="text-sm font-semibold px-2 py-0.5 bg-indigo-50 text-primary rounded">
+                  {pendingTasks.length} Tasks
+                </span>
+              </div>
+              
+              <div className="p-2 divide-y divide-slate-100 max-h-[300px] overflow-y-auto">
+                {isLoadingPendingTasks ? (
+                  <p className="text-sm text-slate-400 text-center py-4">Loading pending tasks...</p>
+                ) : pendingTasks.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center py-4">No pending tasks</p>
+                ) : (
+                  pendingTasks.map((task: any) => (
+                    <div key={task.taskId} className="flex items-center justify-between py-2 px-1 hover:bg-slate-50/50 rounded-md transition-colors">
+                      <span className="text-sm font-normal leading-normal pr-3 flex-1 min-w-0" title={task.taskName}>
+                        {task.taskName}
+                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-6 w-6 text-primary hover:bg-primary hover:text-white border-primary/20 hover:border-primary shrink-0 cursor-pointer disabled:opacity-30 rounded-md"
+                          disabled={!isPlanningEditable}
+                          onClick={() => setEditingItem({
+                            type: "TASK",
+                            title: task.taskName,
+                            taskId: task.taskId,
+                            task: {
+                              taskId: task.taskId,
+                              taskName: task.taskName
+                            },
+                            estimatedTime: 60
+                          } as any)}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Gantt Tasks Panel */}
+            <div className="bg-white border border-slate-200/80 rounded-xl shadow-xs overflow-hidden">
+              <div className="p-3 border-b border-slate-100 bg-purple-50/20 flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold text-slate-800 text-sm">Gantt Tasks</h3>
+                </div>
+                <span className="text-sm font-semibold px-2 py-0.5 bg-purple-50 text-primary rounded">
+                  {ganttItems.length} Tasks
+                </span>
+              </div>
+              
+              <div className="p-2 divide-y divide-slate-100 max-h-[300px] overflow-y-auto">
+                {isLoadingGantt ? (
+                  <p className="text-sm text-slate-400 text-center py-4">Loading Gantt tasks...</p>
+                ) : ganttItems.length === 0 ? (
+                  <p className="text-sm text-slate-400 text-center  py-4">No Gantt tasks for today</p>
+                ) : (
+                  ganttItems.map((task: any) => (
+                    <div key={task.ganttItemId} className="flex items-center justify-between py-2 px-1 hover:bg-slate-50/50 rounded-md transition-colors">
+                      <span className="text-sm font-normal text-slate-700 leading-normal pr-3 flex-1 min-w-0" title={task.itemName}>
+                        {task.itemName}
+                      </span>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Button
+                          size="icon"
+                          variant="outline"
+                          className="h-6 w-6 text-primary hover:bg-primary hover:text-white border-primary/20 hover:border-primary shrink-0 cursor-pointer disabled:opacity-30 rounded-md"
+                          disabled={!isPlanningEditable || items.some((i) => i.ganttItemId === task.ganttItemId)}
+                          onClick={() => setEditingItem({
+                            type: "GANTT",
+                            title: task.itemName,
+                            ganttItemId: task.ganttItemId,
+                            gantItem: {
+                              ganttItemId: task.ganttItemId,
+                              itemName: task.itemName
+                            }
+                          } as any)}
+                        >
+                          <Plus className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+          </div>
+
         </div>
 
         {/* Add Modal */}
@@ -582,6 +808,7 @@ export default function CheckIn() {
           />
         )}
 
+        {/* Add Task Drawer */}
         {isOpenTaskDrawer && (
           <CalendarAddTaskDrawer
             open={isOpenTaskDrawer}
@@ -603,6 +830,7 @@ export default function CheckIn() {
           />
         )}
 
+        {/* Add Meeting Drawer */}
         {isOpenMeetingDrawer && (
           <MeetingDrawer
             open={isOpenMeetingDrawer}
@@ -622,6 +850,7 @@ export default function CheckIn() {
             }}
           />
         )}
+
       </div>
     </FormProvider>
   );

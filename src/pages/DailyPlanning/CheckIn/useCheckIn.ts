@@ -5,7 +5,9 @@ import { format, subDays, addDays } from "date-fns";
 import { getUserId, getUserDetail, getUserPermission } from "@/features/selectors/auth.selector";
 import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
 import useRemoveDailyPlanItem from "@/features/api/dailyPlan/useRemoveDailyPlanItem";
-import useFinalSubmitDailyPlan from "@/features/api/dailyPlan/useFinalSubmitDailyPlan";
+import useAddDailyPlanItem from "@/features/api/dailyPlan/useAddDailyPlanItem";
+import useCheckInDailyPlan from "@/features/api/dailyPlan/useCheckInDailyPlan";
+import useAllCompanyTask from "@/features/api/companyTask/useAllCompanyTask";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 
 export default function useCheckIn() {
@@ -52,7 +54,20 @@ export default function useCheckIn() {
 
   const { data, isLoading, refetch } = useGetDailyPlan(employeeId, selectedDate);
   const { mutate: removeItem, isPending: isDeleting } = useRemoveDailyPlanItem();
-  const { mutate: finalSubmit, isPending: isSubmitting } = useFinalSubmitDailyPlan();
+  const { mutate: addItem } = useAddDailyPlanItem();
+  const { mutate: submitCheckIn, isPending: isSubmitting } = useCheckInDailyPlan();
+
+  const { data: pendingTasksData, isLoading: isLoadingPendingTasks } = useAllCompanyTask({
+    filter: {
+      isNotCompleteCancel: true,
+      dailyplantasknotinclude: true,
+      employeeId: employeeId,
+    },
+  });
+
+  const pendingTasks = useMemo(() => {
+    return pendingTasksData?.data || [];
+  }, [pendingTasksData]);
 
   const user = useSelector(getUserDetail);
   const startTime = user?.companyStartTime;
@@ -72,10 +87,34 @@ export default function useCheckIn() {
   }, [startTime, selectedDate, todayDate]);
 
   const items = useMemo(() => {
-    if (Array.isArray(data?.data)) {
-      return data.data;
-    }
-    return data?.data?.dailyPlanItems || [];
+    const rawItems = (Array.isArray(data?.data)
+      ? data.data
+      : data?.data?.dailyPlanItems || []) as DailyPlanItem[];
+    return rawItems.map((item: DailyPlanItem) => {
+      let derivedType = "TASK";
+      if (item.meetingId || item.meeting) {
+        derivedType = "MEETING";
+      } else if (item.ganttItemId || item.gantItem) {
+        derivedType = "GANTT";
+      }
+
+      // Calculate estimatedTime in seconds from meeting if meeting
+      let estTimeSec = (item.planTime !== undefined && item.planTime !== null) ? item.planTime : item.estimatedTime;
+      if (derivedType === "MEETING" && item.meeting?.meetingDateTime && item.meeting?.endDate) {
+        const start = new Date(item.meeting.meetingDateTime).getTime();
+        const end = new Date(item.meeting.endDate).getTime();
+        if (end > start) {
+          estTimeSec = Math.round((end - start) / 1000);
+        }
+      }
+
+      return {
+        ...item,
+        type: item.type || derivedType,
+        estimatedTime: estTimeSec ? Math.round(estTimeSec / 60) : 0,
+        actualTime: item.actualTime ? Math.round(item.actualTime / 60) : 0,
+      };
+    });
   }, [data]);
 
   const filteredItems = useMemo(() => {
@@ -141,6 +180,7 @@ export default function useCheckIn() {
     removeItem(deletingItem.planItemId, {
       onSuccess: () => {
         setDeletingItem(null);
+        refetch();
       },
     });
   };
@@ -152,17 +192,77 @@ export default function useCheckIn() {
   };
 
   const handleConfirmSubmitPlan = () => {
-    finalSubmit(undefined, {
-      onSuccess: () => {
-        setIsSubmitModalOpen(false);
-        refetch();
+    submitCheckIn(
+      {
+        checkinDate: selectedDate,
+        submitTime: new Date().toISOString(),
+        isFinalSubmit: true,
+        isAutoSubmit: false,
       },
+      {
+        onSuccess: () => {
+          setIsSubmitModalOpen(false);
+          refetch();
+        },
+      }
+    );
+  };
+
+  const handleDirectSubmitPlanningItem = async (payload: {
+    taskId?: string;
+    meetingId?: string;
+    ganttItemId?: string;
+    estimatedTime: number;
+    remarks: string;
+    title: string;
+  }) => {
+    return new Promise<void>((resolve, reject) => {
+      addItem(
+        {
+          date: selectedDate,
+          type: payload.taskId ? "TASK" : payload.meetingId ? "MEETING" : "GANTT",
+          planTime: payload.estimatedTime * 60, // Convert minutes to seconds
+          remarks: payload.remarks || undefined,
+          taskId: payload.taskId,
+          meetingId: payload.meetingId,
+          ganttItemId: payload.ganttItemId,
+          isPlaned: true,
+        },
+        {
+          onSuccess: () => {
+            refetch();
+            resolve();
+          },
+          onError: (err) => {
+            reject(err);
+          },
+        }
+      );
     });
   };
 
+  const handleAddSuggestedTask = (taskTitle: string, durationMins: number, type: "TASK" | "GANTT", refId?: string) => {
+    addItem(
+      {
+        date: selectedDate,
+        type: type,
+        planTime: durationMins * 60, // Convert minutes to seconds
+        remarks: taskTitle,
+        isPlaned: true,
+        ganttItemId: type === "GANTT" ? refId : undefined,
+        taskId: type === "TASK" ? refId : undefined,
+      },
+      {
+        onSuccess: () => {
+          refetch();
+        },
+      }
+    );
+  };
+
   const isSubmitted = useMemo(() => {
-    return items.some((i) => i.submittedDate !== null && i.submittedDate !== undefined);
-  }, [items]);
+    return Boolean(data?.data?.isAutoSubmit || data?.data?.isFinalSubmit);
+  }, [data]);
 
   const permission = useSelector(getUserPermission).DAILY_PLANNING;
 
@@ -210,5 +310,11 @@ export default function useCheckIn() {
     isSubmitModalOpen,
     setIsSubmitModalOpen,
     isCompanyTimeDefined,
+
+    // Direct and suggested add
+    handleDirectSubmitPlanningItem,
+    handleAddSuggestedTask,
+    pendingTasks,
+    isLoadingPendingTasks,
   };
 }

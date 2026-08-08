@@ -1,8 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useSelector } from "react-redux";
 import { format } from "date-fns";
-
-import { getUserId } from "@/features/selectors/auth.selector";
 import useAddDailyPlanItem from "@/features/api/dailyPlan/useAddDailyPlanItem";
 import useUpdateDailyPlanItem from "@/features/api/dailyPlan/useUpdateDailyPlanItem";
 import useGetCompanyTaskSearch from "@/features/api/companyTask/useGetCompanyTaskSearch";
@@ -25,6 +22,17 @@ export interface DropdownOptionItem {
   isFooterNote?: boolean;
 }
 
+interface ExtendedDailyPlanItem extends DailyPlanItem {
+  ganttItem?: {
+    ganttItemId?: string;
+    itemName?: string;
+  } | null;
+  gantItem?: {
+    ganttItemId: string;
+    itemName: string;
+  } | null;
+}
+
 export default function useAddEditCheckInModal({
   open,
   onOpenChange,
@@ -33,7 +41,6 @@ export default function useAddEditCheckInModal({
   companyWorkingMinutes,
   date,
 }: UseAddEditCheckInModalProps) {
-  const employeeId = useSelector(getUserId);
   const todayDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
 
   const [type, setType] = useState<DailyPlanItemType>("TASK");
@@ -318,7 +325,7 @@ export default function useAddEditCheckInModal({
 
     const initialGanttItemId =
       initialItem && initialItem.type === "GANTT"
-        ? initialItem.ganttItemId || initialItem.gantItem?.ganttItemId
+        ? initialItem.ganttItemId || (initialItem as ExtendedDailyPlanItem).ganttItem?.ganttItemId || initialItem.gantItem?.ganttItemId
         : undefined;
 
     if (initialGanttItemId) {
@@ -327,6 +334,7 @@ export default function useAddEditCheckInModal({
         options.unshift({
           value: initialGanttItemId,
           label:
+            (initialItem as ExtendedDailyPlanItem).ganttItem?.itemName ||
             initialItem?.gantItem?.itemName ||
             initialItem?.title ||
             "Selected Gant Task",
@@ -357,6 +365,7 @@ export default function useAddEditCheckInModal({
         initialItem.title ||
         initialItem.task?.taskName ||
         initialItem.meeting?.meetingName ||
+        (initialItem as ExtendedDailyPlanItem).ganttItem?.itemName ||
         initialItem.gantItem?.itemName ||
         "";
       setTitle(currentTitle);
@@ -366,6 +375,7 @@ export default function useAddEditCheckInModal({
           initialItem.meetingId ||
           initialItem.meeting?.meetingId ||
           initialItem.ganttItemId ||
+          (initialItem as ExtendedDailyPlanItem).ganttItem?.ganttItemId ||
           initialItem.gantItem?.ganttItemId ||
           "",
       );
@@ -418,30 +428,18 @@ export default function useAddEditCheckInModal({
   const handleSubmit = () => {
     if (!validate()) return;
 
-    const finalTitle =
-      title.trim() ||
-      refOptions.find(
-        (o) => !o.isHeader && !o.isFooterNote && o.value === selectedRefId,
-      )?.label ||
-      "";
-
     const totalMinutes =
       (Number(estimatedHours) || 0) * 60 + (Number(estimatedMinutes) || 0);
+
+
 
     if (initialItem?.planItemId) {
       updateItem(
         {
           planItemId: initialItem.planItemId,
-          type,
-          title: finalTitle,
-          estimatedTime: totalMinutes,
-          priority: initialItem?.priority || "Medium",
+          planTime: totalMinutes * 60, // Convert minutes to seconds
           remarks: remarks.trim() || undefined,
-          taskId: type === "TASK" ? selectedRefId || undefined : undefined,
-          meetingId:
-            type === "MEETING" ? selectedRefId || undefined : undefined,
-          ganttItemId:
-            type === "GANTT" ? selectedRefId || undefined : undefined,
+          isPlaned: true,
         },
         {
           onSuccess: () => {
@@ -452,18 +450,16 @@ export default function useAddEditCheckInModal({
     } else {
       addItem(
         {
-          employeeId,
-          date: todayDate,
+          date: date || todayDate,
           type,
-          title: finalTitle,
-          priority: "Medium",
-          estimatedTime: totalMinutes,
+          planTime: totalMinutes * 60, // Convert minutes to seconds
           remarks: remarks.trim() || undefined,
           taskId: type === "TASK" ? selectedRefId || undefined : undefined,
           meetingId:
             type === "MEETING" ? selectedRefId || undefined : undefined,
           ganttItemId:
             type === "GANTT" ? selectedRefId || undefined : undefined,
+          isPlaned: true,
         },
         {
           onSuccess: () => {
@@ -485,16 +481,14 @@ export default function useAddEditCheckInModal({
     return new Promise<void>((resolve, reject) => {
       addItem(
         {
-          employeeId,
-          date: todayDate,
+          date: date || todayDate,
           type: payload.taskId ? "TASK" : payload.meetingId ? "MEETING" : "GANTT",
-          title: payload.title,
-          priority: "Medium",
-          estimatedTime: payload.estimatedTime,
+          planTime: payload.estimatedTime * 60, // Convert minutes to seconds
           remarks: payload.remarks || undefined,
           taskId: payload.taskId,
           meetingId: payload.meetingId,
           ganttItemId: payload.ganttItemId,
+          isPlaned: true,
         },
         {
           onSuccess: () => {
@@ -512,6 +506,7 @@ export default function useAddEditCheckInModal({
   return {
     type,
     setType,
+    title,
     setTitle,
     search,
     setSearch,

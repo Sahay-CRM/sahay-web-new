@@ -87,13 +87,16 @@ export default function useAddProjectSingle() {
     value: status.coreParameterId,
     label: status.coreParameterName,
   }));
-
+  const { data: projectApiData } = useGetCompanyProjectById(
+    companyProjectId || "",
+  );
   const { data: allProjectsData, isLoading: allProjectsLoading } = useGetCompanyProject({
     filter: {
       search: parentProjectSearch || undefined,
+      projectId: projectApiData?.data?.parentProjectId || undefined,
     },
     enable: true,
-  });
+  }); 
 
   const parentProjectOptions = (allProjectsData?.data || [])
     .filter((proj) => proj.projectId && proj.projectName && proj.projectId !== companyProjectId)
@@ -105,9 +108,7 @@ export default function useAddProjectSingle() {
 
   /** Mutations & API */
   const { mutate: addProject, isPending } = useAddUpdateCompanyProject();
-  const { data: projectApiData } = useGetCompanyProjectById(
-    companyProjectId || "",
-  );
+
 
   /** Form setup */
   const methods = useForm<FormValues>({

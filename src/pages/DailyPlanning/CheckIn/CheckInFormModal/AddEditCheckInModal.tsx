@@ -2,10 +2,8 @@ import { useEffect } from "react";
 import { AlertTriangle } from "lucide-react";
 import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import FormSelect from "@/components/shared/Form/FormSelect";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
-import { FormItem, FormLabel } from "@/components/ui/form";
-import { Textarea } from "@/components/ui/textarea";
+import { FormLabel } from "@/components/ui/form";
 import useAddEditCheckInModal from "./useAddEditCheckInModal";
 
 interface AddEditCheckInModalProps {
@@ -31,7 +29,7 @@ export default function AddEditCheckInModal({
 }: AddEditCheckInModalProps) {
   const {
     type,
-    setType,
+    title,
     setTitle,
     setSearch,
     selectedRefId,
@@ -40,12 +38,9 @@ export default function AddEditCheckInModal({
     setEstimatedHours,
     estimatedMinutes,
     setEstimatedMinutes,
-    remarks,
-    setRemarks,
     errors,
     setErrors,
     refOptions,
-    typeOptions,
     handleSubmit,
     handleModalClose,
     isPending,
@@ -88,69 +83,72 @@ export default function AddEditCheckInModal({
     >
       <div className="space-y-4">
         {/* Type Select */}
-        <div>
-          <FormSelect
-            label="Type"
-            value={type}
-            onChange={(val) => {
-              setType((Array.isArray(val) ? val[0] : val) as DailyPlanItemType);
-              setSelectedRefId("");
-              setTitle("");
-              setSearch("");
-            }}
-            options={typeOptions}
-            isMandatory
-            placeholder="Select Type"
-            disabled={!!initialItem}
-          />
+        <div className="flex items-center gap-2 py-1">
+          <span className="text-sm font-semibold text-slate-600">Type:</span>
+          <span className="text-sm font-bold text-slate-800">
+            {type === "TASK" ? "Task" : type === "MEETING" ? "Meeting" : "Gant Task"}
+          </span>
         </div>
 
         {/* Select Task or Meeting Field */}
         <div>
-          <div className="flex justify-between items-center w-full mb-1.5">
-           
-            <FormLabel>
-              Select {type === "TASK" ? "Task" : type === "MEETING" ? "Meeting" : "Gant Task"} <span className="text-red-500">*</span>
-              </FormLabel>
-            {!initialItem && (
-              type === "TASK" ? (
-                <button
-                  type="button"
-                  onClick={onAddTaskClick}
-                  className="text-xs font-semibold text-primary hover:underline focus:outline-none cursor-pointer"
-                >
-                  + Add Task
-                </button>
-              ) : type === "MEETING" ? (
-                <button
-                  type="button"
-                  onClick={onAddMeetingClick}
-                  className="text-xs font-semibold text-primary hover:underline focus:outline-none cursor-pointer"
-                >
-                  + Add Meeting
-                </button>
-              ) : null
-            )}
-          </div>
-          <SearchDropdown
-            options={refOptions}
-            selectedValues={selectedRefId ? [selectedRefId] : []}
-            onSearchChange={setSearch}
-            onSelect={(item) => {
-              setSelectedRefId(item.value);
-              setTitle(item.label);
-              setErrors((prev) => ({ ...prev, title: undefined }));
-            }}
-            placeholder={
-              type === "TASK"
-                ? "Select or search task..."
-                : type === "MEETING"
-                ? "Select or search meeting..."
-                : "Select or search gant task..."
-            }
-            disabled={!!initialItem}
-            error={errors.title ? { message: errors.title } : undefined}
-          />
+          {initialItem ? (
+            <div className="flex items-center gap-2 py-1">
+              <span className="text-sm font-semibold text-slate-600">
+                {type === "TASK" ? "Task" : type === "MEETING" ? "Meeting" : "Gant Task"}:
+              </span>
+              <span className="text-sm font-bold text-slate-800">
+                {title}
+              </span>
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-between items-center w-full mb-1.5">
+               
+                <FormLabel>
+                  Select {type === "TASK" ? "Task" : type === "MEETING" ? "Meeting" : "Gant Task"} <span className="text-red-500">*</span>
+                  </FormLabel>
+                {!initialItem && (
+                  type === "TASK" ? (
+                    <button
+                      type="button"
+                      onClick={onAddTaskClick}
+                      className="text-xs font-semibold text-primary hover:underline focus:outline-none cursor-pointer"
+                    >
+                      + Add Task
+                    </button>
+                  ) : type === "MEETING" ? (
+                    <button
+                      type="button"
+                      onClick={onAddMeetingClick}
+                      className="text-xs font-semibold text-primary hover:underline focus:outline-none cursor-pointer"
+                    >
+                      + Add Meeting
+                    </button>
+                  ) : null
+                )}
+              </div>
+              <SearchDropdown
+                options={refOptions}
+                selectedValues={selectedRefId ? [selectedRefId] : []}
+                onSearchChange={setSearch}
+                onSelect={(item) => {
+                  setSelectedRefId(item.value);
+                  setTitle(item.label);
+                  setErrors((prev) => ({ ...prev, title: undefined }));
+                }}
+                placeholder={
+                  type === "TASK"
+                    ? "Select or search task..."
+                    : type === "MEETING"
+                    ? "Select or search meeting..."
+                    : "Select or search gant task..."
+                }
+                disabled={!!initialItem}
+                error={errors.title ? { message: errors.title } : undefined}
+              />
+            </>
+          )}
         </div>
         {errors.title && (
           <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] block mt-1">
@@ -207,7 +205,7 @@ export default function AddEditCheckInModal({
         )}
 
         {/* Remarks */}
-        <FormItem>
+        {/* <FormItem>
           <FormLabel>Remarks</FormLabel>
           <Textarea
             value={remarks}
@@ -216,7 +214,7 @@ export default function AddEditCheckInModal({
             rows={3}
             className="text-sm resize-none mt-1"
           />
-        </FormItem>
+        </FormItem> */}
       </div>
     </ModalData>
   );

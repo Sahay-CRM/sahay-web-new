@@ -18,7 +18,7 @@ export default function useAddUpdateCompanyMeeting() {
         url: isUpdate
           ? Urls.updateCompanyMeeting(companyMeetingId!)
           : Urls.addCompanyMeeting(),
-        data: isUpdate ? rest : data,
+        data: rest,
       };
 
       const { data: resData } = isUpdate
