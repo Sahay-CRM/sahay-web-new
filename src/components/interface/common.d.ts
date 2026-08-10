@@ -2098,6 +2098,7 @@ interface DailyPlanTimeLog {
   rating?: number | null;
   dayRating?: number | null;
   checkoutTime?: string | null;
+  remark?:string;
 }
 
 interface DailyPlan {
@@ -2113,6 +2114,7 @@ interface DailyPlan {
   rating?: number | null;
   dayRating?: number | null;
   timeLog?: DailyPlanTimeLog;
+  remark?:string;
   isCheckoutSubmitted?: boolean;
   id?: string;
 }

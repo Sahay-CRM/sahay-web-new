@@ -415,6 +415,8 @@ export default function useAddEditCheckInModal({
       (Number(estimatedHours) || 0) * 60 + (Number(estimatedMinutes) || 0);
     if (totalMinutes <= 0) {
       newErrors.estimatedTime = "Estimated time must be greater than 0";
+    } else if ((Number(estimatedHours) || 0) > 12) {
+      newErrors.estimatedTime = "Estimated time cannot exceed 12 hours";
     }
 
     setErrors(newErrors);
@@ -427,6 +429,14 @@ export default function useAddEditCheckInModal({
 
   const handleSubmit = () => {
     if (!validate()) return;
+
+    const hours = Number(estimatedHours) || 0;
+    if (hours >= 8 && hours <= 12) {
+      const confirmSubmit = window.confirm(
+        `Are you sure you want to estimate ${hours} hours for this item?`
+      );
+      if (!confirmSubmit) return;
+    }
 
     const totalMinutes =
       (Number(estimatedHours) || 0) * 60 + (Number(estimatedMinutes) || 0);

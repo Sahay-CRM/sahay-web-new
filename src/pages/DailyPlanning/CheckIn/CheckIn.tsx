@@ -8,7 +8,9 @@ import {
   Trash2,
   Edit2,
   Plus,
-  AlertTriangle
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -18,6 +20,7 @@ import useGetGanttItems from "@/features/api/gantt/useGetGanttItems";
 import AddEditCheckInModal from "./CheckInFormModal";
 import ConfirmDeleteModal from "./ConfirmDeleteModal";
 import ConfirmSubmitPlanModal from "./ConfirmSubmitPlanModal";
+import SingleCalendarDatePicker from "@/components/shared/FormDateTimePicker/SingleCalendarDatePicker";
 import CalendarAddTaskDrawer from "@/pages/DailyPlanning/CalendarAddTaskDrawer";
 import MeetingDrawer from "@/pages/companyTask/CompanyTaskFormModal/meetingDrawer";
 import { getUserPermission } from "@/features/selectors/auth.selector";
@@ -29,6 +32,12 @@ import PageNotAccess from "@/pages/PageNoAccess";
 export default function CheckIn() {
   const {
     selectedDate,
+    setSelectedDate,
+    minDate,
+    maxDate,
+    goToDate,
+    shiftDay,
+    todayDate,
     items,
     filteredItems,
     isLoading,
@@ -198,6 +207,62 @@ export default function CheckIn() {
     <FormProvider {...methods}>
       <div className="w-full h-full flex flex-col px-2 sm:px-3 py-3 overflow-y-auto bg-slate-50/50">
         
+        {/* Title Header */}
+        <div className="flex items-center justify-between mb-4 shrink-0 flex-wrap gap-4 px-1">
+          <div className="flex items-center gap-4">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-800">Check-in</h1>
+          </div>
+
+          {/* Date Selector / Calendar at the top */}
+          <div className="flex items-center gap-2">
+            {/* Date Switcher Box */}
+            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white shadow-2xs py-0.5 px-1">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 cursor-pointer"
+                onClick={() => shiftDay(-1)}
+                disabled={selectedDate <= minDate}
+              >
+                <ChevronLeft className="h-4 w-4 text-slate-600" />
+              </Button>
+
+              <SingleCalendarDatePicker
+                value={new Date(selectedDate)}
+                onChange={(date) => {
+                  if (date) {
+                    setSelectedDate(format(date, "yyyy-MM-dd"));
+                  }
+                }}
+                minDate={new Date(minDate)}
+                maxDate={new Date(maxDate)}
+                variant="ghost"
+              />
+
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-9 w-9 cursor-pointer"
+                onClick={() => shiftDay(1)}
+                disabled={selectedDate >= maxDate}
+              >
+                <ChevronRight className="h-4 w-4 text-slate-600" />
+              </Button>
+            </div>
+
+            {selectedDate !== todayDate && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-3 text-sm cursor-pointer border-slate-200 hover:bg-slate-50 font-semibold"
+                onClick={() => goToDate(new Date())}
+              >
+                Today
+              </Button>
+            )}
+          </div>
+        </div>
+
         {/* Header content relocated to columns */}
 
         {/* Overtime Warning Bar */}
@@ -682,8 +747,7 @@ export default function CheckIn() {
                             task: {
                               taskId: task.taskId,
                               taskName: task.taskName
-                            },
-                            estimatedTime: 60
+                            }
                           } as any)}
                         >
                           <Plus className="h-3.5 w-3.5" />

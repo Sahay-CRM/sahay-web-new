@@ -14,8 +14,8 @@ export default function useCheckIn() {
   const employeeId = useSelector(getUserId);
   const todayDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
 
-  const minDate = useMemo(() => format(subDays(new Date(), 7), "yyyy-MM-dd"), []);
-  const maxDate = useMemo(() => format(new Date(), "yyyy-MM-dd"), []);
+  const minDate = useMemo(() => format(subDays(new Date(), 365 * 10), "yyyy-MM-dd"), []);
+  const maxDate = useMemo(() => format(addDays(new Date(), 2), "yyyy-MM-dd"), []);
 
   const [selectedDate, setSelectedDate] = useState(todayDate);
 
@@ -62,6 +62,7 @@ export default function useCheckIn() {
       isNotCompleteCancel: true,
       dailyplantasknotinclude: true,
       employeeId: employeeId,
+      taskdeadline: selectedDate,
     },
   });
 
@@ -73,7 +74,8 @@ export default function useCheckIn() {
   const startTime = user?.companyStartTime;
 
   const isEditWindowExpired = useMemo(() => {
-    if (selectedDate !== todayDate) return true;
+    if (selectedDate < todayDate) return true;
+    if (selectedDate > todayDate) return false;
     if (!startTime) return false;
     const [startHour, startMin] = startTime.split(":").map(Number);
     const checkinStartDateTime = new Date();
@@ -90,7 +92,8 @@ export default function useCheckIn() {
     const rawItems = (Array.isArray(data?.data)
       ? data.data
       : data?.data?.dailyPlanItems || []) as DailyPlanItem[];
-    return rawItems.map((item: DailyPlanItem) => {
+    const filteredRaw = rawItems.filter((item: DailyPlanItem) => item.isPlaned !== false);
+    return filteredRaw.map((item: DailyPlanItem) => {
       let derivedType = "TASK";
       if (item.meetingId || item.meeting) {
         derivedType = "MEETING";

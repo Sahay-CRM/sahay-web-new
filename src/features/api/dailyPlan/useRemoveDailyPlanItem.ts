@@ -17,6 +17,7 @@ export default function useRemoveDailyPlanItem() {
     onSuccess: (res) => {
       toast.success(res.message || "Item removed");
       queryClient.invalidateQueries({ queryKey: ["daily-plan"] });
+      queryClient.invalidateQueries({ queryKey: ["get-all-task-dropdown"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message || "Failed to remove item");

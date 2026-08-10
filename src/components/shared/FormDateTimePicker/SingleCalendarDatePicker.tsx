@@ -78,7 +78,6 @@ export default function SingleCalendarDatePicker({
             disabled={disabledDays}
             startMonth={minDate}
             endMonth={maxDate}
-            hideNavigation={true}
           />
         </div>
       </PopoverContent>

@@ -321,6 +321,39 @@ export default function AddMeeting() {
     setModalOpen(true);
   };
 
+  // Time filter for Start Time (should be before selected End Time)
+  const filterStartTime = (time: Date) => {
+    if (!endDateVal) return true;
+    const end = new Date(endDateVal);
+    
+    // We only filter time if the dates are the same
+    const isSameDate = 
+      time.getFullYear() === end.getFullYear() &&
+      time.getMonth() === end.getMonth() &&
+      time.getDate() === end.getDate();
+
+    if (isSameDate) {
+      return time.getTime() < end.getTime();
+    }
+    return true;
+  };
+
+  // Time filter for End Time (should be after selected Start Time)
+  const filterEndTime = (time: Date) => {
+    if (!meetingDateTimeVal) return true;
+    const start = new Date(meetingDateTimeVal);
+
+    const isSameDate = 
+      time.getFullYear() === start.getFullYear() &&
+      time.getMonth() === start.getMonth() &&
+      time.getDate() === start.getDate();
+
+    if (isSameDate) {
+      return time.getTime() > start.getTime();
+    }
+    return true;
+  };
+
   return (
     <CompanyAccessGuard
       companyId={companyMeetingId ? resourceCompanyId : undefined}
@@ -511,8 +544,37 @@ export default function AddMeeting() {
                               label=""
                               value={localDate}
                               onChange={(date) => {
-                                field.onChange(date?.toISOString());
+                                if (date) {
+                                  field.onChange(date.toISOString());
+                                  
+                                  // Sync same date for End Date ONLY if it is already selected
+                                  const currentEndVal = endDateVal ? new Date(endDateVal) : null;
+                                  if (currentEndVal) {
+                                    let targetEndDate = new Date(currentEndVal);
+                                    targetEndDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+                                    
+                                    // If end time is before or equal to start time, default to start time + 30 minutes
+                                    if (targetEndDate.getTime() <= date.getTime()) {
+                                      targetEndDate = new Date(date.getTime() + 30 * 60 * 1000);
+                                    }
+                                    
+                                    setValue("endDate", targetEndDate.toISOString(), {
+                                      shouldValidate: true,
+                                      shouldDirty: true,
+                                    });
+                                  }
+                                } else {
+                                  field.onChange(null);
+                                  setValue("endDate", null, {
+                                    shouldValidate: true,
+                                    shouldDirty: true,
+                                  });
+                                }
                               }}
+                              filterTime={filterStartTime}
+                              minDate={endDateVal ? new Date(endDateVal) : null}
+                              maxDate={endDateVal ? new Date(endDateVal) : null}
+                              isClearable={true}
                               error={errors.meetingDateTime}
                               disablePastDays={
                                 Number(import.meta.env.VITE_DISABLEPASTDATES) ||
@@ -532,11 +594,12 @@ export default function AddMeeting() {
                   {/* Meeting End Date */}
                   <div>
                     <label className="block text-md font-semibold text-gray-900 mb-1">
-                      Meeting End Date
+                      Meeting End Date  <span className="text-red-500">*</span>
                     </label>
                     <Controller
                       control={control}
                       name="endDate"
+                       rules={{ required: "Meeting End Date is required" }}
                       render={({ field }) => {
                         const localDate = field.value
                           ? new Date(field.value)
@@ -547,8 +610,32 @@ export default function AddMeeting() {
                               label=""
                               value={localDate}
                               onChange={(date) => {
-                                field.onChange(date?.toISOString());
+                                if (date) {
+                                  const startVal = meetingDateTimeVal ? new Date(meetingDateTimeVal) : null;
+                                  let targetEndDate = new Date(date);
+                                  
+                                  if (startVal) {
+                                    // Force end date to be the same date as start date
+                                    targetEndDate.setFullYear(startVal.getFullYear(), startVal.getMonth(), startVal.getDate());
+                                    
+                                    if (targetEndDate.getTime() <= startVal.getTime()) {
+                                      targetEndDate = new Date(startVal.getTime() + 30 * 60 * 1000);
+                                    }
+                                  }
+                                  
+                                  field.onChange(targetEndDate.toISOString());
+                                } else {
+                                  field.onChange(null);
+                                  setValue("meetingDateTime", null, {
+                                    shouldValidate: true,
+                                    shouldDirty: true,
+                                  });
+                                }
                               }}
+                              filterTime={filterEndTime}
+                              minDate={meetingDateTimeVal ? new Date(meetingDateTimeVal) : null}
+                              maxDate={meetingDateTimeVal ? new Date(meetingDateTimeVal) : null}
+                              isClearable={true}
                               error={errors.endDate}
                               disablePastDays={
                                 Number(import.meta.env.VITE_DISABLEPASTDATES) ||
