@@ -249,7 +249,13 @@ export const useAgenda = ({
 
   const handleStartMeeting = () => {
     if (meetingId) {
-      createMeet(meetingId);
+      createMeet(meetingId, {
+        onSuccess: () => {
+          queryClient.resetQueries({
+            queryKey: ["get-meeting-details-timing", meetingId],
+          });
+        },
+      });
     }
   };
 

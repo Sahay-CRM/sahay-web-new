@@ -11,6 +11,7 @@ interface KpisSearchDropdownProps {
   renderData?: (task: KpiAllList, checked: boolean) => React.ReactNode;
   dropdownClassName?: string;
   inputClassName?: string;
+  placeholder?: string;
 }
 
 const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
@@ -20,6 +21,7 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
   renderData,
   dropdownClassName = "",
   inputClassName = "",
+  placeholder = "Add kpis in meeting",
 }) => {
   const [searchValue, setSearchValue] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -70,7 +72,7 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
         </span>
         <Input
           type="text"
-          placeholder="Add or Create KPI"
+          placeholder={placeholder}
           value={searchValue}
           onChange={(e) => {
             setSearchValue(e.target.value);

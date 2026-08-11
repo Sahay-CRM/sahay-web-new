@@ -1,12 +1,15 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
-import {  formatToLocalDateTime } from "@/features/utils/app.utils";
+import { formatToLocalDateTime } from "@/features/utils/app.utils";
 import { toast } from "sonner";
 import { off, onValue, ref } from "firebase/database";
 import { useParams } from "react-router-dom";
 import { database } from "@/firebaseConfig";
 
-import TableData from "@/components/shared/DataTable/DataTable";
+import TableData, {
+  ColumnConfig,
+} from "@/components/shared/DataTable/DataTable";
+import AssigneeAvatars from "@/components/shared/AssigneeAvatars/AssigneeAvatars";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import {
   Tooltip,
@@ -36,6 +39,7 @@ interface TasksProps {
   ioType?: string;
   selectedIssueId?: string;
   isTeamLeader?: boolean | undefined;
+  headerLeft?: React.ReactNode;
 }
 
 export default function Tasks({
@@ -44,6 +48,7 @@ export default function Tasks({
   ioType,
   selectedIssueId,
   isTeamLeader,
+  headerLeft,
 }: TasksProps) {
   const { id: meetingId } = useParams();
   const { data: taskStatus } = useGetAllTaskStatus({
@@ -105,20 +110,33 @@ export default function Tasks({
   }, [selectedIssueId, meetingId]);
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
+    { key: "srNo", label: "#", visible: true },
     { key: "taskName", label: "Task Name", visible: true },
     { key: "taskDeadline", label: "Task Deadline", visible: true },
     { key: "assigneeNames", label: "Assignees", visible: true },
     { key: "taskStatus", label: "Status", visible: true },
   ]);
 
-  const visibleColumns = columnToggleOptions.reduce(
-    (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
+  const tableColumns = useMemo(() => {
+    const cols: Record<string, string | ColumnConfig> = {};
+    columnToggleOptions.forEach((col) => {
+      if (col.visible) {
+        if (col.key === "assigneeNames") {
+          cols[col.key] = {
+            label: col.label,
+            render: (_val: unknown, item: unknown) => {
+              const task = item as TaskGetPaging;
+              const assignees = task?.assignUsers || [];
+              return <AssigneeAvatars users={assignees} />;
+            },
+          };
+        } else {
+          cols[col.key] = col.label;
+        }
+      }
+    });
+    return cols;
+  }, [columnToggleOptions]);
 
   const canToggleColumns = columnToggleOptions.length > 3;
 
@@ -192,8 +210,9 @@ export default function Tasks({
 
   return (
     <div className="flex flex-col">
-      <div className="flex gap-5 justify-between mb-5 shrink-0">
-        <div className="flex gap-5 items-center">
+      <div className="flex gap-5 justify-between mb-5 shrink-0 items-center">
+        <div className="flex items-center">{headerLeft}</div>
+        <div className="flex gap-5 items-center ml-auto">
           {isTeamLeader && (
             <>
               <TaskSearchDropdown
@@ -243,7 +262,7 @@ export default function Tasks({
             : "",
           rawTaskDeadline: task.taskDeadline,
         }))}
-        columns={visibleColumns}
+        columns={tableColumns}
         primaryKey="taskId"
         // onEdit={navigate(`/dashboard/tasks/edit/${row.taskId}`)}
         // onViewButton={(row) => {

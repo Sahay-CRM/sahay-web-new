@@ -62,7 +62,7 @@ export default function TabsSection({
             key={tab.frequencyType}
             value={tab.frequencyType}
             disabled={isDisabled}
-            className="rounded-none bg-white border-b-2 border-transparent text-xs font-medium text-muted-foreground hover:text-primary data-[state=active]:border-b-primary data-[state=active]:text-primary disabled:opacity-80 disabled:cursor-not-allowed"
+            className="rounded-none bg-white border-b-2 border-transparent text-sm font-medium text-muted-foreground hover:text-primary data-[state=active]:border-b-primary data-[state=active]:text-primary disabled:opacity-80 disabled:cursor-not-allowed"
           >
             {tab.frequencyType}{" "}
             <span className="ml-0.5 text-xs">({tab?.count})</span>
