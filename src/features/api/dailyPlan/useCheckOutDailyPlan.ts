@@ -11,7 +11,7 @@ export interface CheckOutPayload {
   checkoutTime: string;
   isFinalSubmit: boolean;
   dayRating?: number;
-  remark?: string;
+  remarks?: string;
   items: {
     planItemId?: string;
     taskId?: string;

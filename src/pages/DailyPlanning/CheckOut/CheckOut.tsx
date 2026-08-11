@@ -11,7 +11,8 @@ import {
   Calendar,
   ChevronLeft,
   ChevronRight,
-  TriangleAlert
+  TriangleAlert,
+  Share2
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -66,6 +67,7 @@ interface ExtendedDailyPlanItem extends DailyPlanItem {
     itemDeadline?: string | null;
     actualStartDate?: string | null;
     actualEndDate?: string | null;
+    projectName?: string;
   } | null;
   gantItem?: {
     ganttItemId: string;
@@ -73,7 +75,19 @@ interface ExtendedDailyPlanItem extends DailyPlanItem {
     itemDeadline?: string | null;
     actualStartDate?: string | null;
     actualEndDate?: string | null;
+    projectName?: string;
   } | null;
+  task?: (DailyPlanItemTaskRef & {
+    companyProject?: {
+      projectName?: string;
+    } | null;
+  }) | null;
+  meeting?: (DailyPlanItemMeetingRef & {
+    companyProject?: {
+      projectName?: string;
+    } | null;
+  }) | null;
+  isForward?: boolean;
 }
 
 export default function CheckOut() {
@@ -144,8 +158,8 @@ export default function CheckOut() {
 
   const backendRemark = useMemo(() => {
     return (
-      planData?.data?.remark ||
-      planData?.data?.timeLog?.remark  ||
+      planData?.data?.remarks ||
+      planData?.data?.timeLog?.remarks ||
       ""
     );
   }, [planData]);
@@ -193,6 +207,119 @@ export default function CheckOut() {
     setValidationErrors({});
     setShowValidationErrors(false);
   }, [selectedDate]);
+
+  const handleShareCheckout = () => {
+    if (!items || items.length === 0) {
+      toast.error("No items to share!");
+      return;
+    }
+
+    let formattedDate = "";
+    try {
+      formattedDate = format(new Date(selectedDate), "dd/MM/yyyy");
+    } catch {
+      formattedDate = selectedDate;
+    }
+
+    const plan = planData?.data;
+    const timeLog = plan?.timeLog;
+
+    const rawCheckin = 
+      timeLog?.checkinTime || 
+      plan?.checkinTime ||
+      timeLog?.createdDatetime ||
+      plan?.createdDatetime ||
+      timeLog?.submitTime ||
+      plan?.submitTime;
+    let checkinTimeStr = "-";
+    if (rawCheckin) {
+      try {
+        if (rawCheckin.includes("T") || rawCheckin.includes("-")) {
+          checkinTimeStr = format(new Date(rawCheckin), "hh:mm a").toUpperCase();
+        } else {
+          const [h, m] = rawCheckin.split(":");
+          const d = new Date();
+          d.setHours(parseInt(h) || 0, parseInt(m) || 0, 0, 0);
+          checkinTimeStr = format(d, "hh:mm a").toUpperCase();
+        }
+      } catch {
+        checkinTimeStr = rawCheckin;
+      }
+    }
+
+    const rawCheckout = 
+      timeLog?.checkoutTime || 
+      plan?.checkoutTime ||
+      timeLog?.updatedDatetime ||
+      plan?.updatedDatetime;
+    let checkoutTimeStr = "";
+    if (rawCheckout) {
+      try {
+        if (rawCheckout.includes("T") || rawCheckout.includes("-")) {
+          checkoutTimeStr = format(new Date(rawCheckout), "hh:mm a").toUpperCase();
+        } else {
+          const [h, m] = rawCheckout.split(":");
+          const d = new Date();
+          d.setHours(parseInt(h) || 0, parseInt(m) || 0, 0, 0);
+          checkoutTimeStr = format(d, "hh:mm a").toUpperCase();
+        }
+      } catch {
+        checkoutTimeStr = rawCheckout;
+      }
+    } else {
+      checkoutTimeStr = format(new Date(), "hh:mm a").toUpperCase();
+    }
+
+    const tasks = items.filter((item) => !item.meetingId && !item.ganttItemId && !item.isExtra);
+    const meetings = items.filter((item) => Boolean(item.meetingId) && !item.isExtra);
+    const gantt = items.filter((item) => Boolean(item.ganttItemId) && !item.isExtra);
+    const extra = items.filter((item) => Boolean(item.isExtra));
+
+    const summaryGroups = [
+      { displayName: "Task", items: tasks },
+      { displayName: "Meeting", items: meetings },
+      { displayName: "Gantt", items: gantt },
+      { displayName: "Extra", items: extra },
+    ].filter((group) => group.items.length > 0);
+
+    let text = `${formattedDate}\n\n`;
+    text += `Check-in: ${checkinTimeStr}\n`;
+    text += `Check-out: ${checkoutTimeStr}\n\n\n`;
+
+    summaryGroups.forEach((group) => {
+      text += `${group.displayName} (${group.items.length})\n`;
+      group.items.forEach((item) => {
+        const title = item.title;
+        const isMeeting = Boolean(item.meetingId);
+
+        let estDuration = "—";
+        if (!item.isExtra || isMeeting) {
+          estDuration = item.plannedTimeMinutes > 0 ? formatMinutesToHours(item.plannedTimeMinutes) : "—";
+        }
+
+        const h = item.actualHours === "" ? 0 : Number(item.actualHours) || 0;
+        const m = item.actualMinutes === "" ? 0 : Number(item.actualMinutes) || 0;
+        const actualMins = h * 60 + m;
+        const actDuration = actualMins > 0 ? formatMinutesToHours(actualMins) : "—";
+
+        let emoji = "❌";
+        if (actualMins > 0) {
+          emoji = "✅";
+        }
+
+        text += `• ${title}: Est: ${estDuration} | Act: ${actDuration} ${emoji}\n`;
+      });
+      text += `\n`;
+    });
+
+    navigator.clipboard.writeText(text.trim())
+      .then(() => {
+        toast.success("Check-out summary copied to clipboard!");
+      })
+      .catch(() => {
+        toast.error("Failed to copy check-out summary.");
+      });
+  };
 
   const [isExtraModalOpen, setIsExtraModalOpen] = useState(false);
 
@@ -312,8 +439,8 @@ export default function CheckOut() {
   // Sync state with fetched daily plan items
   useEffect(() => {
     if (dailyPlanItems.length > 0) {
-      setItems(
-        (dailyPlanItems as ExtendedDailyPlanItem[]).map((item) => {
+      setItems((prevItems) => {
+        return (dailyPlanItems as ExtendedDailyPlanItem[]).map((item) => {
           let derivedType = item.type;
           if (!derivedType) {
             if (item.meetingId || item.meeting) derivedType = "MEETING";
@@ -332,10 +459,24 @@ export default function CheckOut() {
 
           // Convert seconds from backend to minutes for UI fields
           const plannedMinutes = estTimeSec ? Math.round(estTimeSec / 60) : 0;
-          const actualMinutes = item.actualTime ? Math.round(item.actualTime / 60) : 0;
+          
+          // Check if this item already exists in the previous local items state
+          const existingItem = prevItems.find((prev) => prev.id === item.planItemId);
+          
+          let actualH: number | "" = "";
+          let actualM: number | "" = "";
+          
+          if (existingItem) {
+            // Preserve user-filled values from local state
+            actualH = existingItem.actualHours;
+            actualM = existingItem.actualMinutes;
+          } else {
+            // Otherwise, initialize from backend values
+            const actualMinutes = item.actualTime ? Math.round(item.actualTime / 60) : 0;
+            actualH = actualMinutes > 0 ? (Math.floor(actualMinutes / 60) || "") : "";
+            actualM = actualMinutes > 0 ? ((actualMinutes % 60) || "") : "";
+          }
 
-          const actualH = actualMinutes > 0 ? (Math.floor(actualMinutes / 60) || "") : "";
-          const actualM = actualMinutes > 0 ? ((actualMinutes % 60) || "") : "";
           const isDetailM = Boolean(item.meetingId && item.meeting?.detailMeetingStatus);
 
           return {
@@ -357,8 +498,8 @@ export default function CheckOut() {
             joiners: item.meeting?.joiners?.map((j: string | DailyPlanUserRef) => typeof j === "string" ? j : j.employeeName || j.name || "") || [],
             isDetailMeeting: isDetailM,
           };
-        })
-      );
+        });
+      });
     }
   }, [dailyPlanItems]);
 
@@ -504,7 +645,7 @@ export default function CheckOut() {
       const actualMins = h * 60 + m;
 
       return {
-        planItemId: item.isExtra ? undefined : item.id,
+        planItemId: item.id,
         taskId: item.taskId,
         meetingId: item.meetingId,
         ganttItemId: item.ganttItemId,
@@ -522,7 +663,7 @@ export default function CheckOut() {
         checkoutTime: new Date().toISOString(),
         isFinalSubmit: true,
         dayRating: rating ?? undefined,
-        remark: notes || undefined,
+        remarks: notes || undefined,
         items: payloadItems,
       },
       {
@@ -552,7 +693,7 @@ export default function CheckOut() {
 
     // Validate Rating (required to proceed)
     if (ratingIsMissing) {
-      setRatingError("Please rate your today's experience (1 to 10)");
+      setRatingError("Please rate your today's productivity (1 to 10)");
       return;
     } else {
       setRatingError(null);
@@ -569,19 +710,27 @@ export default function CheckOut() {
   return (
     <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 bg-slate-50/50 overflow-y-auto lg:overflow-hidden">
       
-      {/* Title Header */}
       <div className="flex items-center justify-between mb-6 shrink-0 flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold tracking-tight text-slate-800">Check-out</h1>
-         
         </div>
 
         {/* Date Selector / Calendar at the top */}
         <div className="flex items-center gap-2">
-           {isEditable && isPlanSubmitted && !isLoading && (
+          {(isAlreadyCheckedOut || isSubmitted) && selectedDate === todayDate && (
+            <Button
+              onClick={handleShareCheckout}
+              type="button"
+              className=" bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              <Share2 className="h-4 w-4" /> Share Summary
+            </Button>
+          )}
+
+          {isEditable && isPlanSubmitted && !isLoading && (
             <Button
               onClick={() => setIsExtraModalOpen(true)}
-               >
+            >
               <Plus className="h-4 w-4" /> Extra Task
             </Button>
           )}
@@ -801,21 +950,17 @@ export default function CheckOut() {
                         
                         const timeBgClass = isLogged ? "bg-[#e8f5e9]" : "bg-[#edf2fc]";
                         
-                        const inputClassName = `w-8 h-7 text-center text-sm font-bold bg-transparent focus:outline-none border-b transition-colors disabled:cursor-not-allowed [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
-                          item.isDetailMeeting || !isEditable
-                            ? "border-slate-200 text-slate-400"
-                            : isLogged
-                              ? "border-emerald-350 text-emerald-700 focus:border-emerald-500"
-                              : "border-slate-350 text-primary focus:border-primary"
-                        }`;
+                        const inputClassName = `w-6 h-6 text-center text-lg font-bold bg-transparent focus:outline-none border-b transition-colors disabled:cursor-default [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none ${
+                           isLogged
+                               ? "border-emerald-350 text-emerald-700 focus:border-emerald-500"
+                               : "border-slate-350 text-primary focus:border-primary"
+                         }`;
 
-                        const labelClassName = `text-sm font-bold ${
-                          item.isDetailMeeting || !isEditable
-                            ? "text-slate-400"
-                            : isLogged
-                              ? "text-emerald-700"
-                              : "text-primary"
-                        }`;
+                        const labelClassName = `text-sm font-semibold ${
+                           isLogged
+                               ? "text-emerald-700"
+                               : "text-primary"
+                         }`;
                         
                         return (
                           <TableRow
@@ -857,11 +1002,12 @@ export default function CheckOut() {
 
                              {/* Copy button */}
                             <TableCell className={`py-2.5 px-1 text-sm text-center border-none w-[40px] ${timeBgClass}`}>
-                              {!item.isDetailMeeting && isEditable && item.plannedTimeMinutes > 0 && (
+                              {!item.isDetailMeeting && (
                                 <button
                                   type="button"
                                   onClick={() => handleCopySingle(item.id)}
-                                  className="h-7 w-7 mx-auto border border-slate-200 hover:border-primary/50 text-slate-400 hover:text-primary rounded-full inline-flex items-center justify-center transition-colors cursor-pointer bg-white shadow-3xs"
+                                  disabled={!isEditable || item.plannedTimeMinutes <= 0}
+                                  className="h-7 w-7 mx-auto border border-slate-200 hover:enabled:border-primary/50 text-slate-400 hover:enabled:text-primary rounded-full inline-flex items-center justify-center transition-colors bg-white shadow-3xs disabled:cursor-default"
                                   title="Copy planned to actual"
                                 >
                                   <ArrowRight className="h-4 w-4 text-primary" />
@@ -881,7 +1027,7 @@ export default function CheckOut() {
                                     disabled={item.isDetailMeeting || !isEditable}
                                     className={inputClassName}
                                   />
-                                  <span className={`${labelClassName} pr-1`}>hr</span>
+                                  <span className={`${labelClassName}  pr-1`}>hr</span>
                                   
                                   <input
                                     type="number"
@@ -920,7 +1066,7 @@ export default function CheckOut() {
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-3xs flex flex-col h-full text-left gap-6 overflow-hidden">
             
             {/* Top Details Group (Scrollable) */}
-            <div className="flex-1 overflow-y-auto pr-1 flex flex-col gap-6">
+            <div className="flex-1 overflow-y-auto pl-1.5 pr-2 py-0.5 flex flex-col gap-6">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
                 <h2 className="text-base font-bold text-slate-800">Check-out Summary</h2>
                 <span className="text-sm text-primary font-bold flex items-center gap-1">

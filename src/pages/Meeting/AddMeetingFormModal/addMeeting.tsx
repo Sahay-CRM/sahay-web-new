@@ -12,6 +12,15 @@ import { Button } from "@/components/ui/button";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import AddMeetingModal from "./addMeetingModal";
 import { getInitials } from "@/features/utils/app.utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { getMeetingType } from "@/features/api/meetingType";
@@ -56,6 +65,11 @@ export default function AddMeeting() {
     companyMeetingId,
     isPending,
     meetingApiData,
+    isConfModalOpen,
+    setIsConfModalOpen,
+    reasons,
+    setReasons,
+    onConfirmSubmit,
   } = hookProps;
 
   const {
@@ -1050,6 +1064,55 @@ export default function AddMeeting() {
             isLoading={isPending}
           />
         )}
+
+        {/* Deadline change reason dialog */}
+        <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>
+          <DialogContent className="sm:max-w-[425px] bg-white rounded-lg">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-gray-800">
+                Confirmation Required
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-500 mt-1">
+                The deadline has been changed. Please provide a reason to
+                proceed with the update.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-3">
+              <div className="grid gap-2">
+                <label
+                  htmlFor="reason"
+                  className="text-sm font-semibold text-gray-700"
+                >
+                  Reason
+                </label>
+                <Textarea
+                  id="reason"
+                  placeholder="Enter reasons for deadline change..."
+                  value={reasons}
+                  onChange={(e) => setReasons(e.target.value)}
+                  className="col-span-3 border-gray-200 focus:border-primary"
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsConfModalOpen(false)}
+                disabled={isPending}
+                className="border-gray-300 text-gray-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={onConfirmSubmit}
+                disabled={isPending || !reasons.trim()}
+                className="bg-primary hover:bg-primary-dark text-white font-medium"
+              >
+                {isPending ? "Confirming..." : "Confirm"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </FormProvider>
     </CompanyAccessGuard>
   );

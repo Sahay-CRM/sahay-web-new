@@ -29,6 +29,7 @@ interface ProjectCardProps {
     projectDocuments: { fileId: string; fileName: string }[],
     projectId: string,
   ) => void;
+  onEyeClick?: () => void;
 }
 
 export default function ProjectCard({
@@ -45,16 +46,13 @@ export default function ProjectCard({
   createdBy,
   deadlineRequest,
   onViewDocuments,
+  onEyeClick,
 }: ProjectCardProps) {
   const { zoom } = useZoom();
   const scale = zoom / 100;
   const navigate = useNavigate();
   const handleEdit = () => {
     navigate(`/dashboard/projects/edit/${projectId}`);
-  };
-
-  const handleView = () => {
-    navigate(`/dashboard/projects/view/${projectId}`);
   };
 
   return (
@@ -102,7 +100,7 @@ export default function ProjectCard({
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleView();
+                onEyeClick?.();
               }}
               className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
             >

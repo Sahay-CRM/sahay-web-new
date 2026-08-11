@@ -319,5 +319,6 @@ export default function useCheckIn() {
     handleAddSuggestedTask,
     pendingTasks,
     isLoadingPendingTasks,
+    planData: data,
   };
 }

@@ -4,6 +4,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import ProjectCard from "../projectCard";
+import { useNavigate } from "react-router-dom";
 
 export default function BoardColumn({
   column,
@@ -11,6 +12,7 @@ export default function BoardColumn({
   handleCardClick,
   handleViewDocuments,
 }: BoardColumnProps) {
+  const navigate = useNavigate();
   const { setNodeRef } = useDroppable({
     id: column.id,
     data: {
@@ -46,7 +48,7 @@ export default function BoardColumn({
             <div
               key={project.projectId}
               className="w-full cursor-pointer"
-              onClick={() => handleCardClick(project)}
+              onClick={() => navigate(`/dashboard/projects/view/${project.projectId}`)}
             >
               <ProjectCard
                 projectId={project.projectId}
@@ -62,6 +64,7 @@ export default function BoardColumn({
                 createdBy={project.createdBy}
                 deadlineRequest={project.deadlineRequest}
                 onViewDocuments={handleViewDocuments}
+                onEyeClick={() => handleCardClick(project)}
               />
             </div>
           ))}

@@ -35,6 +35,7 @@ import {
   getRepeatTypeOrCustomForRepeatMeeting,
 } from "@/components/shared/RepeatOption/repeatOption";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 import CustomModalFile from "@/components/shared/CustomModalRepeatMeeting";
@@ -196,9 +197,24 @@ interface GroupedCompanyMeetings {
         setCustomRepeatData(t.customObj);
       }
       setSelectedRepeat(getRepeatTypeOrCustomForRepeatMeeting(t));
+      if (t.duration && t.duration > 0) {
+        setValue("hasDuration", true);
+        const totalMinutes = Math.round(t.duration / 60);
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        setValue("durationHours", h > 0 ? String(h) : "");
+        setValue("durationMinutes", m > 0 ? String(m) : "");
+      } else {
+        setValue("hasDuration", false);
+        setValue("durationHours", "");
+        setValue("durationMinutes", "");
+      }
     } else {
       setValue("isActive", "active");
       setSelectedRepeat("");
+      setValue("hasDuration", false);
+      setValue("durationHours", "");
+      setValue("durationMinutes", "");
     }
   }, [
     repetitiveTaskId,
@@ -232,6 +248,10 @@ interface GroupedCompanyMeetings {
         0,
       ),
     );
+    const durationSeconds = data.hasDuration
+      ? ((Number(data.durationHours) || 0) * 60 + (Number(data.durationMinutes) || 0)) * 60
+      : null;
+
     const payload = data.repetitiveTaskId
       ? {
           repetitiveTaskId: repetitiveTaskId,
@@ -258,6 +278,7 @@ interface GroupedCompanyMeetings {
           repeatType: data.repeatType,
           customObj: data.customObj,
           isChildDataKey: data.additionalKey,
+          duration: durationSeconds,
         }
       : {
           taskName: data.taskName,
@@ -284,6 +305,7 @@ interface GroupedCompanyMeetings {
           repeatType: data.repeatType,
           // repeatType: data.repeatType.toUpperCase(),
           customObj: data.customObj,
+          duration: durationSeconds,
         };
 
     addUpdateTask(payload, {
@@ -612,6 +634,69 @@ interface GroupedCompanyMeetings {
                 </span>
               )}
             </div>
+
+            {/* Duration Option */}
+            <div className="flex items-center gap-3 mt-4 pt-2 border-t border-slate-100 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-semibold text-slate-700 select-none">Set Task Duration</Label>
+                <Switch
+                  checked={watch("hasDuration") || false}
+                  onCheckedChange={(checked) => {
+                    setValue("hasDuration", checked);
+                    if (!checked) {
+                      setValue("durationHours", "");
+                      setValue("durationMinutes", "");
+                    }
+                  }}
+                />
+              </div>
+
+              {(watch("hasDuration") || false) && (
+                <div className="flex items-center gap-2 ml-2 animate-in fade-in-50 slide-in-from-left-1 duration-150">
+                  {/* Hours */}
+                  <div className="flex items-baseline gap-1">
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="0"
+                      {...register("durationHours", {
+                        onChange: (e) => {
+                          const val = e.target.value;
+                          if (val !== "" && (Number(val) < 0 || val.includes("."))) {
+                            setValue("durationHours", "");
+                          }
+                        }
+                      })}
+                      className="w-10 text-center text-sm font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-primary focus:outline-none pb-0.5 placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="text-slate-500 font-medium text-xs">hr</span>
+                  </div>
+
+                  {/* Separator */}
+                  <span className="text-slate-300 text-sm font-light pb-0.5">:</span>
+
+                  {/* Minutes */}
+                  <div className="flex items-baseline gap-1">
+                    <input
+                      type="number"
+                      min={0}
+                      max={59}
+                      placeholder="00"
+                      {...register("durationMinutes", {
+                        onChange: (e) => {
+                          const val = e.target.value;
+                          if (val !== "" && (Number(val) < 0 || Number(val) > 59 || val.includes("."))) {
+                            setValue("durationMinutes", "");
+                          }
+                        }
+                      })}
+                      className="w-10 text-center text-sm font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-primary focus:outline-none pb-0.5 placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="text-slate-500 font-medium text-xs">min</span>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -747,7 +832,7 @@ interface GroupedCompanyMeetings {
                   </>
                 );
               }}
-            />
+            />            
 
             <div className="flex gap-4">
               <div className="w-1/2">

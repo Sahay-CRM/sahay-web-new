@@ -11,9 +11,11 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  Share2
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { formatMinutesToHours } from "@/features/utils/formatting.utils";
 import useCheckIn from "./useCheckIn";
 import useGetGanttItems from "@/features/api/gantt/useGetGanttItems";
@@ -66,6 +68,7 @@ export default function CheckIn() {
     handleDirectSubmitPlanningItem,
     pendingTasks,
     isLoadingPendingTasks,
+    planData,
   } = useCheckIn();
 
   const { data: ganttResponse, isLoading: isLoadingGantt } = useGetGanttItems({
@@ -76,6 +79,77 @@ export default function CheckIn() {
   const navigate = useNavigate();
   const allPermissions = useSelector(getUserPermission);
   const canEditCompanyProfile = allPermissions?.COMPANY_PROFILE?.Edit;
+
+  const handleShareCheckin = () => {
+    if (!items || items.length === 0) {
+      toast.error("No items to share!");
+      return;
+    }
+
+    let formattedDate = "";
+    try {
+      formattedDate = format(new Date(selectedDate), "dd/MM/yyyy");
+    } catch {
+      formattedDate = selectedDate;
+    }
+
+    const dataAny = planData?.data as any;
+    const timeLogAny = planData?.data?.timeLog as any;
+
+    const rawCheckin = 
+      timeLogAny?.checkinTime || 
+      dataAny?.checkinTime ||
+      timeLogAny?.createdDatetime ||
+      dataAny?.createdDatetime ||
+      timeLogAny?.submitTime ||
+      dataAny?.submitTime;
+    let checkinTimeStr = "-";
+    if (rawCheckin) {
+      try {
+        if (rawCheckin.includes("T") || rawCheckin.includes("-")) {
+          checkinTimeStr = format(new Date(rawCheckin), "hh:mm a").toLowerCase();
+        } else {
+          const [h, m] = rawCheckin.split(":");
+          const d = new Date();
+          d.setHours(parseInt(h) || 0, parseInt(m) || 0, 0, 0);
+          checkinTimeStr = format(d, "hh:mm a").toLowerCase();
+        }
+      } catch {
+        checkinTimeStr = rawCheckin;
+      }
+    }
+
+    const repetitive = items.filter((item: any) => item.createdBy === "SYSTEM" && item.type !== "MEETING");
+    const meetings = items.filter((item: any) => item.type === "MEETING");
+    const planned = items.filter((item: any) => item.createdBy !== "SYSTEM" && item.type !== "MEETING");
+
+    const summaryGroups = [
+      { displayName: "Repetitive Tasks", items: repetitive },
+      { displayName: "Meetings", items: meetings },
+      { displayName: "Planned Tasks", items: planned },
+    ].filter((group) => group.items.length > 0);
+
+    let text = `${formattedDate}\n\n`;
+    text += `Check-in: ${checkinTimeStr}\n\n\n`;
+
+    summaryGroups.forEach((group) => {
+      text += `${group.displayName} (${group.items.length})\n`;
+      group.items.forEach((item: any) => {
+        const title = item.title || item.task?.taskName || item.meeting?.meetingName || item.gantItem?.itemName || "Plan Item";
+        const durationStr = item.estimatedTime > 0 ? formatMinutesToHours(item.estimatedTime) : "—";
+        text += `• ${title}: ${durationStr}\n`;
+      });
+      text += `\n`;
+    });
+
+    navigator.clipboard.writeText(text.trim())
+      .then(() => {
+        toast.success("Check-in plan copied to clipboard!");
+      })
+      .catch(() => {
+        toast.error("Failed to copy check-in plan to clipboard.");
+      });
+  };
 
   const [isOpenTaskDrawer, setIsOpenTaskDrawer] = useState(false);
   const [isOpenMeetingDrawer, setIsOpenMeetingDrawer] = useState(false);
@@ -215,6 +289,15 @@ export default function CheckIn() {
 
           {/* Date Selector / Calendar at the top */}
           <div className="flex items-center gap-2">
+            {isSubmitted && selectedDate === todayDate && (
+              <Button
+                onClick={handleShareCheckin}
+                type="button"
+                className=" bg-emerald-600 hover:bg-emerald-700 text-white"
+              >
+                <Share2 className="h-4 w-4" /> Share Plan
+              </Button>
+            )}
             {/* Date Switcher Box */}
             <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white shadow-2xs py-0.5 px-1">
               <Button

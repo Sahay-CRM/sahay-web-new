@@ -682,6 +682,7 @@ interface AddUpdateTask {
   repetitiveTaskId?: string;
   ioType?: string;
   commentId?: string;
+  duration?: number | null;
 }
 
 interface TaskGetPaging {
@@ -831,6 +832,7 @@ interface Task {
   nextDate?: string;
   deadlineRequest?: string;
   companyId?: string;
+  duration?: number | null;
 }
 
 interface ProjectTask {
@@ -2098,7 +2100,11 @@ interface DailyPlanTimeLog {
   rating?: number | null;
   dayRating?: number | null;
   checkoutTime?: string | null;
-  remark?:string;
+  checkinTime?: string | null;
+  remarks?:string;
+  createdDatetime?: string | null;
+  updatedDatetime?: string | null;
+  submitTime?: string | null;
 }
 
 interface DailyPlan {
@@ -2108,15 +2114,19 @@ interface DailyPlan {
   dailyPlanItems: DailyPlanItem[];
   timeLogId?: string;
   checkoutTime?: string | null;
+  checkinTime?: string | null;
   submitTime?: string | null;
   isFinalSubmit?: boolean;
   isAutoSubmit?: boolean;
   rating?: number | null;
   dayRating?: number | null;
   timeLog?: DailyPlanTimeLog;
-  remark?:string;
+  remarks?:string;
   isCheckoutSubmitted?: boolean;
   id?: string;
+  remarks
+  createdDatetime?: string | null;
+  updatedDatetime?: string | null;
 }
 
 interface DailyPlanResponse {
