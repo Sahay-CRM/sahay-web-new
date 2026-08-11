@@ -2041,6 +2041,7 @@ interface DailyPlanItemTaskRef {
   taskDeadline?: string | null;
   dueDate?: string | null;
   assignees?: (string | DailyPlanUserRef)[] | null;
+  repetitiveTaskId?: string | null;
 }
 
 interface DailyPlanItemMeetingRef {
@@ -2088,11 +2089,13 @@ interface DailyPlanItem {
   historyRecords?: DailyPlanItemHistoryRecord[];
   isForwarded?: boolean;
   isPlanned?: boolean | null;
+  isRepeat?: boolean;
   submittedDate?: string | null;
   createdBy?: string;
   updatedBy?: string | null;
   createdDatetime?: string;
   updatedDatetime?: string;
+  forwardDate?: string | null;
 }
 
 interface DailyPlanTimeLog {
@@ -2124,7 +2127,6 @@ interface DailyPlan {
   remarks?:string;
   isCheckoutSubmitted?: boolean;
   id?: string;
-  remarks
   createdDatetime?: string | null;
   updatedDatetime?: string | null;
 }

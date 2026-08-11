@@ -111,10 +111,13 @@ export default function useCheckIn() {
         }
       }
 
+      const isRepeatTask = item.isRepeat || !!item.task?.repetitiveTaskId;
       return {
         ...item,
         type: item.type || derivedType,
-        estimatedTime: estTimeSec ? Math.round(estTimeSec / 60) : 0,
+        estimatedTime: estTimeSec
+          ? (isRepeatTask ? estTimeSec : Math.round(estTimeSec / 60))
+          : 0,
         actualTime: item.actualTime ? Math.round(item.actualTime / 60) : 0,
       };
     });

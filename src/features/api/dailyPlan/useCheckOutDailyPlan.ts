@@ -20,6 +20,7 @@ export interface CheckOutPayload {
     actualTime: number;
     remarks?: string;
     isPlaned: boolean;
+    forwardDate?: string;
   }[];
 }
 

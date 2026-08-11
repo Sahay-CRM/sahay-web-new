@@ -58,6 +58,7 @@ interface CheckoutItem {
   remarks?: string;
   joiners?: string[];
   isDetailMeeting?: boolean;
+  forwardDate?: string | null;
 }
 
 interface ExtendedDailyPlanItem extends DailyPlanItem {
@@ -457,8 +458,11 @@ export default function CheckOut() {
             }
           }
 
-          // Convert seconds from backend to minutes for UI fields
-          const plannedMinutes = estTimeSec ? Math.round(estTimeSec / 60) : 0;
+          // Convert seconds from backend to minutes for UI fields (except for repeat tasks which are already in minutes)
+          const isRepeatTask = item.isRepeat || !!item.task?.repetitiveTaskId;
+          const plannedMinutes = estTimeSec
+            ? (isRepeatTask ? estTimeSec : Math.round(estTimeSec / 60))
+            : 0;
           
           // Check if this item already exists in the previous local items state
           const existingItem = prevItems.find((prev) => prev.id === item.planItemId);
@@ -497,6 +501,7 @@ export default function CheckOut() {
             remarks: item.remarks || "",
             joiners: item.meeting?.joiners?.map((j: string | DailyPlanUserRef) => typeof j === "string" ? j : j.employeeName || j.name || "") || [],
             isDetailMeeting: isDetailM,
+            forwardDate: item.forwardDate || null,
           };
         });
       });
@@ -555,6 +560,14 @@ export default function CheckOut() {
       delete next[id];
       return next;
     });
+  };
+
+  const handleForwardDateChange = (id: string, dateStr: string | null) => {
+    setItems((prevItems) =>
+      prevItems.map((item) =>
+        item.id === id ? { ...item, forwardDate: dateStr } : item
+      )
+    );
   };
 
   // Handle manual input changes
@@ -644,6 +657,12 @@ export default function CheckOut() {
       const m = item.actualMinutes === "" ? 0 : Number(item.actualMinutes) || 0;
       const actualMins = h * 60 + m;
 
+      const isLogged = actualMins > 0;
+      let forwardDateVal: string | undefined = undefined;
+      if (!isLogged && !item.isDetailMeeting) {
+        forwardDateVal = item.forwardDate || format(addDays(new Date(selectedDate), 1), "yyyy-MM-dd");
+      }
+
       return {
         planItemId: item.id,
         taskId: item.taskId,
@@ -653,6 +672,7 @@ export default function CheckOut() {
         actualTime: actualMins * 60, // Convert minutes to seconds
         remarks: item.remarks || item.title,
         isPlaned: !item.isExtra,
+        forwardDate: forwardDateVal,
       };
     });
 
@@ -909,13 +929,14 @@ export default function CheckOut() {
                       <ArrowRightLeft className="h-3.5 w-3.5" /> 
                     </Button>
                   </TableHead>
-                  <TableHead className="py-3 pr-5 pl-2 text-center text-white font-semibold w-[130px] border-none">Actual Time</TableHead>
+                  <TableHead className="py-3 px-2 text-center text-white font-semibold w-[130px] border-none">Actual Time</TableHead>
+                  <TableHead className="py-3 pr-5 pl-2 text-center text-white font-semibold w-[140px] border-none">Forward Date</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-slate-100 text-black text-sm border-none">
                 {items.length === 0 ? (
                   <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={5} className="py-16 text-center text-slate-400 border-none">
+                    <TableCell colSpan={6} className="py-16 text-center text-slate-400 border-none">
                       <Clock className="h-10 w-10 text-slate-300 mx-auto mb-2" />
                       <p className="text-sm font-semibold">No planned tasks for today.</p>
                       <p className="text-sm text-slate-400 mt-1">Click "+ Extra Task" to add tasks manually.</p>
@@ -926,7 +947,7 @@ export default function CheckOut() {
                     <React.Fragment key={group.name}>
                       {/* Group Header Row */}
                       <TableRow className="bg-[#f8fbff] hover:bg-[#f8fbff] border-y border-blue-100/50">
-                        <TableCell colSpan={5} className="py-2.5 pl-5 pr-4 border-none">
+                        <TableCell colSpan={6} className="py-2.5 pl-5 pr-4 border-none">
                           <div className="flex items-center gap-2">
                             <h2 className="text-[15px] font-bold text-primary tracking-tight">
                               {group.displayName}
@@ -1046,6 +1067,34 @@ export default function CheckOut() {
                                   )}
                                 </div>
                               </div>
+                            </TableCell>
+
+                            {/* Forward Date Column */}
+                            <TableCell className={`py-2.5 text-sm pr-5 pl-2 text-center border-none w-[140px] ${timeBgClass}`}>
+                              {!item.isDetailMeeting ? (
+                                isEditable ? (
+                                  !isLogged ? (
+                                    <div className="inline-flex items-center justify-center">
+                                      <SingleCalendarDatePicker
+                                        value={item.forwardDate ? new Date(item.forwardDate) : addDays(new Date(selectedDate), 1)}
+                                        onChange={(date) => 
+                                          handleForwardDateChange(item.id, date ? format(date, "yyyy-MM-dd") : null)
+                                        }
+                                        minDate={addDays(new Date(selectedDate), 1)}
+                                        variant="ghost"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <span className="text-slate-400 font-medium">-</span>
+                                  )
+                                ) : (
+                                  <span className="text-slate-700 font-medium">
+                                    {item.forwardDate ? formatItemDate(item.forwardDate) : "-"}
+                                  </span>
+                                )
+                              ) : (
+                                <span className="text-slate-400 font-medium">-</span>
+                              )}
                             </TableCell>
                           </TableRow>
                         );

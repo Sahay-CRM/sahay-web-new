@@ -1,0 +1,296 @@
+{
+  "workableTemplates": [
+    {
+      "templateName": "Weekly Overdue Tasks Report",
+      "templateDescription": "Summary of active tasks that have passed their deadline without completion.",
+      "industryId": "b97eb787-d47d-48fa-8db0-7bce16dc259b",
+      "isDefault": true,
+      "reportConfig": {
+        "sort": {
+          "field": "taskDeadline",
+          "order": "asc"
+        },
+        "module": "TASK",
+        "columns": [
+          "assignedTo",
+          "taskName",
+          "status",
+          "taskDeadline",
+          "taskStartDate"
+        ],
+        "filters": [
+          {
+            "field": "taskDeadline",
+            "operator": "<",
+            "value": "NOW"
+          },
+          {
+            "field": "taskActualEndDate",
+            "operator": "NULL"
+          },
+          {
+            "field": "isNotApplicable",
+            "operator": "FALSE"
+          }
+        ],
+        "groupBy": "assignedTo",
+        "viewType": "FULL",
+        "chartConfig": [
+          {
+            "type": "bar",
+            "title": "Overdue Tasks by Assignee",
+            "xAxis": "assignedTo",
+            "yAxis": "count"
+          }
+        ]
+      }
+    },
+    {
+      "templateName": "Monthly Task Status Breakdown",
+      "templateDescription": "Breakdown of task status volumes and percentages for the current month.",
+      "industryId": "b97eb787-d47d-48fa-8db0-7bce16dc259b",
+      "isDefault": true,
+      "reportConfig": {
+        "sort": {
+          "field": "createdDatetime",
+          "order": "desc"
+        },
+        "module": "TASK",
+        "columns": [
+          "taskName",
+          "status",
+          "taskDeadline",
+          "assignedTo",
+          "repetitiveTaskId"
+        ],
+        "filters": [
+          {
+            "field": "createdDatetime",
+            "operator": "THIS_MONTH"
+          },
+          {
+            "field": "isNotApplicable",
+            "operator": "FALSE"
+          }
+        ],
+        "groupBy": "status",
+        "viewType": "FULL",
+        "chartConfig": [
+          {
+            "type": "pie",
+            "title": "Current Month Task Status Distribution",
+            "metric": "count",
+            "dimension": "status"
+          }
+        ]
+      }
+    },
+    {
+      "templateName": "Task Type Distribution Report",
+      "templateDescription": "Analyzes the distribution of task volumes grouped by task type.",
+      "industryId": "b97eb787-d47d-48fa-8db0-7bce16dc259b",
+      "isDefault": false,
+      "reportConfig": {
+        "sort": {
+          "field": "createdDatetime",
+          "order": "desc"
+        },
+        "module": "TASK",
+        "columns": [
+          "taskName",
+          "taskType",
+          "status",
+          "assignedTo"
+        ],
+        "filters": [
+          {
+            "field": "isNotApplicable",
+            "operator": "FALSE"
+          }
+        ],
+        "groupBy": "taskType",
+        "viewType": "FULL",
+        "chartConfig": [
+          {
+            "type": "pie",
+            "title": "Task Category Distribution",
+            "metric": "count",
+            "dimension": "taskType"
+          }
+        ]
+      }
+    },
+    {
+      "templateName": "Completed Tasks Performance Report",
+      "templateDescription": "List of tasks completed in the last 30 days grouped by assignee.",
+      "industryId": "b97eb787-d47d-48fa-8db0-7bce16dc259b",
+      "isDefault": false,
+      "reportConfig": {
+        "sort": {
+          "field": "taskActualEndDate",
+          "order": "desc"
+        },
+        "module": "TASK",
+        "columns": [
+          "taskName",
+          "taskStartDate",
+          "taskActualEndDate",
+          "assignedTo",
+          "status"
+        ],
+        "filters": [
+          {
+            "field": "taskActualEndDate",
+            "operator": "LAST_30_DAYS"
+          }
+        ],
+        "groupBy": "assignedTo",
+        "viewType": "FULL",
+        "chartConfig": [
+          {
+            "type": "bar",
+            "title": "Completed Tasks by Employee",
+            "xAxis": "assignedTo",
+            "yAxis": "count"
+          }
+        ]
+      }
+    },
+    {
+      "templateName": "Not Applicable Tasks Audit Report",
+      "templateDescription": "Audit report listing all tasks marked as Not Applicable.",
+      "industryId": "b97eb787-d47d-48fa-8db0-7bce16dc259b",
+      "isDefault": false,
+      "reportConfig": {
+        "sort": {
+          "field": "updatedDatetime",
+          "order": "desc"
+        },
+        "module": "TASK",
+        "columns": [
+          "taskName",
+          "taskDescription",
+          "updatedDatetime",
+          "status",
+          "assignedTo"
+        ],
+        "filters": [
+          {
+            "field": "isNotApplicable",
+            "operator": "TRUE"
+          }
+        ],
+        "groupBy": "status",
+        "viewType": "FULL",
+        "chartConfig": [
+          {
+            "type": "bar",
+            "title": "Not Applicable Tasks by Status",
+            "xAxis": "status",
+            "yAxis": "count"
+          }
+        ]
+      }
+    }
+  ],
+  "unworkableTemplates": [
+    {
+      "templateName": "Task Productivity by Department",
+      "templateDescription": "Aggregates task status counts based on the department of the assigned employee.",
+      "reportConfig": {
+        "module": "TASK",
+        "columns": [
+          "taskName",
+          "departmentName",
+          "status",
+          "assignedTo"
+        ],
+        "filters": [],
+        "groupBy": "departmentId",
+        "chartConfig": [
+          {
+            "type": "bar",
+            "title": "Task Volume by Department",
+            "xAxis": "departmentId",
+            "yAxis": "count"
+          }
+        ]
+      },
+      "unsupportableReason": "No direct relationship exists between CompanyTaskMaster and Department. Tasks are linked to employees via the TaskEmployeeJunction table. Grouping by department at the query level is not natively possible in Prisma without mapping through employees first."
+    },
+    {
+      "templateName": "Project-wise Task Tracking",
+      "templateDescription": "Tracks task counts and status breakdowns for each project.",
+      "reportConfig": {
+        "module": "TASK",
+        "columns": [
+          "taskName",
+          "projectName",
+          "status"
+        ],
+        "filters": [],
+        "groupBy": "projectId",
+        "chartConfig": [
+          {
+            "type": "bar",
+            "title": "Project Task Progress",
+            "xAxis": "projectId",
+            "yAxis": "count"
+          }
+        ]
+      },
+      "unsupportableReason": "Standard tasks (CompanyTaskMaster) are linked to projects (CompanyProjectMaster) via a junction table (ProjectTaskJunction) rather than a direct foreign key. Prisma cannot group by a column (projectId) that does not exist directly on the primary model."
+    },
+    {
+      "templateName": "Average Task Completion Cycle Time",
+      "templateDescription": "Analyzes the average time difference between task start dates and completion dates.",
+      "reportConfig": {
+        "module": "TASK",
+        "columns": [
+          "taskName",
+          "assignedTo",
+          "completionCycleDays"
+        ],
+        "filters": [
+          {
+            "field": "taskActualEndDate",
+            "operator": "NOT_NULL"
+          }
+        ],
+        "groupBy": "assignedTo",
+        "chartConfig": [
+          {
+            "type": "bar",
+            "title": "Average Completion Days by Employee",
+            "xAxis": "assignedTo",
+            "yAxis": "avgCompletionDays"
+          }
+        ]
+      },
+      "unsupportableReason": "Prisma cannot calculate dynamic fields (e.g. completionCycleDays = taskActualEndDate - taskStartDate) or run mathematical aggregates on calculated values at query time. The schema lacks a physical field for cycle times."
+    },
+    {
+      "templateName": "Task Creator Activity Report",
+      "templateDescription": "Tracks the volume and status of tasks created by each manager or supervisor.",
+      "reportConfig": {
+        "module": "TASK",
+        "columns": [
+          "taskName",
+          "createdByEmployeeName",
+          "status"
+        ],
+        "filters": [],
+        "groupBy": "employeeId",
+        "chartConfig": [
+          {
+            "type": "bar",
+            "title": "Tasks Created by Supervisor",
+            "xAxis": "employeeId",
+            "yAxis": "count"
+          }
+        ]
+      },
+      "unsupportableReason": "While the creator ID (employeeId) exists in the CompanyTaskMaster model, there is no corresponding database relation constraint pointing to CompanyEmployee in the schema, making it impossible for Prisma to resolve the creator's name."
+    }
+  ]
+}

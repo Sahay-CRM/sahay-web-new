@@ -199,7 +199,7 @@ interface GroupedCompanyMeetings {
       setSelectedRepeat(getRepeatTypeOrCustomForRepeatMeeting(t));
       if (t.duration && t.duration > 0) {
         setValue("hasDuration", true);
-        const totalMinutes = Math.round(t.duration / 60);
+        const totalMinutes = t.duration;
         const h = Math.floor(totalMinutes / 60);
         const m = totalMinutes % 60;
         setValue("durationHours", h > 0 ? String(h) : "");
@@ -248,8 +248,8 @@ interface GroupedCompanyMeetings {
         0,
       ),
     );
-    const durationSeconds = data.hasDuration
-      ? ((Number(data.durationHours) || 0) * 60 + (Number(data.durationMinutes) || 0)) * 60
+    const durationMinutes = data.hasDuration
+      ? (Number(data.durationHours) || 0) * 60 + (Number(data.durationMinutes) || 0)
       : null;
 
     const payload = data.repetitiveTaskId
@@ -278,7 +278,7 @@ interface GroupedCompanyMeetings {
           repeatType: data.repeatType,
           customObj: data.customObj,
           isChildDataKey: data.additionalKey,
-          duration: durationSeconds,
+          duration: durationMinutes,
         }
       : {
           taskName: data.taskName,
@@ -305,7 +305,7 @@ interface GroupedCompanyMeetings {
           repeatType: data.repeatType,
           // repeatType: data.repeatType.toUpperCase(),
           customObj: data.customObj,
-          duration: durationSeconds,
+          duration: durationMinutes,
         };
 
     addUpdateTask(payload, {

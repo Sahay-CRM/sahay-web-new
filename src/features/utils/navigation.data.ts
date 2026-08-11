@@ -56,7 +56,7 @@ export const companyNavigationData = [
       {
         id: 5,
         icon: "Users",
-        label: "Sahay Teammate",
+        label: "Supports",
         link: "/dashboard/sahay-teammate",
         permission: "View",
         moduleKey: "SAHAY_EMP",

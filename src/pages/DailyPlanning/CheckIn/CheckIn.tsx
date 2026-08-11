@@ -279,10 +279,10 @@ export default function CheckIn() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full h-full flex flex-col px-2 sm:px-3 py-3 overflow-y-auto bg-slate-50/50">
+      <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 overflow-y-auto bg-slate-50/50">
         
         {/* Title Header */}
-        <div className="flex items-center justify-between mb-4 shrink-0 flex-wrap gap-4 px-1">
+        <div className="flex items-center justify-between mb-6 shrink-0 flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold tracking-tight text-slate-800">Check-in</h1>
           </div>
