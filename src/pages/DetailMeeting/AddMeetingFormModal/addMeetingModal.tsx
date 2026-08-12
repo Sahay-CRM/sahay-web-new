@@ -27,7 +27,6 @@ const AddMeetingModal: React.FC<MeetingModalProps> = ({
     modalData?.meetingTypeName ||
     meetingType?.meetingTypeName ||
     meetingTypeId?.meetingTypeName;
-console.log(modalData)
   return (
     <ModalData
       isModalOpen={isModalOpen}

@@ -23,7 +23,7 @@ import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { format, subDays, addDays } from "date-fns";
 import { formatMinutesToHours } from "@/features/utils/formatting.utils";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
-import { getUserId } from "@/features/selectors/auth.selector";
+import { getUserId, getUserDetail } from "@/features/selectors/auth.selector";
 import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
 import useCheckOutDailyPlan from "@/features/api/dailyPlan/useCheckOutDailyPlan";
 import useAddDailyPlanItem from "@/features/api/dailyPlan/useAddDailyPlanItem";
@@ -183,6 +183,22 @@ export default function CheckOut() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isConfirmSubmitOpen, setIsConfirmSubmitOpen] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
+
+  const showForwardDateCol = useMemo(() => {
+    return !isEditable ? items.some((item) => item.forwardDate) : showValidationErrors;
+  }, [isEditable, items, showValidationErrors]);
+
+  const user = useSelector(getUserDetail);
+
+  const companyWorkingMinutes = useMemo(() => {
+    if (!user?.companyStartTime || !user?.companyEndTime) return 0;
+    const [startH, startM] = user.companyStartTime.split(":").map(Number);
+    const [endH, endM] = user.companyEndTime.split(":").map(Number);
+    if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return 0;
+    let diff = (endH * 60 + endM) - (startH * 60 + startM);
+    if (diff < 0) diff += 24 * 60;
+    return diff;
+  }, [user?.companyStartTime, user?.companyEndTime]);
 
   // Sync rating state with fetched backend rating
   useEffect(() => {
@@ -390,8 +406,8 @@ export default function CheckOut() {
 
   const totalActualMinutes = useMemo(() => {
     return items.reduce((acc, item) => {
-      const h = typeof item.actualHours === "number" ? Number(item.actualHours) : 0;
-      const m = typeof item.actualMinutes === "number" ? Number(item.actualMinutes) : 0;
+      const h = item.actualHours === "" ? 0 : Number(item.actualHours) || 0;
+      const m = item.actualMinutes === "" ? 0 : Number(item.actualMinutes) || 0;
       return acc + (h * 60 + m);
     }, 0);
   }, [items]);
@@ -516,8 +532,9 @@ export default function CheckOut() {
 
   // Copy all planned times into actual times
   const handleCopyAll = () => {
-    setItems((prevItems) =>
-      prevItems.map((item) => {
+    setItems((prevItems) => {
+      let accumulatedMins = 0;
+      return prevItems.map((item) => {
         if (item.isDetailMeeting) return item; // Skip detail meetings
         if (item.plannedTimeMinutes <= 0) {
           return {
@@ -526,26 +543,57 @@ export default function CheckOut() {
             actualMinutes: "",
           };
         }
-        const hours = Math.floor(item.plannedTimeMinutes / 60) || "";
-        const mins = (item.plannedTimeMinutes % 60) || "";
+        let copyMins = item.plannedTimeMinutes;
+        const remaining = 1440 - accumulatedMins;
+        if (remaining <= 0) {
+          return {
+            ...item,
+            actualHours: "",
+            actualMinutes: "",
+          };
+        }
+        if (copyMins > remaining) {
+          copyMins = remaining;
+        }
+        accumulatedMins += copyMins;
+        const hours = Math.floor(copyMins / 60) || "";
+        const mins = (copyMins % 60) || "";
         return {
           ...item,
           actualHours: hours,
           actualMinutes: mins,
         };
-      })
-    );
+      });
+    });
     setValidationErrors({});
   };
 
   // Copy single planned time to actual time
   const handleCopySingle = (id: string) => {
-    setItems((prevItems) =>
-      prevItems.map((item) => {
+    setItems((prevItems) => {
+      const otherItemsMins = prevItems.reduce((acc, item) => {
+        if (item.id === id) return acc;
+        const h = item.actualHours === "" ? 0 : Number(item.actualHours) || 0;
+        const m = item.actualMinutes === "" ? 0 : Number(item.actualMinutes) || 0;
+        return acc + (h * 60 + m);
+      }, 0);
+
+      const maxMins = 1440 - otherItemsMins;
+      if (maxMins <= 0) {
+        toast.error("Total logged time cannot exceed 24 hours!");
+        return prevItems;
+      }
+
+      return prevItems.map((item) => {
         if (item.id === id) {
           if (item.isDetailMeeting) return item; // Skip detail meetings
-          const hours = Math.floor(item.plannedTimeMinutes / 60) || "";
-          const mins = (item.plannedTimeMinutes % 60) || "";
+          let copyMins = item.plannedTimeMinutes;
+          if (copyMins > maxMins) {
+            toast.error("Total logged time cannot exceed 24 hours! Capped copied time.");
+            copyMins = maxMins;
+          }
+          const hours = Math.floor(copyMins / 60) || "";
+          const mins = (copyMins % 60) || "";
           return {
             ...item,
             actualHours: hours,
@@ -553,8 +601,8 @@ export default function CheckOut() {
           };
         }
         return item;
-      })
-    );
+      });
+    });
     setValidationErrors((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -573,10 +621,51 @@ export default function CheckOut() {
   // Handle manual input changes
   const handleHoursChange = (id: string, val: string) => {
     const cleanVal = val.slice(0, 2);
-    const num = cleanVal === "" || cleanVal === "0" ? "" : Math.max(0, Math.min(12, parseInt(cleanVal) || 0));
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, actualHours: num } : item))
-    );
+    if (cleanVal === "" || cleanVal === "0") {
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, actualHours: "" } : item))
+      );
+      return;
+    }
+
+    setItems((prev) => {
+      const otherItemsMins = prev.reduce((acc, item) => {
+        if (item.id === id) return acc;
+        const h = item.actualHours === "" ? 0 : Number(item.actualHours) || 0;
+        const m = item.actualMinutes === "" ? 0 : Number(item.actualMinutes) || 0;
+        return acc + (h * 60 + m);
+      }, 0);
+
+      const maxMins = 1440 - otherItemsMins;
+      if (maxMins <= 0) {
+        toast.error("Total logged time cannot exceed 24 hours!");
+        return prev.map((item) => (item.id === id ? { ...item, actualHours: "", actualMinutes: "" } : item));
+      }
+
+      let hInput = Math.max(0, Math.min(24, parseInt(cleanVal) || 0));
+      const currentM = prev.find((item) => item.id === id)?.actualMinutes;
+      const mVal = currentM === "" ? 0 : Number(currentM) || 0;
+
+      if (hInput * 60 + mVal > maxMins) {
+        toast.error("Total logged time cannot exceed 24 hours!");
+        hInput = Math.floor(maxMins / 60);
+        const cappedM = maxMins % 60;
+        return prev.map((item) =>
+          item.id === id
+            ? {
+                ...item,
+                actualHours: hInput || "",
+                actualMinutes: cappedM || "",
+              }
+            : item
+        );
+      }
+
+      return prev.map((item) =>
+        item.id === id ? { ...item, actualHours: hInput || "" } : item
+      );
+    });
+
     setValidationErrors((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -586,10 +675,57 @@ export default function CheckOut() {
 
   const handleMinutesChange = (id: string, val: string) => {
     const cleanVal = val.slice(0, 2);
-    const num = cleanVal === "" || cleanVal === "0" ? "" : Math.max(0, Math.min(59, parseInt(cleanVal) || 0));
-    setItems((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, actualMinutes: num } : item))
-    );
+    if (cleanVal === "" || cleanVal === "0") {
+      setItems((prev) =>
+        prev.map((item) => (item.id === id ? { ...item, actualMinutes: "" } : item))
+      );
+      return;
+    }
+
+    setItems((prev) => {
+      const otherItemsMins = prev.reduce((acc, item) => {
+        if (item.id === id) return acc;
+        const h = item.actualHours === "" ? 0 : Number(item.actualHours) || 0;
+        const m = item.actualMinutes === "" ? 0 : Number(item.actualMinutes) || 0;
+        return acc + (h * 60 + m);
+      }, 0);
+
+      const maxMins = 1440 - otherItemsMins;
+      if (maxMins <= 0) {
+        toast.error("Total logged time cannot exceed 24 hours!");
+        return prev.map((item) => (item.id === id ? { ...item, actualHours: "", actualMinutes: "" } : item));
+      }
+
+      let mInput = Math.max(0, Math.min(59, parseInt(cleanVal) || 0));
+      const currentH = prev.find((item) => item.id === id)?.actualHours;
+      const hVal = currentH === "" ? 0 : Number(currentH) || 0;
+
+      if (hVal * 60 + mInput > maxMins) {
+        toast.error("Total logged time cannot exceed 24 hours!");
+        mInput = maxMins - hVal * 60;
+        if (mInput < 0) {
+          const cappedH = Math.floor(maxMins / 60);
+          const cappedM = maxMins % 60;
+          return prev.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  actualHours: cappedH || "",
+                  actualMinutes: cappedM || "",
+                }
+              : item
+          );
+        }
+        return prev.map((item) =>
+          item.id === id ? { ...item, actualMinutes: mInput || "" } : item
+        );
+      }
+
+      return prev.map((item) =>
+        item.id === id ? { ...item, actualMinutes: mInput || "" } : item
+      );
+    });
+
     setValidationErrors((prev) => {
       const next = { ...prev };
       delete next[id];
@@ -924,19 +1060,21 @@ export default function CheckOut() {
                       size="sm"
                       onClick={handleCopyAll}
                       disabled={items.length === 0 || !isEditable}
-                      className="h-8 w-8 p-0 text-white hover:bg-white/10 text-xs font-bold cursor-pointer rounded-lg flex items-center justify-center mx-auto"
+                      className="h-8 w-8 p-0 text-white hover:bg-white text-xs font-bold cursor-pointer rounded-lg flex items-center justify-center mx-auto"
                     >
                       <ArrowRightLeft className="h-3.5 w-3.5" /> 
                     </Button>
                   </TableHead>
                   <TableHead className="py-3 px-2 text-center text-white font-semibold w-[130px] border-none">Actual Time</TableHead>
-                  <TableHead className="py-3 pr-5 pl-2 text-center text-white font-semibold w-[140px] border-none">Forward Date</TableHead>
+                  {showForwardDateCol && (
+                    <TableHead className="py-3 pr-5 pl-2 text-center text-white font-semibold w-[140px] border-none">Forward Date</TableHead>
+                  )}
                 </TableRow>
               </TableHeader>
               <TableBody className="divide-y divide-slate-100 text-black text-sm border-none">
                 {items.length === 0 ? (
                   <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={6} className="py-16 text-center text-slate-400 border-none">
+                    <TableCell colSpan={showForwardDateCol ? 6 : 5} className="py-16 text-center text-slate-400 border-none">
                       <Clock className="h-10 w-10 text-slate-300 mx-auto mb-2" />
                       <p className="text-sm font-semibold">No planned tasks for today.</p>
                       <p className="text-sm text-slate-400 mt-1">Click "+ Extra Task" to add tasks manually.</p>
@@ -947,7 +1085,7 @@ export default function CheckOut() {
                     <React.Fragment key={group.name}>
                       {/* Group Header Row */}
                       <TableRow className="bg-[#f8fbff] hover:bg-[#f8fbff] border-y border-blue-100/50">
-                        <TableCell colSpan={6} className="py-2.5 pl-5 pr-4 border-none">
+                        <TableCell colSpan={showForwardDateCol ? 6 : 5} className="py-2.5 pl-5 pr-4 border-none">
                           <div className="flex items-center gap-2">
                             <h2 className="text-[15px] font-bold text-primary tracking-tight">
                               {group.displayName}
@@ -1023,7 +1161,7 @@ export default function CheckOut() {
 
                              {/* Copy button */}
                             <TableCell className={`py-2.5 px-1 text-sm text-center border-none w-[40px] ${timeBgClass}`}>
-                              {!item.isDetailMeeting && (
+                              {!item.isDetailMeeting && item.plannedTimeMinutes > 0 && (
                                 <button
                                   type="button"
                                   onClick={() => handleCopySingle(item.id)}
@@ -1031,7 +1169,7 @@ export default function CheckOut() {
                                   className="h-7 w-7 mx-auto border border-slate-200 hover:enabled:border-primary/50 text-slate-400 hover:enabled:text-primary rounded-full inline-flex items-center justify-center transition-colors bg-white shadow-3xs disabled:cursor-default"
                                   title="Copy planned to actual"
                                 >
-                                  <ArrowRight className="h-4 w-4 text-primary" />
+                                  <ArrowRight className="h-4 w-4 text-current" />
                                 </button>
                               )}
                             </TableCell>
@@ -1070,32 +1208,34 @@ export default function CheckOut() {
                             </TableCell>
 
                             {/* Forward Date Column */}
-                            <TableCell className={`py-2.5 text-sm pr-5 pl-2 text-center border-none w-[140px] ${timeBgClass}`}>
-                              {!item.isDetailMeeting ? (
-                                isEditable ? (
-                                  !isLogged ? (
-                                    <div className="inline-flex items-center justify-center">
-                                      <SingleCalendarDatePicker
-                                        value={item.forwardDate ? new Date(item.forwardDate) : addDays(new Date(selectedDate), 1)}
-                                        onChange={(date) => 
-                                          handleForwardDateChange(item.id, date ? format(date, "yyyy-MM-dd") : null)
-                                        }
-                                        minDate={addDays(new Date(selectedDate), 1)}
-                                        variant="ghost"
-                                      />
-                                    </div>
+                            {showForwardDateCol && (
+                              <TableCell className={`py-2.5 text-sm pr-5 pl-2 text-center border-none w-[140px] ${timeBgClass}`}>
+                                {!item.isDetailMeeting ? (
+                                  isEditable ? (
+                                    !isLogged && showValidationErrors ? (
+                                      <div className="inline-flex items-center justify-center">
+                                        <SingleCalendarDatePicker
+                                          value={item.forwardDate ? new Date(item.forwardDate) : addDays(new Date(selectedDate), 1)}
+                                          onChange={(date) => 
+                                            handleForwardDateChange(item.id, date ? format(date, "yyyy-MM-dd") : null)
+                                          }
+                                          minDate={addDays(new Date(selectedDate), 1)}
+                                          variant="ghost"
+                                        />
+                                      </div>
+                                    ) : (
+                                      <span className="text-slate-400 font-medium">-</span>
+                                    )
                                   ) : (
-                                    <span className="text-slate-400 font-medium">-</span>
+                                    <span className="text-slate-700 font-medium">
+                                      {item.forwardDate ? formatItemDate(item.forwardDate) : "-"}
+                                    </span>
                                   )
                                 ) : (
-                                  <span className="text-slate-700 font-medium">
-                                    {item.forwardDate ? formatItemDate(item.forwardDate) : "-"}
-                                  </span>
-                                )
-                              ) : (
-                                <span className="text-slate-400 font-medium">-</span>
-                              )}
-                            </TableCell>
+                                  <span className="text-slate-400 font-medium">-</span>
+                                )}
+                              </TableCell>
+                            )}
                           </TableRow>
                         );
                       })}
@@ -1128,7 +1268,7 @@ export default function CheckOut() {
                <div className="grid grid-cols-2 gap-4 shrink-0">
                  {/* Total Planned Time */}
                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col text-left shadow-2xs">
-                   <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider">Planned Time</span>
+                   <span className="text-[12px] font-bold text-slate-500  tracking-wider">Planned Time</span>
                    <span className="text-[15px] font-extrabold text-slate-800 mt-1.5 truncate" title={formatMinutesToHours(totalPlannedMinutes)}>
                      {formatMinutesToHours(totalPlannedMinutes)}
                    </span>
@@ -1136,13 +1276,24 @@ export default function CheckOut() {
 
                  {/* Total Logged Time */}
                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col text-left shadow-2xs">
-                   <span className="text-[12px] font-bold text-slate-500 uppercase tracking-wider">Logged Time</span>
+                   <span className="text-[12px] font-bold text-slate-500  tracking-wider">Logged Time</span>
                    <span className="text-[15px] font-extrabold text-slate-800 mt-1.5 truncate" title={totalActualMinutes > 0 ? formatMinutesToHours(totalActualMinutes) : "-"}>
                      {totalActualMinutes > 0 ? formatMinutesToHours(totalActualMinutes) : "-"}
                    </span>
                  </div>
                </div>
 
+                {companyWorkingMinutes > 0 && totalActualMinutes > companyWorkingMinutes && (
+                  <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-900 flex items-start gap-3 shadow-2xs transition-all duration-300 shrink-0">
+                    <TriangleAlert className="h-5 w-5 text-rose-500 shrink-0 mt-0.5" />
+                    <div className="flex-1 space-y-1 text-left">
+                      <p className="font-bold text-sm leading-none">Overtime </p>
+                      <p className="text-xs text-rose-700 leading-relaxed font-medium">
+                        Your total logged time ({formatMinutesToHours(totalActualMinutes)}) exceeds the company's daily working hours ({formatMinutesToHours(companyWorkingMinutes)}).
+                      </p>
+                    </div>
+                  </div>
+                )}
               {/* Productivity Rating Section */}
               <div className="space-y-3 pt-2 shrink-0">
                 <div>
