@@ -113,14 +113,24 @@ export default function useCheckIn() {
 
       const isRepeatTask = item.isRepeat || !!item.task?.repetitiveTaskId;
       const isDetailMeeting = Boolean(item.isDetailMeeting || (item.meetingId && item.meeting?.detailMeetingStatus));
+
+      let estTimeMins = 0;
+      if (estTimeSec) {
+        if (derivedType === "MEETING" && !isDetailMeeting) {
+          estTimeMins = estTimeSec;
+        } else {
+          estTimeMins = isRepeatTask ? estTimeSec : Math.round(estTimeSec / 60);
+        }
+      }
+
       return {
         ...item,
         type: item.type || derivedType,
         isDetailMeeting,
-        estimatedTime: estTimeSec
-          ? (isRepeatTask ? estTimeSec : Math.round(estTimeSec / 60))
+        estimatedTime: estTimeMins,
+        actualTime: item.actualTime
+          ? (derivedType === "MEETING" && isDetailMeeting ? item.actualTime : Math.round(item.actualTime / 60))
           : 0,
-        actualTime: item.actualTime ? Math.round(item.actualTime / 60) : 0,
       };
     });
   }, [data]);
