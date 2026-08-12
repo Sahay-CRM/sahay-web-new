@@ -285,17 +285,28 @@ export default function CheckIn() {
         <div className="flex items-center justify-between mb-6 shrink-0 flex-wrap gap-4">
           <div className="flex items-center gap-4">
             <h1 className="text-2xl font-bold tracking-tight text-slate-800">Check-in</h1>
-          </div>
-
-          {/* Date Selector / Calendar at the top */}
-          <div className="flex items-center gap-2">
-            {isSubmitted && selectedDate === todayDate && (
+            {isSubmitted && (
               <Button
                 onClick={handleShareCheckin}
                 type="button"
                 className=" bg-emerald-600 hover:bg-emerald-700 text-white"
               >
                 <Share2 className="h-4 w-4" /> Share Plan
+              </Button>
+            )}
+          </div>
+
+          {/* Date Selector / Calendar at the top */}
+          <div className="flex items-center gap-2">
+            
+             {selectedDate !== todayDate && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-9 px-3 text-sm cursor-pointer border-slate-200 hover:bg-slate-50 font-semibold"
+                onClick={() => goToDate(new Date())}
+              >
+                Today
               </Button>
             )}
             {/* Date Switcher Box */}
@@ -333,16 +344,7 @@ export default function CheckIn() {
               </Button>
             </div>
 
-            {selectedDate !== todayDate && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 px-3 text-sm cursor-pointer border-slate-200 hover:bg-slate-50 font-semibold"
-                onClick={() => goToDate(new Date())}
-              >
-                Today
-              </Button>
-            )}
+           
           </div>
         </div>
 
@@ -814,9 +816,16 @@ export default function CheckIn() {
                 ) : (
                   pendingTasks.map((task: any) => (
                     <div key={task.taskId} className="flex items-center justify-between py-2 px-1 hover:bg-slate-50/50 rounded-md transition-colors">
-                      <span className="text-sm font-normal leading-normal pr-3 flex-1 min-w-0" title={task.taskName}>
-                        {task.taskName}
-                      </span>
+                      <div className="flex-1 min-w-0 pr-3 flex items-center gap-2">
+                        <span className="text-sm font-semibold text-black truncate" title={task.taskName}>
+                          {task.taskName}
+                        </span>
+                        {task.projectName && (
+                          <span className="text-sm text-slate-800 font-normal truncate" title={task.projectName}>
+                            ({task.projectName})
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <Button
                           size="icon"
@@ -861,9 +870,16 @@ export default function CheckIn() {
                 ) : (
                   ganttItems.map((task: any) => (
                     <div key={task.ganttItemId} className="flex items-center justify-between py-2 px-1 hover:bg-slate-50/50 rounded-md transition-colors">
-                      <span className="text-sm font-normal text-slate-700 leading-normal pr-3 flex-1 min-w-0" title={task.itemName}>
-                        {task.itemName}
-                      </span>
+                      <div className="flex-1 min-w-0 pr-3 flex items-center gap-2">
+                        <span className="text-sm font-semibold text-black truncate" title={task.itemName}>
+                          {task.itemName}
+                        </span>
+                        {task.workspaceName && (
+                          <span className="text-sm text-slate-800 font-normal truncate" title={task.workspaceName}>
+                            ({task.workspaceName})
+                          </span>
+                        )}
+                      </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <Button
                           size="icon"

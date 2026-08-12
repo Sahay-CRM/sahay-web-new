@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
@@ -15,6 +15,10 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import ProjectTaskDrawer from "./projectTaskDrawer";
 
 import { useAllCompanyTask } from "@/features/api/companyTask";
+import {
+  useGetCompanyProjectById,
+  useGetAllProjectStatus,
+} from "@/features/api/companyProject";
 import { formatToLocalDateTime, getInitials } from "@/features/utils/app.utils";
 import { queryClient } from "@/queryClient";
 import { getUserPermission } from "@/features/selectors/auth.selector";
@@ -35,7 +39,7 @@ export default function ProjectTaskList({
   const taskPermission = useSelector(getUserPermission).TASK;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [selectedTaskForEdit, setSelectedTaskForEdit] = useState<TaskGetPaging | null>(null);
-  const [taskSearch, setTaskSearch] = useState("");
+  const [taskSearch, setTaskSearch] = useState({ search: "" });
 
   const { data: tasks } = useAllCompanyTask({
     filter: {
@@ -43,10 +47,30 @@ export default function ProjectTaskList({
     },
   });
 
+  const { data: projectData } = useGetCompanyProjectById(activeProjectId);
+  const { data: projectStatusList } = useGetAllProjectStatus({
+    filter: {},
+    enable: true,
+  });
+
+  const isProjectClosed = useMemo(() => {
+    const projectStatusId = projectData?.data?.projectStatusId;
+    if (!projectStatusId || !projectStatusList?.data) return false;
+
+    const currentStatus = projectStatusList.data.find(
+      (status) => status.projectStatusId === projectStatusId
+    );
+
+    return (
+      currentStatus?.winLostProject === 1 || currentStatus?.winLostProject === 0
+    );
+  }, [projectData?.data?.projectStatusId, projectStatusList?.data]);
+
   const taskTableData = (tasks?.data ?? [])
     .filter((task) => {
       if (statusFilter === "pending") {
-        return task.taskStatus?.toLowerCase() !== "completed";
+        const status = task.taskStatus?.toLowerCase() || "";
+        return status !== "completed" && status !== "cancelled" && status !== "cancel";
       }
       if (statusFilter === "completed") {
         return task.taskStatus?.toLowerCase() === "completed";
@@ -54,8 +78,8 @@ export default function ProjectTaskList({
       return true;
     })
     .filter((task) => {
-      if (!taskSearch) return true;
-      const search = taskSearch.toLowerCase();
+      if (!taskSearch.search) return true;
+      const search = taskSearch.search.toLowerCase();
       return (
         task.taskName?.toLowerCase().includes(search) ||
         task.taskDescription?.toLowerCase().includes(search) ||
@@ -78,20 +102,20 @@ export default function ProjectTaskList({
 
   return (
     <div
-      className={`bg-white border rounded-2xl shadow-md flex flex-col ${className || "h-[calc(100vh-120px)]"}`}
+      className={`bg-white border rounded-2xl shadow-md flex flex-col ${className || "h-auto"}`}
     >
       {/* Task List (scroll container includes header so it stays sticky) */}
-      <div className="flex-1 overflow-auto px-5 pb-2">
+      <div className="px-5 pb-2">
         {/* Header */}
         <div className="sticky top-0 bg-white z-20 -mx-5 px-5 mt-4">
           <div className="flex justify-between items-center w-full gap-4 pb-4">
             <SearchInput
               placeholder="Search..."
-              searchValue={taskSearch}
+              searchValue={taskSearch.search}
               setPaginationFilter={setTaskSearch}
               className="w-80 h-9"
             />
-            {taskPermission.Add && !hideAddButton && (
+            {taskPermission.Add && !hideAddButton && !isProjectClosed && (
               <Button
                 className="py-2 w-fit h-9"
                 onClick={() => {
@@ -118,14 +142,11 @@ export default function ProjectTaskList({
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="truncate max-w-[350px] cursor-pointer">
+                          <div className="break-words whitespace-normal cursor-pointer">
                             {row.taskName}
                           </div>
                         </TooltipTrigger>
-                        <TooltipContent className="max-w-[300px] p-2 bg-slate-900 border border-slate-800 text-white rounded-md shadow-md space-y-1">
-                          <p className=" text-xs border-b border-slate-700 pb-1 break-words">
-                            {row.taskName}
-                          </p>
+                        <TooltipContent className="max-w-[300px] p-2 bg-slate-900 border border-slate-800 text-white rounded-md shadow-md">
                           <p className="text-[11px] text-white break-words whitespace-pre-wrap">
                             {row.taskDescription || "No description"}
                           </p>
@@ -192,7 +213,7 @@ export default function ProjectTaskList({
             }}
             primaryKey="taskId"
             onEdit={
-              taskPermission.Edit
+              taskPermission.Edit && !isProjectClosed
                 ? (row) => {
                     setSelectedTaskForEdit(row);
                     setIsDrawerOpen(true);
@@ -200,7 +221,7 @@ export default function ProjectTaskList({
                 : undefined
             }
             viewButton={false}
-            isActionButton={() => true}
+            isActionButton={() => !isProjectClosed}
             canDelete={() => false}
             moduleKey="TASK"
             onRowClick={(row) => {

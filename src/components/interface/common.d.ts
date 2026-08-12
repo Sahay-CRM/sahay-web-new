@@ -445,7 +445,7 @@ interface ProjectStatusRes {
   projectStatusId: string;
   projectStatus: string;
   projectStatusOrder: number;
-  winLostProject: null;
+  winLostProject: number | null;
   color?: string;
 }
 
@@ -2170,6 +2170,7 @@ interface TodayGanttItem {
   parentItemId: string | null;
   itemName: string;
   itemStatus: string;
+  workspaceName?: string;
 }
 
 interface GanttTodayItemsResponse {

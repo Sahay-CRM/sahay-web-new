@@ -59,6 +59,7 @@ interface CheckoutItem {
   joiners?: string[];
   isDetailMeeting?: boolean;
   forwardDate?: string | null;
+  isJoinLiveMeeting?: boolean;
 }
 
 interface ExtendedDailyPlanItem extends DailyPlanItem {
@@ -87,8 +88,10 @@ interface ExtendedDailyPlanItem extends DailyPlanItem {
     companyProject?: {
       projectName?: string;
     } | null;
+    isJoinLiveMeeting?: boolean;
   }) | null;
   isForward?: boolean;
+  isJoinLiveMeeting?: boolean;
 }
 
 export default function CheckOut() {
@@ -183,6 +186,14 @@ export default function CheckOut() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isConfirmSubmitOpen, setIsConfirmSubmitOpen] = useState(false);
   const [showValidationErrors, setShowValidationErrors] = useState(false);
+
+  const emptyTasks = useMemo(() => {
+    return items.filter(
+      (item) => !item.isDetailMeeting && 
+        (item.actualHours === "" || item.actualHours === 0 || item.actualHours == null) && 
+        (item.actualMinutes === "" || item.actualMinutes === 0 || item.actualMinutes == null)
+    );
+  }, [items]);
 
   const showForwardDateCol = useMemo(() => {
     return !isEditable ? items.some((item) => item.forwardDate) : showValidationErrors;
@@ -386,14 +397,14 @@ export default function CheckOut() {
 
   const pendingOptions = useMemo(() => {
     return availablePendingTasks.map((t) => ({
-      label: t.taskName || "Unnamed Task",
+      label: t.projectName ? `${t.taskName} (${t.projectName})` : t.taskName || "Unnamed Task",
       value: t.taskId || "",
     }));
   }, [availablePendingTasks]);
 
   const ganttOptions = useMemo(() => {
     return availableGanttTasks.map((t) => ({
-      label: t.itemName || "Unnamed Gantt Task",
+      label: t.workspaceName ? `${t.itemName} (${t.workspaceName})` : t.itemName || "Unnamed Gantt Task",
       value: t.ganttItemId || "",
     }));
   }, [availableGanttTasks]);
@@ -465,6 +476,15 @@ export default function CheckOut() {
             else derivedType = "TASK";
           }
 
+          const isDetailM = Boolean(
+            item.meetingId && 
+            (
+              item.meeting?.detailMeetingStatus || 
+              item.isJoinLiveMeeting === false || 
+              item.meeting?.isJoinLiveMeeting === false
+            )
+          );
+
           let estTimeSec = (item.planTime !== undefined && item.planTime !== null) ? item.planTime : item.estimatedTime;
           if (!estTimeSec && derivedType === "MEETING" && item.meeting?.meetingDateTime && item.meeting?.endDate) {
             const start = new Date(item.meeting.meetingDateTime).getTime();
@@ -474,11 +494,15 @@ export default function CheckOut() {
             }
           }
 
-          // Convert seconds from backend to minutes for UI fields (except for repeat tasks which are already in minutes)
           const isRepeatTask = item.isRepeat || !!item.task?.repetitiveTaskId;
-          const plannedMinutes = estTimeSec
-            ? (isRepeatTask ? estTimeSec : Math.round(estTimeSec / 60))
-            : 0;
+          let plannedMinutes = 0;
+          if (estTimeSec) {
+            if (derivedType === "MEETING" && !isDetailM) {
+              plannedMinutes = estTimeSec;
+            } else {
+              plannedMinutes = isRepeatTask ? estTimeSec : Math.round(estTimeSec / 60);
+            }
+          }
           
           // Check if this item already exists in the previous local items state
           const existingItem = prevItems.find((prev) => prev.id === item.planItemId);
@@ -496,8 +520,6 @@ export default function CheckOut() {
             actualH = actualMinutes > 0 ? (Math.floor(actualMinutes / 60) || "") : "";
             actualM = actualMinutes > 0 ? ((actualMinutes % 60) || "") : "";
           }
-
-          const isDetailM = Boolean(item.meetingId && item.meeting?.detailMeetingStatus);
 
           return {
             id: item.planItemId,
@@ -518,6 +540,7 @@ export default function CheckOut() {
             joiners: item.meeting?.joiners?.map((j: string | DailyPlanUserRef) => typeof j === "string" ? j : j.employeeName || j.name || "") || [],
             isDetailMeeting: isDetailM,
             forwardDate: item.forwardDate || null,
+            isJoinLiveMeeting: item.isJoinLiveMeeting !== false && item.meeting?.isJoinLiveMeeting !== false,
           };
         });
       });
@@ -869,11 +892,7 @@ export default function CheckOut() {
       <div className="flex items-center justify-between mb-6 shrink-0 flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <h1 className="text-2xl font-bold tracking-tight text-slate-800">Check-out</h1>
-        </div>
-
-        {/* Date Selector / Calendar at the top */}
-        <div className="flex items-center gap-2">
-          {(isAlreadyCheckedOut || isSubmitted) && selectedDate === todayDate && (
+          {(isAlreadyCheckedOut || isSubmitted) && (
             <Button
               onClick={handleShareCheckout}
               type="button"
@@ -882,12 +901,27 @@ export default function CheckOut() {
               <Share2 className="h-4 w-4" /> Share Summary
             </Button>
           )}
+        </div>
+
+        {/* Date Selector / Calendar at the top */}
+        <div className="flex items-center gap-2">
+          
 
           {isEditable && isPlanSubmitted && !isLoading && (
             <Button
               onClick={() => setIsExtraModalOpen(true)}
             >
               <Plus className="h-4 w-4" /> Extra Task
+            </Button>
+          )}
+          {selectedDate !== todayDate && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 px-3 text-sm cursor-pointer border-slate-200 hover:bg-slate-50 font-semibold"
+              onClick={() => goToDate(new Date())}
+            >
+              Today
             </Button>
           )}
           {/* Date Switcher Box */}
@@ -925,16 +959,7 @@ export default function CheckOut() {
             </Button>
           </div>
 
-          {selectedDate !== todayDate && (
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-9 px-3 text-sm cursor-pointer border-slate-200 hover:bg-slate-50 font-semibold"
-              onClick={() => goToDate(new Date())}
-            >
-              Today
-            </Button>
-          )}
+          
         </div>
       </div>
 
@@ -990,55 +1015,54 @@ export default function CheckOut() {
           </div>
         )
       ) : isSubmitted ? (
-        <div className="w-full flex-1 flex flex-col items-center justify-center p-6 min-h-[400px]">
-          <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-8 text-center shadow-md flex flex-col items-center">
-            <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600 mb-5 shadow-inner">
-              <CheckCircle2 className="h-8 w-8" />
-            </div>
-            
-            <h2 className="text-xl font-bold text-slate-900 mb-2">Check-out Submitted!</h2>
-            
-            <p className="text-sm text-slate-500 mb-6 leading-relaxed">
-              Thank you! The daily check-out plan, actual logged times, and experience rating ({rating}/10) have been submitted.
-            </p>
+      <div className="flex flex-1 items-center justify-center p-6">
+  <div className="w-full max-w-md rounded-xl border border-emerald-200 bg-white p-8 text-center shadow-sm">
+    <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100">
+      <CheckCircle2 className="h-8 w-8 text-emerald-600" />
+    </div>
 
-            <div className="w-full bg-slate-50 rounded-lg p-3 mb-6 text-left border border-slate-100 space-y-2">
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500">Rating:</span>
-                <span className="font-semibold text-slate-800">{rating}/10</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500">Total Items:</span>
-                <span className="font-semibold text-slate-800">{items.length}</span>
-              </div>
-              <div className="flex justify-between text-xs">
-                <span className="text-slate-500">Actual Hours Logged:</span>
-                <span className="font-semibold text-slate-800">
-                  {formatMinutesToHours(
-                    items.reduce((acc, item) => {
-                      const h = typeof item.actualHours === "number" ? item.actualHours : Number(item.actualHours) || 0;
-                      const m = typeof item.actualMinutes === "number" ? item.actualMinutes : Number(item.actualMinutes) || 0;
-                      return acc + (h * 60 + m);
-                    }, 0)
-                  )}
-                </span>
-              </div>
-            </div>
+    <h2 className="text-xl font-semibold text-slate-900">
+      Check-out Submitted Successfully
+    </h2>
 
-            {selectedDate === todayDate && (
-              <Button
-                onClick={() => {
-                  setIsSubmitted(false);
-                  setRating(null);
-                }}
-                variant="outline"
-                className="w-full py-2 border-slate-200 text-slate-700 font-semibold rounded-lg flex items-center justify-center gap-2 transition-all cursor-pointer"
-              >
-                <span>Log Check-out Again</span>
-              </Button>
-            )}
-          </div>
-        </div>
+    <p className="mt-2 text-sm text-slate-500">
+      Your daily check-out has been submitted successfully.
+    </p>
+
+    <div className="mt-6 rounded-lg border border-slate-200 bg-slate-50 p-4 text-left">
+      <div className="flex justify-between py-1">
+        <span className="text-sm text-slate-500">Rating</span>
+        <span className="text-sm font-medium text-slate-800">
+          {rating}/10
+        </span>
+      </div>
+
+      <div className="flex justify-between py-1">
+        <span className="text-sm text-slate-500">Tasks</span>
+        <span className="text-sm font-medium text-slate-800">
+          {items.length}
+        </span>
+      </div>
+
+      <div className="flex justify-between py-1">
+        <span className="text-sm text-slate-500">Actual Time</span>
+        <span className="text-sm font-medium text-slate-800">
+          {formatMinutesToHours(
+            items.reduce((acc, item) => {
+              const h = Number(item.actualHours) || 0;
+              const m = Number(item.actualMinutes) || 0;
+              return acc + h * 60 + m;
+            }, 0)
+          )}
+        </span>
+      </div>
+    </div>
+
+    <p className="mt-5 text-xs text-slate-400">
+      This check-out has been submitted and is now read-only.
+    </p>
+  </div>
+</div>
       ) : (
 
       /* Main Grid: 2 Columns */
@@ -1129,8 +1153,15 @@ export default function CheckOut() {
                             }`}
                           >
                             {/* Item Name */}
-                            <TableCell className="py-2.5 text-sm pl-5 pr-4 text-black text-left truncate max-w-[320px] border-none" title={item.title}>
-                              {item.title}
+                            <TableCell className="py-2.5 text-sm pl-5 pr-4 text-black text-left border-none" title={item.title}>
+                              <div className="flex items-center gap-2">
+                                <span className="truncate max-w-[240px]">{item.title}</span>
+                                {item.meetingId && item.isJoinLiveMeeting === false && (
+                                  <span className="text-[10px] bg-slate-100 text-red-600 font-semibold px-1.5 py-0.5 rounded-sm border border-slate-200 uppercase shrink-0">
+                                    Not Joined
+                                  </span>
+                                )}
+                              </div>
                             </TableCell>
 
                             {/* Deadline / Time */}
@@ -1176,35 +1207,41 @@ export default function CheckOut() {
 
                             {/* Actual Time Inputs */}
                             <TableCell className={`py-2.5 text-sm pr-5 pl-2 border-none w-[130px] ${timeBgClass}`}>
-                              <div className="flex flex-col items-center">
-                                <div className="flex items-center justify-center gap-1">
-                                  <input
-                                    type="number"
-                                    min={0}
-                                    value={item.actualHours}
-                                    onChange={(e) => handleHoursChange(item.id, e.target.value)}
-                                    disabled={item.isDetailMeeting || !isEditable}
-                                    className={inputClassName}
-                                  />
-                                  <span className={`${labelClassName}  pr-1`}>hr</span>
-                                  
-                                  <input
-                                    type="number"
-                                    min={0}
-                                    max={59}
-                                    value={item.actualMinutes}
-                                    onChange={(e) => handleMinutesChange(item.id, e.target.value)}
-                                    disabled={item.isDetailMeeting || !isEditable}
-                                    className={inputClassName}
-                                  />
-                                  <span className={labelClassName}>min</span>
-                                  {isWarningActive && (
-                                    <span title="Time not filled" className="cursor-help inline-flex items-center ml-1">
-                                      <TriangleAlert className="h-3.5 w-3.5 text-amber-500 shrink-0" />
-                                    </span>
-                                  )}
+                              {item.meetingId && item.isJoinLiveMeeting === false ? (
+                                <div className="text-center font-medium text-red-600 text-xs">
+                                  Not Joined
                                 </div>
-                              </div>
+                              ) : (
+                                <div className="flex flex-col items-center">
+                                  <div className="flex items-center justify-center gap-1">
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      value={item.actualHours}
+                                      onChange={(e) => handleHoursChange(item.id, e.target.value)}
+                                      disabled={item.isDetailMeeting || !isEditable}
+                                      className={inputClassName}
+                                    />
+                                    <span className={`${labelClassName}  pr-1`}>hr</span>
+                                    
+                                    <input
+                                      type="number"
+                                      min={0}
+                                      max={59}
+                                      value={item.actualMinutes}
+                                      onChange={(e) => handleMinutesChange(item.id, e.target.value)}
+                                      disabled={item.isDetailMeeting || !isEditable}
+                                      className={inputClassName}
+                                    />
+                                    <span className={labelClassName}>min</span>
+                                    {isWarningActive && (
+                                      <span title="Time not filled" className="cursor-help inline-flex items-center ml-1">
+                                        <TriangleAlert className="h-3.5 w-3.5 text-amber-500 shrink-0" />
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              )}
                             </TableCell>
 
                             {/* Forward Date Column */}
@@ -1402,9 +1439,18 @@ export default function CheckOut() {
     </h3>
 
     <p className="mt-3 text-sm leading-6 text-slate-600">
-      Some tasks do not have <span className="font-medium">Actual Time</span>{" "}
-      entered.
+      The following tasks do not have <span className="font-medium">Actual Time</span> entered:
     </p>
+
+    <div className="mt-3.5 mb-4 max-h-[160px] overflow-y-auto bg-slate-50 border border-slate-200/80 rounded-xl p-3 text-left">
+      <ul className="list-disc list-inside space-y-1 text-sm text-slate-700 font-semibold">
+        {emptyTasks.map((task) => (
+          <li key={task.id} className="truncate" title={task.title}>
+            {task.title}
+          </li>
+        ))}
+      </ul>
+    </div>
 
     <p className="mt-2 text-sm leading-6 text-slate-500">
       Please review your tasks before submitting your checkout.

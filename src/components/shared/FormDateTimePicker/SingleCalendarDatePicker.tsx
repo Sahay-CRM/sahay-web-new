@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import * as React from "react";
-import { format, isToday } from "date-fns";
+import { format} from "date-fns";
 import { CalendarDays } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -33,7 +33,7 @@ export default function SingleCalendarDatePicker({
   // Normalize date helper
   const formatDateLabel = (d: Date | undefined): string => {
     if (!d) return "Pick a date";
-    if (isToday(d)) return "Today";
+    // if (isToday(d)) return "Today";
     return format(d, "dd MMM yyyy");
   };
 

@@ -377,7 +377,7 @@ const ProjectView = () => {
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto mt-3 max-h-[400px] pr-1">
+        <div className="mt-3 pr-1">
           <div className="space-y-2 pr-2">
             {commentsData.isLoading ? (
               <p className="text-muted-foreground text-sm">
