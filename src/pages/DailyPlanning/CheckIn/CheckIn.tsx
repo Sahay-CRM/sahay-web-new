@@ -279,7 +279,7 @@ export default function CheckIn() {
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 overflow-y-auto bg-slate-50/50">
+      <div className="w-full h-full flex flex-col p-3 sm:p-4 md:p-6 overflow-y-auto bg-white">
         
         {/* Title Header */}
         <div className="flex items-center justify-between mb-6 shrink-0 flex-wrap gap-4">
@@ -529,7 +529,7 @@ export default function CheckIn() {
                                   </p>
                                 </div>
                                 <div className="col-span-2 text-sm font-normal text-black">
-                                  Meeting
+                                  {item.isDetailMeeting ? "Live Meeting" : "Meeting"}
                                 </div>
                                 <div className="col-span-4 text-sm text-black truncate" title={timeStr || deadline}>
                                   <span className="font-medium text-black mr-1 sm:hidden">MEETING TIME:</span>
@@ -629,7 +629,7 @@ export default function CheckIn() {
                                 </p>
                               </div>
                               <div className="col-span-2 text-sm font-normal text-black">
-                                {isGantt ? "Gantt" : isMeeting ? "Meeting" : "Normal"}
+                                {isGantt ? "Gantt" : isMeeting ? (item.isDetailMeeting ? "Live Meeting" : "Meeting") : "Normal"}
                               </div>
                               <div className="col-span-4 text-sm text-black truncate" title={timeStr || deadline}>
                                 <span className="font-medium text-slate-400 mr-1 sm:hidden">

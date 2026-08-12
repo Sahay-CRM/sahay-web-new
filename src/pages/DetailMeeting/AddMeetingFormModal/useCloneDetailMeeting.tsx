@@ -23,6 +23,7 @@ export default function useCloneDetailMeeting() {
       meetingDescription: "",
       meetingDateTime: "",
       meetingTimePlanned: "",
+      meetingTypeId: "",
       employeeId: [],
     },
   });
@@ -43,6 +44,7 @@ export default function useCloneDetailMeeting() {
       meetingName: data?.meetingName,
       meetingDescription: data?.meetingDescription,
       meetingDateTime: data?.meetingDateTime,
+      meetingTypeId:  data?.meetingTypeId,
       joiners: data?.employeeId?.map(
         (ele: { employeeId: string }) => ele?.employeeId,
       ),
@@ -75,6 +77,8 @@ export default function useCloneDetailMeeting() {
     setModalOpen(false);
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const watchedMeetingType = watch("meetingTypeId") as any || "";
   const selectedTemplateName = watch("templateName") || "";
 
   return {
@@ -84,7 +88,7 @@ export default function useCloneDetailMeeting() {
     onSubmit,
     meetingPreview: {
       ...getValues(),
-      meetingTypeName: selectedTemplateName,
+      meetingTypeName: watchedMeetingType?.meetingTypeName  || selectedTemplateName,
     },
     trigger,
     methods,

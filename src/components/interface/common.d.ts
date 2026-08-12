@@ -2096,6 +2096,7 @@ interface DailyPlanItem {
   createdDatetime?: string;
   updatedDatetime?: string;
   forwardDate?: string | null;
+  isDetailMeeting?:boolean | null;
 }
 
 interface DailyPlanTimeLog {

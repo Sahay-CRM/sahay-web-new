@@ -112,9 +112,11 @@ export default function useCheckIn() {
       }
 
       const isRepeatTask = item.isRepeat || !!item.task?.repetitiveTaskId;
+      const isDetailMeeting = Boolean(item.isDetailMeeting || (item.meetingId && item.meeting?.detailMeetingStatus));
       return {
         ...item,
         type: item.type || derivedType,
+        isDetailMeeting,
         estimatedTime: estTimeSec
           ? (isRepeatTask ? estTimeSec : Math.round(estTimeSec / 60))
           : 0,

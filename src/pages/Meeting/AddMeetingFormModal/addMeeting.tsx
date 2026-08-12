@@ -253,16 +253,36 @@ export default function AddMeeting() {
     !companyMeetingId && selectedType?.parentType === "DETAIL";
 
   useEffect(() => {
-    if (shouldHideStatus && meetingStatusOptions.length > 0) {
-      const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
-      if (defaultStatus) {
-        setValue("meetingStatusId", defaultStatus.value, {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
+    if (meetingStatusOptions.length > 0) {
+      if (shouldHideStatus) {
+        const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
+        if (defaultStatus && meetingStatusVal !== defaultStatus.value) {
+          setValue("meetingStatusId", defaultStatus.value, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          setValue("meetingStatus", defaultStatus.label);
+        }
+      } else if (!companyMeetingId && !meetingStatusVal) {
+        const defaultStatus = [...meetingStatusOptions].sort(
+          (a, b) => (a.order || 0) - (b.order || 0)
+        )[0];
+        if (defaultStatus) {
+          setValue("meetingStatusId", defaultStatus.value, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          setValue("meetingStatus", defaultStatus.label);
+        }
       }
     }
-  }, [shouldHideStatus, meetingStatusOptions, setValue]);
+  }, [
+    shouldHideStatus,
+    companyMeetingId,
+    meetingStatusOptions,
+    setValue,
+    meetingStatusVal,
+  ]);
 
   // Fetch employees
   const [employeeSearch, setEmployeeSearch] = useState("");
