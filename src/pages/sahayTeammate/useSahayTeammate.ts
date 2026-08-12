@@ -28,12 +28,19 @@ export default function useSahayTeammate() {
     currentPage: 1,
     pageSize: 25,
     search: "",
-    isDeactivated: false,
-    employeeType: "SAHAYTEAMMATE,CONSULTANT",
   });
 
   const { data: employeeData, isLoading } = getEmployee({
-    filter: { ...paginationFilter },
+    filter: {
+      ...paginationFilter,
+      employeeType: "SAHAYTEAMMATE,CONSULTANT",
+      isDeactivated:
+        currentStatus === "active"
+          ? false
+          : currentStatus === "inactive"
+            ? true
+            : undefined,
+    },
   });
 
   const { mutate: addEmployee } = useAddOrUpdateEmployee();
@@ -42,17 +49,10 @@ export default function useSahayTeammate() {
 
   const onStatusChange = (val: string) => {
     setCurrentStatus(val);
-    setPaginationFilter((prev) => {
-      const next = { ...prev, currentPage: 1 };
-      if (val === "active") {
-        next.isDeactivated = false;
-      } else if (val === "inactive") {
-        next.isDeactivated = true;
-      } else {
-        delete next.isDeactivated;
-      }
-      return next;
-    });
+    setPaginationFilter((prev) => ({
+      ...prev,
+      currentPage: 1,
+    }));
   };
 
   const openModal = useCallback((data: EmployeeData) => {

@@ -358,6 +358,8 @@ interface CompanyProjectDataProps {
   ];
   deadlineRequest?: string;
   companyId?: string;
+  parentProjectId?: string | null;
+  companyProjectMasters?: CompanyProjectDataProps[];
 }
 
 // interface CompanyMeetingDataProps {
@@ -443,7 +445,7 @@ interface ProjectStatusRes {
   projectStatusId: string;
   projectStatus: string;
   projectStatusOrder: number;
-  winLostProject: null;
+  winLostProject: number | null;
   color?: string;
 }
 
@@ -553,6 +555,7 @@ interface EmployeeDetails {
   } | null;
   isDeactivated?: boolean;
   isTeamLeader?: boolean;
+  isSahayEmployee?: boolean;
 }
 
 interface EmployeeCompany {
@@ -679,6 +682,7 @@ interface AddUpdateTask {
   repetitiveTaskId?: string;
   ioType?: string;
   commentId?: string;
+  duration?: number | null;
 }
 
 interface TaskGetPaging {
@@ -714,6 +718,7 @@ interface TaskGetPaging {
   color?: string;
   objectiveTaskId?: string;
   projectId?: string;
+  meetingId?: string;
   issueTaskId?: string;
   repetition?: string;
   meetingNoteId?: string;
@@ -827,6 +832,7 @@ interface Task {
   nextDate?: string;
   deadlineRequest?: string;
   companyId?: string;
+  duration?: number | null;
 }
 
 interface ProjectTask {
@@ -1671,6 +1677,8 @@ interface SimpleCompanyDetails {
   date?: number;
   imageGst?: imageGst;
   imagePancard?: imageGst;
+  companyStartTime?: string;
+  companyEndTime?: string;
 }
 
 interface imageGst {
@@ -1981,7 +1989,7 @@ interface ColumnConfig {
 interface TimeLog {
   timeLogId: string;
   employeeId: string;
-  type: "TASK" | "MEETING";
+  type: "TASK" | "MEETING" | "GANTT";
   refId?: string;
   startHours: string | number;
   endHours: string | number;
@@ -2004,18 +2012,36 @@ interface TimeLog {
     taskDescription?: string;
     meetingName?: string;
     meetingDescription?: string;
+    itemName?: string;
+    itemDescription?: string;
   };
 }
 
-type DailyPlanItemType = "TASK" | "MEETING";
+type DailyPlanItemType = "TASK" | "MEETING" | "GANTT";
 
 type PlanningStatus = "PLANNED" | "COMPLETED" | "FORWARDED" | "CANCELLED";
+
+interface DailyPlanItemGantRef {
+  ganttItemId: string;
+  itemName: string;
+  itemDescription?: string;
+}
+
+interface DailyPlanUserRef {
+  employeeId?: string;
+  employeeName?: string;
+  name?: string;
+  avatar?: string | null;
+}
 
 interface DailyPlanItemTaskRef {
   taskId: string;
   taskName: string;
   taskDescription?: string;
   taskDeadline?: string | null;
+  dueDate?: string | null;
+  assignees?: (string | DailyPlanUserRef)[] | null;
+  repetitiveTaskId?: string | null;
 }
 
 interface DailyPlanItemMeetingRef {
@@ -2023,6 +2049,9 @@ interface DailyPlanItemMeetingRef {
   meetingName: string;
   meetingDescription?: string;
   meetingDateTime?: string | null;
+  joiners?: (string | DailyPlanUserRef)[] | null;
+  endDate?: string | null;
+  detailMeetingStatus?: string | null;
 }
 
 interface DailyPlanItemHistoryRecord {
@@ -2044,6 +2073,11 @@ interface DailyPlanItem {
   priority?: string | null;
   taskId?: string | null;
   meetingId?: string | null;
+  ganttItemId?: string | null;
+  isPlaned?:boolean;
+  planTime?: number | null;
+  isExtra?: boolean;
+  gantItem?: DailyPlanItemGantRef | null;
   estimatedTime: number;
   actualTime?: number | null;
   status: PlanningStatus;
@@ -2054,10 +2088,27 @@ interface DailyPlanItem {
   meeting?: DailyPlanItemMeetingRef | null;
   historyRecords?: DailyPlanItemHistoryRecord[];
   isForwarded?: boolean;
+  isPlanned?: boolean | null;
+  isRepeat?: boolean;
+  submittedDate?: string | null;
   createdBy?: string;
   updatedBy?: string | null;
   createdDatetime?: string;
   updatedDatetime?: string;
+  forwardDate?: string | null;
+  isDetailMeeting?:boolean | null;
+}
+
+interface DailyPlanTimeLog {
+  timeLogId?: string;
+  rating?: number | null;
+  dayRating?: number | null;
+  checkoutTime?: string | null;
+  checkinTime?: string | null;
+  remarks?:string;
+  createdDatetime?: string | null;
+  updatedDatetime?: string | null;
+  submitTime?: string | null;
 }
 
 interface DailyPlan {
@@ -2065,6 +2116,20 @@ interface DailyPlan {
   employeeId: string;
   date: string;
   dailyPlanItems: DailyPlanItem[];
+  timeLogId?: string;
+  checkoutTime?: string | null;
+  checkinTime?: string | null;
+  submitTime?: string | null;
+  isFinalSubmit?: boolean;
+  isAutoSubmit?: boolean;
+  rating?: number | null;
+  dayRating?: number | null;
+  timeLog?: DailyPlanTimeLog;
+  remarks?:string;
+  isCheckoutSubmitted?: boolean;
+  id?: string;
+  createdDatetime?: string | null;
+  updatedDatetime?: string | null;
 }
 
 interface DailyPlanResponse {
@@ -2075,30 +2140,44 @@ interface DailyPlanResponse {
 }
 
 interface AddDailyPlanItemPayload {
-  employeeId?: string;
   date: string;
   type: DailyPlanItemType;
-  title?: string;
-  priority?: string;
   taskId?: string;
   meetingId?: string;
-  estimatedTime: number;
+  ganttItemId?: string;
+  planTime: number;
   remarks?: string;
+  isPlaned: boolean;
+  isExtra?: boolean;
 }
 
 interface UpdateDailyPlanItemPayload {
   planItemId: string;
-  planId?: string;
-  title?: string;
-  type?: DailyPlanItemType;
-  priority?: string;
-  status?: PlanningStatus;
-  estimatedTime?: number;
+  planTime?: number;
   actualTime?: number;
+  remarks?: string;
+  sequence?: number;
+  isPlaned?: boolean;
+  status?: PlanningStatus;
   startTime?: string;
   completionTime?: string;
-  remarks?: string;
-  isFinalSubmit?: boolean;
+}
+
+interface TodayGanttItem {
+  ganttItemId: string;
+  ganttWorkspaceId: string;
+  ganttPhaseId: string | null;
+  parentItemId: string | null;
+  itemName: string;
+  itemStatus: string;
+  workspaceName?: string;
+}
+
+interface GanttTodayItemsResponse {
+  success: boolean;
+  status: number;
+  message: string;
+  data: TodayGanttItem[];
 }
 
 interface CarryForwardDailyPlanItemPayload {

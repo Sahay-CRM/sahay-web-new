@@ -11,13 +11,14 @@ export default function useAddUpdateCompanyTask() {
   const addUpdateCompanyTaskMutation = useMutation({
     mutationKey: ["add-or-update-task-list"],
     mutationFn: async (data: AddUpdateTask) => {
+      const { taskId, ...rest } = data;
       const config = {
-        url: data.taskId
-          ? Urls.updateCompanyTask(data.taskId!)
+        url: taskId
+          ? Urls.updateCompanyTask(taskId)
           : Urls.addCompanyTask(),
-        data: data,
+        data: taskId ? rest : data,
       };
-      const { data: resData } = data.taskId
+      const { data: resData } = taskId
         ? await Api.put<DatePaging>(config)
         : await Api.post<DatePaging>(config);
 

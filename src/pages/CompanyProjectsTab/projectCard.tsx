@@ -1,4 +1,4 @@
-import { Clock, Edit, Eye, Image } from "lucide-react";
+import { Clock, Eye, Image } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/tooltip";
 import { TableTooltip } from "@/components/shared/DataTable/tableTooltip";
 import { getInitials } from "@/features/utils/app.utils";
-import { useNavigate } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import { isColorDark } from "@/features/utils/color.utils";
 import { useZoom } from "@/features/context/ZoomContext";
 interface ProjectCardProps {
@@ -29,6 +29,7 @@ interface ProjectCardProps {
     projectDocuments: { fileId: string; fileName: string }[],
     projectId: string,
   ) => void;
+  onEyeClick?: () => void;
 }
 
 export default function ProjectCard({
@@ -45,17 +46,14 @@ export default function ProjectCard({
   createdBy,
   deadlineRequest,
   onViewDocuments,
+  onEyeClick,
 }: ProjectCardProps) {
   const { zoom } = useZoom();
   const scale = zoom / 100;
-  const navigate = useNavigate();
-  const handleEdit = () => {
-    navigate(`/dashboard/projects/edit/${projectId}`);
-  };
-
-  const handleView = () => {
-    navigate(`/dashboard/projects/view/${projectId}`);
-  };
+  // const navigate = useNavigate();
+  // const handleEdit = () => {
+  //   navigate(`/dashboard/projects/edit/${projectId}`);
+  // };
 
   return (
     <div className="bg-white border shadow-md rounded-xl p-4 relative hover:shadow-md transition flex flex-col w-full h-full">
@@ -86,7 +84,7 @@ export default function ProjectCard({
           </div>
 
           <div className="flex ">
-            <button
+            {/* <button
               onClick={(e) => {
                 e.stopPropagation();
                 handleEdit();
@@ -97,12 +95,12 @@ export default function ProjectCard({
                 className="h-4 w-4"
                 style={{ width: 16 * scale, height: 16 * scale }}
               />
-            </button>
+            </button> */}
 
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                handleView();
+                onEyeClick?.();
               }}
               className="p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-primary transition"
             >

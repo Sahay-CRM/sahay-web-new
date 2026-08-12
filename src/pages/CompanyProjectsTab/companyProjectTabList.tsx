@@ -14,7 +14,7 @@ import AddProjectDrawer from "./AssignProject/AddProjectDrawer";
 import ViewProjectModal from "./ViewProjectModal";
 import RearrangeTabsSheet from "./RearrangeTabsSheet";
 import SearchInput from "@/components/shared/SearchInput";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import {
   Tooltip,
@@ -87,6 +87,7 @@ export default function CompanyProjectTabList() {
     refetch,
     isHideDateFilter,
   } = useProjectTabs();
+  const navigate = useNavigate();
   const [isViewDocsModalOpen, setIsViewDocsModalOpen] = useState(false);
   const [viewDocsModalData, setViewDocsModalData] = useState<IProjectFormData>(
     {} as IProjectFormData,
@@ -387,7 +388,7 @@ export default function CompanyProjectTabList() {
                       <div
                         key={project.projectId}
                         className="w-full cursor-pointer sm:w-[48%] md:w-[30%] lg:w-[25%] max-w-[360px]"
-                        onClick={() => handleCardClick(project)}
+                        onClick={() => navigate(`/dashboard/projects/view/${project.projectId}`)}
                       >
                         <ProjectCard
                           projectId={project.projectId}
@@ -403,6 +404,7 @@ export default function CompanyProjectTabList() {
                           createdBy={project.createdBy}
                           deadlineRequest={project.deadlineRequest}
                           onViewDocuments={handleViewDocuments}
+                          onEyeClick={() => handleCardClick(project)}
                         />
                       </div>
                     ))}
@@ -416,7 +418,7 @@ export default function CompanyProjectTabList() {
                 <div
                   key={project.projectId}
                   className="w-full cursor-pointer sm:w-[48%] md:w-[30%] lg:w-[25%] max-w-[360px]"
-                  onClick={() => handleCardClick(project)}
+                  onClick={() => navigate(`/dashboard/projects/view/${project.projectId}`)}
                 >
                   <ProjectCard
                     projectId={project.projectId}
@@ -432,6 +434,7 @@ export default function CompanyProjectTabList() {
                     createdBy={project.createdBy}
                     deadlineRequest={project.deadlineRequest}
                     onViewDocuments={handleViewDocuments}
+                    onEyeClick={() => handleCardClick(project)}
                   />
                 </div>
               ))}

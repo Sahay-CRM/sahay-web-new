@@ -120,6 +120,8 @@ interface TableProps<T extends Record<string, unknown>> {
   }[];
   groupBy?: keyof T;
   tableHeightClass?: string;
+  onGroupEdit?: (groupValue: string, firstItem: T) => void;
+  onGroupDelete?: (groupValue: string, firstItem: T) => void;
 }
 
 const TableDataKpi = <T extends Record<string, unknown>>({
@@ -163,6 +165,8 @@ const TableDataKpi = <T extends Record<string, unknown>>({
   extraColumns,
   groupBy,
   tableHeightClass,
+  onGroupEdit,
+  onGroupDelete,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   const showCheckboxes =
@@ -303,10 +307,10 @@ const TableDataKpi = <T extends Record<string, unknown>>({
         )}
       >
         <Table className="min-w-full table-auto">
-          <TableHeader className="sticky top-0 z-10 bg-primary shadow-sm">
+          <TableHeader className="sticky top-0 z-30 bg-primary shadow-sm">
             <TableRow>
               {showCheckboxes && (
-                <TableHead className="w-[40px] sticky left-0 z-40 bg-primary pl-6">
+                <TableHead className="w-[40px] sticky top-0 left-0 z-40 bg-primary pl-6">
                   {/* Checkbox Header */}
                 </TableHead>
               )}
@@ -351,10 +355,12 @@ const TableDataKpi = <T extends Record<string, unknown>>({
               {showActionsColumn && (
                 <TableHead
                   className={twMerge(
-                    `w-fit sticky right-0 z-50 text-right bg-primary pr-2 ${actionColumnWidth}`,
+                    `w-fit sticky top-0 right-0 z-50 text-right bg-primary pr-4 ${actionColumnWidth}`,
                   )}
                 >
-                  Actions
+                  <div className="flex justify-end items-center h-full w-full">
+                    Actions
+                  </div>
                 </TableHead>
               )}
             </TableRow>
@@ -412,24 +418,62 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                   return (
                     <React.Fragment key={item[primaryKey] as React.Key}>
                       {showGroupHeader && (
-                        <TableRow className="bg-[#f8fbff] hover:bg-[#f8fbff] border-y border-blue-100/50">
-                          <TableCell colSpan={totalCols} className="py-2.5 ">
-                            <div className="flex items-center gap-2">
-                              <h2 className="text-[15px] font-bold text-primary tracking-tight">
-                                {String(
-                                  groupValue || "Unassigned Business Function",
-                                )}
-                              </h2>
-                              <span className="ml-1 bg-primary/10 text-primary text-[11px] px-2 py-0.5 rounded-full font-bold">
-                                {
-                                  tableData.filter(
-                                    (i) => groupBy && i[groupBy] === groupValue,
-                                  ).length
-                                }
-                              </span>
-                            </div>
-                          </TableCell>
-                        </TableRow>
+                         <TableRow className="bg-[#f8fbff] hover:bg-[#f8fbff] border-y border-blue-100/50">
+                           {/* Group Title Cell */}
+                           <TableCell colSpan={showActionsColumn ? totalCols - 1 : totalCols} className="py-2.5 ">
+                             <div className="flex items-center gap-2">
+                               <h2 className="text-[15px] font-bold text-primary tracking-tight">
+                                 {String(
+                                   groupValue || "Unassigned Business Function",
+                                 )}
+                               </h2>
+                               <span className="ml-1 bg-primary/10 text-primary text-[11px] px-2 py-0.5 rounded-full font-bold">
+                                 {
+                                   tableData.filter(
+                                     (i) => groupBy && i[groupBy] === groupValue,
+                                   ).length
+                                 }
+                               </span>
+                             </div>
+                           </TableCell>
+
+                           {/* Group Actions Cell (Aligned under the Actions column header!) */}
+                           {showActionsColumn && (
+                             <TableCell className="py-2.5 text-right pr-4 sticky right-0 bg-[#f8fbff] z-10 w-fit">
+                               {(onGroupEdit || onGroupDelete) && (
+                                 <div
+                                   className="flex items-center justify-end gap-3"
+                                   onClick={(e) => e.stopPropagation()}
+                                 >
+                                   {onGroupEdit && (
+                                     <Pencil
+                                       className="w-4 h-4 cursor-pointer text-gray-500 hover:text-primary transition-colors"
+                                       onClick={() => {
+                                         const firstItem = tableData.find(
+                                           (i) => groupBy && i[groupBy] === groupValue,
+                                         );
+                                         if (firstItem)
+                                           onGroupEdit(String(groupValue), firstItem);
+                                       }}
+                                     />
+                                   )}
+                                   {onGroupDelete && (
+                                     <Trash
+                                       className="w-4 h-4 cursor-pointer text-red-500 hover:text-red-750 transition-colors"
+                                       onClick={() => {
+                                         const firstItem = tableData.find(
+                                           (i) => groupBy && i[groupBy] === groupValue,
+                                         );
+                                         if (firstItem)
+                                           onGroupDelete(String(groupValue), firstItem);
+                                       }}
+                                     />
+                                   )}
+                                 </div>
+                               )}
+                             </TableCell>
+                           )}
+                         </TableRow>
                       )}
                       <TableRow
                         className={`${
@@ -660,7 +704,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                                 </div>
                               ) : (
                                 <>
-                                  {isEditDeleteShow ? (
+                                  {isEditDeleteShow && onEdit ? (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button
@@ -682,6 +726,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                                       <TooltipContent>Edit</TooltipContent>
                                     </Tooltip>
                                   ) : (
+                                    onEdit &&
                                     isActionButton?.(item) &&
                                     checkRowPermission(item, "EDIT") && (
                                       <Tooltip>
@@ -708,7 +753,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                                     )
                                   )}
 
-                                  {isEditDeleteShow ? (
+                                  {isEditDeleteShow && onDelete ? (
                                     <Tooltip>
                                       <TooltipTrigger asChild>
                                         <Button
@@ -730,6 +775,7 @@ const TableDataKpi = <T extends Record<string, unknown>>({
                                       <TooltipContent>Delete</TooltipContent>
                                     </Tooltip>
                                   ) : (
+                                    onDelete &&
                                     isActionButton?.(item) &&
                                     checkRowPermission(item, "DELETE") &&
                                     (!canDelete || canDelete(item)) && (

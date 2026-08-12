@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import useGetReports from "@/features/api/Reports/useGetReports";
 import {
@@ -105,6 +105,43 @@ const KPICard = ({
   </div>
 );
 
+const ReportTooltip = ({ text }: { text: string }) => {
+  const ref = useRef<HTMLSpanElement>(null);
+  const [open, setOpen] = useState(false);
+
+  const checkTruncation = () => {
+    const el = ref.current;
+    if (el) {
+      return el.scrollWidth - el.offsetWidth > 1.5;
+    }
+    return false;
+  };
+
+  const handleOpenChange = (isOpen: boolean) => {
+    if (isOpen) {
+      const isTruncated = checkTruncation();
+      setOpen(isTruncated);
+    } else {
+      setOpen(false);
+    }
+  };
+
+  return (
+    <TooltipProvider>
+      <Tooltip open={open} onOpenChange={handleOpenChange}>
+        <TooltipTrigger asChild>
+          <span ref={ref} className="truncate cursor-default block w-full">
+            {text}
+          </span>
+        </TooltipTrigger>
+        <TooltipContent side="top">
+          <p className="text-[11px]">{text}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+};
+
 const LongTermList = ({ items }: { items: ListItem[] }) => {
   return (
     <div className="bg-white border border-slate-200 rounded-[12px] overflow-hidden">
@@ -124,14 +161,7 @@ const LongTermList = ({ items }: { items: ListItem[] }) => {
           >
             {/* Name */}
             <div className="col-span-3 font-medium text-slate-800 truncate">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="cursor-default">{item.name}</span>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  <p className="text-[11px]">{item.name}</p>
-                </TooltipContent>
-              </Tooltip>
+              <ReportTooltip text={item.name} />
             </div>
 
             {/* Duration */}
@@ -241,14 +271,7 @@ const AgendaList = ({ title, items }: { title: string; items: ListItem[] }) => {
                   hasDate ? "col-span-6" : "col-span-6"
                 }`}
               >
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span className="cursor-default">{item.name}</span>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    <p className="text-[11px]">{item.name}</p>
-                  </TooltipContent>
-                </Tooltip>
+                <ReportTooltip text={item.name} />
               </div>
 
               {/* Duration */}

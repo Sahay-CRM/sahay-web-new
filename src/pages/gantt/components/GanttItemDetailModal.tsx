@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from "react";
 import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 import ModalData from "@/components/shared/Modal/ModalData";
-import { Input } from "@/components/ui/input";
+import { useSelector } from "react-redux";
+import { getUserDetail } from "@/features/selectors/auth.selector";
 import { Label } from "@/components/ui/label";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
+import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import { useQuery } from "@tanstack/react-query";
 import Api from "@/features/utils/api.utils";
@@ -17,6 +20,7 @@ import type {
   GanttDependencyType,
   GanttItemStatus,
   GanttItemPriority,
+  UpdateGanttItemRequest,
 } from "@/types/gantt";
 import {
   fmtDate,
@@ -34,6 +38,23 @@ import {
   useUpdateGanttDates,
 } from "@/features/api/gantt";
 //
+
+const parseAssignees = (val?: any): string[] => {
+  if (!val) return [];
+  if (Array.isArray(val)) return val;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+      try {
+        return JSON.parse(trimmed);
+      } catch {
+        // fallback
+      }
+    }
+    return trimmed.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+};
 
 interface Props {
   open: boolean;
@@ -81,9 +102,16 @@ export default function GanttItemDetailModal({
   onOpenChange,
   item,
   workspaceId,
+  phases = [],
   itemsTree = [],
   dependencies = [],
 }: Props) {
+  const userData = useSelector(getUserDetail);
+  const isEmployee = userData?.employeeType === "EMPLOYEE";
+  const assignedIds = parseAssignees(item.assignedToEmployeeId);
+  const isAssignedToMe = assignedIds.includes(userData?.employeeId ?? "");
+  const canEdit = !isEmployee || isAssignedToMe;
+
   const [activeTab, setActiveTab] = useState<
     "general" | "progress" | "dependency" | "assign"
   >("general");
@@ -93,8 +121,8 @@ export default function GanttItemDetailModal({
   // Inline forms state
   const [progressVal, setProgressVal] = useState(item.progressPercentage);
   const [statusVal, setStatusVal] = useState(item.itemStatus);
-  const [selectedAssigneeId, setSelectedAssigneeId] = useState(
-    item.assignedToEmployeeId ?? "",
+  const [selectedAssigneeIds, setSelectedAssigneeIds] = useState<string[]>(() =>
+    parseAssignees(item.assignedToEmployeeId)
   );
 
   // General tab edit state
@@ -109,12 +137,14 @@ export default function GanttItemDetailModal({
     return currentEnd ? format(new Date(currentEnd), "yyyy-MM-dd") : "";
   });
   const [priorityVal, setPriorityVal] = useState(item.priority);
+  const [colorVal, setColorVal] = useState(item.color ?? "#1e9ebe");
+  const [phaseIdVal, setPhaseIdVal] = useState(item.ganttPhaseId ?? "");
 
   // Sync state when item or open state changes
   useEffect(() => {
     setProgressVal(item.progressPercentage);
     setStatusVal(item.itemStatus);
-    setSelectedAssigneeId(item.assignedToEmployeeId ?? "");
+    setSelectedAssigneeIds(parseAssignees(item.assignedToEmployeeId));
     setNameVal(item.itemName);
     setDescVal(item.itemDescription ?? "");
 
@@ -127,7 +157,9 @@ export default function GanttItemDetailModal({
     setEndDateVal(currentEnd ? format(new Date(currentEnd), "yyyy-MM-dd") : "");
 
     setPriorityVal(item.priority);
-  }, [item.ganttItemId, open]);
+    setColorVal(item.color ?? "#1e9ebe");
+    setPhaseIdVal(item.ganttPhaseId ?? "");
+  }, [item.actualEndDate, item.actualStartDate, item.assignedToEmployeeId, item.color, item.ganttItemId, item.ganttPhaseId, item.itemDescription, item.itemName, item.itemStatus, item.plannedEndDate, item.plannedStartDate, item.priority, item.progressPercentage, open]);
 
   // Dependency states – multi-row pending
   interface PendingDep {
@@ -151,22 +183,28 @@ export default function GanttItemDetailModal({
   const handleGeneralSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await Promise.all([
-        updateMutation.mutateAsync({
-          itemName: nameVal,
-          itemDescription: descVal || undefined,
-          priority: priorityVal,
-        }),
-        updateDatesMutation.mutateAsync({
-          itemId: item.ganttItemId,
-          payload: {
-            // plannedStartDate: item.plannedStartDate,
-            // plannedEndDate: item.plannedEndDate,
-            actualStartDate: new Date(startDateVal).toISOString(),
-            actualEndDate: new Date(endDateVal).toISOString(),
-          },
-        }),
-      ]);
+      const initialStart = item.actualStartDate || item.plannedStartDate;
+      const initialStartStr = initialStart ? format(new Date(initialStart), "yyyy-MM-dd") : "";
+
+      const initialEnd = item.actualEndDate || item.plannedEndDate;
+      const initialEndStr = initialEnd ? format(new Date(initialEnd), "yyyy-MM-dd") : "";
+
+      const payload: UpdateGanttItemRequest = {
+        itemName: nameVal,
+        itemDescription: descVal || undefined,
+        priority: priorityVal,
+        color: colorVal,
+        ganttPhaseId: phaseIdVal || null,
+      };
+
+      if (startDateVal !== initialStartStr) {
+        payload.actualStartDate = new Date(startDateVal).toISOString();
+      }
+      if (endDateVal !== initialEndStr) {
+        payload.actualEndDate = new Date(endDateVal).toISOString();
+      }
+
+      await updateMutation.mutateAsync(payload);
       onOpenChange(false);
     } catch {
       // Handled by mutation hook toasts
@@ -183,6 +221,29 @@ export default function GanttItemDetailModal({
     },
     staleTime: 5 * 60 * 1000,
     enabled: open,
+  });
+
+  const selectedAssignees = selectedAssigneeIds.map((id) => {
+    const foundInDd = (employees ?? []).find((e) => e.employeeId === id);
+    if (foundInDd) return foundInDd;
+
+    const assignedArray = Array.isArray(item.assignedEmployee)
+      ? item.assignedEmployee
+      : item.assignedEmployee
+        ? [item.assignedEmployee]
+        : [];
+    const foundInItem = assignedArray.find((e) => e?.employeeId === id);
+    if (foundInItem) {
+      return {
+        employeeId: foundInItem.employeeId,
+        employeeName: foundInItem.employeeName ?? "Unknown",
+      };
+    }
+
+    return {
+      employeeId: id,
+      employeeName: "Loading...",
+    };
   });
 
   const handleDelete = async () => {
@@ -225,11 +286,11 @@ export default function GanttItemDetailModal({
     }
   };
 
-  const handleAssign = async (employeeId: string | null) => {
+  const handleAssign = async (employeeIds: string[] | null) => {
     try {
       await assignMutation.mutateAsync({
         itemId: item.ganttItemId,
-        payload: { assignedToEmployeeId: employeeId },
+        payload: { assignedToEmployeeId: employeeIds },
       });
       onOpenChange(false);
     } catch {
@@ -330,7 +391,7 @@ export default function GanttItemDetailModal({
       >
         <div className="flex-1 flex flex-col">
           {/* Subtitle / Header details */}
-          <div className="flex items-center gap-2 mb-4 text-xs text-slate-500 font-medium">
+          <div className="flex items-center gap-2 mb-4 text-sm text-slate-500 font-medium">
             {isMilestone ? (
               <span className="flex items-center gap-1 text-pink-600 font-semibold">
                 <Diamond className="h-3.5 w-3.5 shrink-0" />
@@ -385,62 +446,69 @@ export default function GanttItemDetailModal({
                 className="space-y-4 pt-1"
               >
                 {/* Task Name */}
-                <div className="space-y-1">
-                  <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
-                    Task Name
-                  </Label>
-                  <Input
-                    value={nameVal}
-                    onChange={(e) => setNameVal(e.target.value)}
-                    placeholder="Task Name"
-                    className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
-                    required
-                  />
-                </div>
+                <FormInputField
+                  label="Task Name"
+                  value={nameVal}
+                  onChange={(e) => setNameVal(e.target.value)}
+                  placeholder="Task Name"
+                  required
+                  disabled={!canEdit}
+                />
 
                 {/* Description */}
-                <div className="space-y-1">
-                  <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
-                    Description
-                  </Label>
-                  <Input
-                    value={descVal}
-                    onChange={(e) => setDescVal(e.target.value)}
-                    placeholder="Optional Description"
-                    className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
-                  />
-                </div>
+                <FormInputField
+                  label="Description"
+                  value={descVal}
+                  onChange={(e) => setDescVal(e.target.value)}
+                  placeholder="Optional Description"
+                  disabled={!canEdit}
+                />
 
                 {/* Start & End Date */}
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
-                      Start Date
-                    </Label>
-                    <Input
-                      type="date"
-                      value={startDateVal}
-                      onChange={(e) => setStartDateVal(e.target.value)}
-                      className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
-                      required
-                      min={minStartDate}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
-                      End Date
-                    </Label>
-                    <Input
-                      type="date"
-                      value={endDateVal}
-                      onChange={(e) => setEndDateVal(e.target.value)}
-                      className="h-10 text-md border border-slate-200 rounded-lg focus-visible:ring-primary focus-visible:border-primary w-full"
-                      required
-                      min={startDateVal || minStartDate}
-                    />
-                  </div>
+                  <FormInputField
+                    type="date"
+                    label="Start Date"
+                    value={startDateVal}
+                    onChange={(e) => setStartDateVal(e.target.value)}
+                    required
+                    min={minStartDate}
+                    disabled={!canEdit}
+                  />
+                  <FormInputField
+                    type="date"
+                    label="End Date"
+                    value={endDateVal}
+                    onChange={(e) => setEndDateVal(e.target.value)}
+                    required
+                    min={startDateVal || minStartDate}
+                    disabled={!canEdit}
+                  />
                 </div>
-
+ 
+                {/* Phase Selection */}
+                {phases.length > 0 && (
+                  <div className="space-y-1">
+                    <FormSelect
+                      label="Phase"
+                      value={phaseIdVal}
+                      onChange={(val) =>
+                        setPhaseIdVal(
+                          (Array.isArray(val) ? val[0] : val) ?? ""
+                        )
+                      }
+                      options={phases.map((p) => ({
+                        value: p.ganttPhaseId,
+                        label: p.phaseName,
+                      }))}
+                      placeholder="Select phase (optional)"
+                      labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
+                      triggerClassName="h-10 rounded-lg border-slate-200 text-md"
+                      disabled={!canEdit}
+                    />
+                  </div>
+                )}
+ 
                 {/* Priority */}
                 <div className="space-y-1">
                   <FormSelect
@@ -456,7 +524,27 @@ export default function GanttItemDetailModal({
                     options={PRIORITY_OPTIONS}
                     labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
                     triggerClassName="h-10 rounded-lg border-slate-200 text-md"
+                    disabled={!canEdit}
                   />
+                </div>
+ 
+                {/* Color Picker */}
+                <div className="space-y-1">
+                  <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
+                    Color
+                  </Label>
+                  <div className="flex items-center gap-3">
+                    <input
+                      type="color"
+                      value={colorVal}
+                      onChange={(e) => setColorVal(e.target.value)}
+                      className="w-10 h-10 p-0 border border-slate-300 rounded-lg cursor-pointer overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-none"
+                      disabled={!canEdit}
+                    />
+                    <span className="text-sm font-mono uppercase text-slate-600">
+                      {colorVal}
+                    </span>
+                  </div>
                 </div>
               </form>
             )}
@@ -490,6 +578,7 @@ export default function GanttItemDetailModal({
                           handleProgressChange(Number(e.target.value))
                         }
                         className="w-full h-1.5 accent-primary cursor-pointer rounded-lg appearance-none bg-slate-200"
+                        disabled={!canEdit}
                       />
                       <div className="flex justify-between text-md text-primary font-semibold font-mono mt-1">
                         <span>0%</span>
@@ -499,7 +588,7 @@ export default function GanttItemDetailModal({
                     </div>
                   </div>
                 ) : (
-                  <p className="text-xs text-slate-500 leading-relaxed pl-3 border-l-2 border-amber-300">
+                  <p className="text-sm text-slate-500 leading-relaxed pl-3 border-l-2 border-amber-300">
                     Milestones represent key targets and do not have numerical
                     progress. You can mark them completed by changing the status
                     below.
@@ -519,6 +608,7 @@ export default function GanttItemDetailModal({
                     options={STATUS_OPTIONS}
                     labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
                     triggerClassName="!py-0 h-10 rounded-lg border-slate-200 text-md"
+                    disabled={!canEdit}
                   />
                 </div>
               </form>
@@ -527,9 +617,8 @@ export default function GanttItemDetailModal({
             {/* ── DEPENDENCY TAB ── */}
             {activeTab === "dependency" && (
               <div className="space-y-5">
-                {/* Existing dependencies */}
                 {predecessors.length > 0 || successors.length > 0 ? (
-                  <div className="divide-y divide-slate-105/60 max-h-[200px] overflow-y-auto pr-1">
+                  <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                     {predecessors.map((dep) => {
                       const pred = itemMap.get(dep.predecessorItemId);
                       const typeLabel =
@@ -543,33 +632,35 @@ export default function GanttItemDetailModal({
                       return (
                         <div
                           key={dep.ganttDependencyId}
-                          className="flex items-center justify-between py-3 text-xs"
+                          className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100/70 border border-slate-100 transition-colors text-sm"
                         >
                           <div className="flex flex-col gap-0.5 min-w-0">
-                            <span className="font-bold text-sm text-slate-800 truncate">
+                            <span className="font-semibold text-slate-800 truncate">
                               {pred?.itemName ?? "Unknown Task"}
                             </span>
-                            <span className="text-slate-400 text-sm">
+                            <span className="text-slate-500 text-sm">
                               {typeLabel}{" "}
                               {dep.lagDays > 0 && `(Lag: +${dep.lagDays}d)`}
                             </span>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-sm font-bold text-primary uppercase">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-100/70 uppercase tracking-wide">
                               {dep.dependencyType}
                             </span>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-50/50 rounded-lg transition-colors"
-                              onClick={() =>
-                                handleDeleteDependency(dep.ganttDependencyId)
-                              }
-                              disabled={deleteDepMutation.isPending}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                            {canEdit && (
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-50/50 rounded-lg transition-colors"
+                                onClick={() =>
+                                  handleDeleteDependency(dep.ganttDependencyId)
+                                }
+                                disabled={deleteDepMutation.isPending}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       );
@@ -588,33 +679,35 @@ export default function GanttItemDetailModal({
                       return (
                         <div
                           key={dep.ganttDependencyId}
-                          className="flex items-center justify-between py-3 text-xs"
+                          className="flex items-center justify-between py-2.5 px-3 rounded-xl bg-slate-50 hover:bg-slate-100/70 border border-slate-100 transition-colors text-sm"
                         >
                           <div className="flex flex-col gap-0.5 min-w-0">
-                            <span className="font-bold text-slate-800 truncate">
+                            <span className="font-semibold text-slate-800 truncate">
                               {succ?.itemName ?? "Unknown Task"}
                             </span>
-                            <span className="text-slate-400 text-[10px]">
+                            <span className="text-slate-500 text-sm">
                               {typeLabel}{" "}
                               {dep.lagDays > 0 && `(Lag: +${dep.lagDays}d)`}
                             </span>
                           </div>
                           <div className="flex items-center gap-3 shrink-0">
-                            <span className="text-[10px] font-bold text-slate-400 uppercase">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100/70 uppercase tracking-wide">
                               {dep.dependencyType} (Succ)
                             </span>
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-50/50 rounded-lg transition-colors"
-                              onClick={() =>
-                                handleDeleteDependency(dep.ganttDependencyId)
-                              }
-                              disabled={deleteDepMutation.isPending}
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                            {canEdit && (
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="h-8 w-8 text-slate-400 hover:text-red-650 hover:bg-red-50/50 rounded-lg transition-colors"
+                                onClick={() =>
+                                  handleDeleteDependency(dep.ganttDependencyId)
+                                }
+                                disabled={deleteDepMutation.isPending}
+                              >
+                                <Trash2 className="h-3.5 w-3.5" />
+                              </Button>
+                            )}
                           </div>
                         </div>
                       );
@@ -626,116 +719,120 @@ export default function GanttItemDetailModal({
                   </p>
                 )}
 
-                {/* Add dependency rows */}
-                {candidates.length > 0 ? (
-                  <div className="space-y-3 pt-4 border-t border-dashed border-slate-200">
-                    <Label className="text-md font-bold text-slate-800 block">
+                {canEdit && candidates.length > 0 ? (
+                  <div className="space-y-4 pt-4 border-t border-slate-100">
+                    <Label className="text-[15px] font-bold text-slate-800 block">
                       Add New Relation Links
                     </Label>
 
-                    {/* Header row */}
-                    <div className="grid grid-cols-12 gap-2 items-center">
-                      <span className="col-span-5 text-sm font-semibold text-slate-500 uppercase tracking-wide">
-                        Depends On
-                      </span>
-                      <span className="col-span-4 text-sm font-semibold text-slate-500 uppercase tracking-wide">
-                        Relation Type
-                      </span>
-                      <span className="col-span-2 text-sm font-semibold text-slate-500 uppercase tracking-wide text-center">
-                        Lag (d)
-                      </span>
-                      <span className="col-span-1" />
-                    </div>
-
-                    {pendingDeps.map((row) => (
-                      <div
-                        key={row.id}
-                        className="grid grid-cols-12 gap-2 items-center"
-                      >
-                        <div className="col-span-5">
-                          <FormSelect
-                            value={row.predId}
-                            onChange={(val) =>
-                              updatePendingRow(row.id, {
-                                predId: Array.isArray(val) ? val[0] : val,
-                              })
-                            }
-                            options={candidates
-                              .filter(
-                                (c) =>
-                                  !pendingDeps.some(
-                                    (r) =>
-                                      r.id !== row.id &&
-                                      r.predId === c.ganttItemId,
-                                  ),
-                              )
-                              .map((c) => ({
-                                value: c.ganttItemId,
-                                label: c.itemName,
-                              }))}
-                            placeholder="Select task..."
-                          />
-                        </div>
-
-                        <div className="col-span-4">
-                          <FormSelect
-                            value={row.depType}
-                            onChange={(val) =>
-                              updatePendingRow(row.id, {
-                                depType: (Array.isArray(val)
-                                  ? val[0]
-                                  : val) as GanttDependencyType,
-                              })
-                            }
-                            options={[
-                              { value: "FS", label: "FS: Finish-to-Start" },
-                              { value: "SS", label: "SS: Start-to-Start" },
-                              { value: "FF", label: "FF: Finish-to-Finish" },
-                              { value: "SF", label: "SF: Start-to-Finish" },
-                            ]}
-                          />
-                        </div>
-
-                        <div className="col-span-2">
-                          <input
-                            type="number"
-                            min="0"
-                            value={row.lagDays}
-                            onChange={(e) =>
-                              updatePendingRow(row.id, {
-                                lagDays: Number(e.target.value),
-                              })
-                            }
-                            className="w-full h-9 text-sm border border-slate-200 rounded-lg bg-white px-2 shadow-sm text-slate-800 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all text-center"
-                          />
-                        </div>
-
-                        <div className="col-span-1 flex justify-center">
-                          <button
-                            type="button"
-                            onClick={() => removePendingRow(row.id)}
-                            className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
+                    <div className="p-3 bg-slate-50/50 rounded-xl border border-slate-100/80 space-y-3">
+                      {/* Header row */}
+                      <div className="grid grid-cols-12 gap-2 items-center px-1">
+                        <span className="col-span-5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Depends On
+                        </span>
+                        <span className="col-span-4 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                          Relation Type
+                        </span>
+                        <span className="col-span-2 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-center">
+                          Lag (Days)
+                        </span>
+                        <span className="col-span-1" />
                       </div>
-                    ))}
 
-                    {/* Add another row */}
-                    <button
-                      type="button"
-                      onClick={addPendingRow}
-                      className="flex items-center gap-1.5 text-xs text-primary font-semibold hover:text-primary/80 transition-colors mt-1"
-                    >
-                      <Plus className="h-3.5 w-3.5" />
-                      Add Another
-                    </button>
+                      {pendingDeps.map((row) => (
+                        <div
+                          key={row.id}
+                          className="grid grid-cols-12 gap-2 items-center"
+                        >
+                          <div className="col-span-5">
+                            <FormSelect
+                              value={row.predId}
+                              onChange={(val) =>
+                                updatePendingRow(row.id, {
+                                  predId: Array.isArray(val) ? val[0] : val,
+                                })
+                              }
+                              options={candidates
+                                .filter(
+                                  (c) =>
+                                    !pendingDeps.some(
+                                      (r) =>
+                                        r.id !== row.id &&
+                                        r.predId === c.ganttItemId,
+                                    ),
+                                )
+                                .map((c) => ({
+                                  value: c.ganttItemId,
+                                  label: c.itemName,
+                                }))}
+                              placeholder="Select task..."
+                            />
+                          </div>
+
+                          <div className="col-span-4">
+                            <FormSelect
+                              value={row.depType}
+                              onChange={(val) =>
+                                updatePendingRow(row.id, {
+                                  depType: (Array.isArray(val)
+                                    ? val[0]
+                                    : val) as GanttDependencyType,
+                                })
+                              }
+                              options={[
+                                { value: "FS", label: "FS: Finish-to-Start" },
+                                { value: "SS", label: "SS: Start-to-Start" },
+                                { value: "FF", label: "FF: Finish-to-Finish" },
+                                { value: "SF", label: "SF: Start-to-Finish" },
+                              ]}
+                            />
+                          </div>
+
+                          <div className="col-span-2">
+                            <FormInputField
+                              type="number"
+                              min="0"
+                              value={row.lagDays}
+                              onChange={(e) =>
+                                updatePendingRow(row.id, {
+                                  lagDays: Number(e.target.value),
+                                })
+                              }
+                              className="text-center h-9 text-sm border border-slate-200 rounded-lg !mt-0"
+                              containerClass="!space-y-0"
+                            />
+                          </div>
+
+                          <div className="col-span-1 flex justify-center">
+                            <button
+                              type="button"
+                              onClick={() => removePendingRow(row.id)}
+                              className="h-8 w-8 flex items-center justify-center rounded-lg text-slate-300 hover:text-red-500 hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+
+                      {/* Add another row */}
+                      <button
+                        type="button"
+                        onClick={addPendingRow}
+                        className="flex items-center gap-1.5 text-sm text-primary font-semibold hover:text-primary/80 transition-colors mt-1 pl-1"
+                      >
+                        <Plus className="h-3.5 w-3.5" />
+                        Add Another
+                      </button>
+                    </div>
                   </div>
                 ) : (
-                  <p className="text-[10px] text-slate-400 text-center py-2">
-                    No other tasks available for linking relationship.
-                  </p>
+                  !canEdit && candidates.length > 0 ? null : (
+                    <p className="text-sm text-slate-400 text-center py-2">
+                      No other tasks available for linking relationship.
+                    </p>
+                  )
                 )}
               </div>
             )}
@@ -743,69 +840,98 @@ export default function GanttItemDetailModal({
             {/* ── ASSIGN EMPLOYEE TAB ── */}
             {activeTab === "assign" && (
               <div className="space-y-4">
-                {item.assignedEmployee?.employeeName ? (
+                {selectedAssignees.length > 0 ? (
                   <div className="flex items-center justify-between py-2 border-b border-slate-100">
                     <div className="min-w-0">
                       <Label className="text-md font-semibold text-slate-800 mb-1.5 block">
-                        Current Assignee
+                        Current Assignees ({selectedAssignees.length})
                       </Label>
-                      <div className="flex items-center gap-2 mt-1">
-                        <div className="h-5 w-5 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[9px] font-bold">
-                          {getInitials(item.assignedEmployee.employeeName)}
-                        </div>
-                        <span className="text-xs font-bold text-slate-850">
-                          {item.assignedEmployee.employeeName}
-                        </span>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {selectedAssignees.map((emp) => (
+                          <div
+                            key={emp.employeeId}
+                            className="flex items-center gap-1.5 bg-slate-50 border border-slate-100 rounded-lg px-2.5 py-1 text-sm"
+                          >
+                            <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">
+                              {getInitials(emp.employeeName)}
+                            </div>
+                            <span className="font-bold text-slate-800">
+                              {emp.employeeName}
+                            </span>
+                            {canEdit && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedAssigneeIds((prev) =>
+                                    prev.filter((id) => id !== emp.employeeId)
+                                  );
+                                }}
+                                className="text-slate-400 hover:text-red-500 ml-1 transition-colors"
+                              >
+                                &times;
+                              </button>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 text-xs text-slate-500 hover:text-red-650 hover:bg-red-50/50 border border-slate-200 rounded-lg shadow-sm"
-                      onClick={() => handleAssign(null)}
-                      disabled={assignMutation.isPending}
-                    >
-                      {assignMutation.isPending ? (
-                        <Loader2 className="h-3 w-3 animate-spin mr-1" />
-                      ) : null}
-                      Unassign
-                    </Button>
+                    {canEdit && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-8 text-sm text-slate-500 hover:text-red-650 hover:bg-red-50/50 border border-slate-200 rounded-lg shadow-sm align-top shrink-0"
+                        onClick={() => {
+                          setSelectedAssigneeIds([]);
+                          handleAssign(null);
+                        }}
+                        disabled={assignMutation.isPending}
+                      >
+                        {assignMutation.isPending ? (
+                          <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                        ) : null}
+                        Unassign All
+                      </Button>
+                    )}
                   </div>
                 ) : (
                   <div className="py-2.5">
                     <p className="text-sm text-slate-400 italic">
-                      Currently unassigned. Select an employee below to assign
+                      Currently unassigned. Select employees below to assign
                       this task.
                     </p>
                   </div>
                 )}
 
-                {employeesLoading ? (
-                  <div className="flex justify-center py-8 text-primary">
-                    <SpinnerIcon />
-                  </div>
-                ) : (
-                  <FormSelect
-                    label="Select Assignee"
-                    value={selectedAssigneeId}
-                    onChange={(val) =>
-                      setSelectedAssigneeId(Array.isArray(val) ? val[0] : val)
-                    }
-                    options={(employees ?? []).map((emp) => ({
-                      value: emp.employeeId,
-                      label: emp.employeeName,
-                    }))}
-                    placeholder="Select employee..."
-                    labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
-                    triggerClassName="h-10 rounded-lg border-slate-200 text-md"
-                  />
+                {canEdit && (
+                  employeesLoading ? (
+                    <div className="flex justify-center py-8 text-primary">
+                      <SpinnerIcon />
+                    </div>
+                  ) : (
+                    <FormSelect
+                      label="Select Assignees"
+                      value={selectedAssigneeIds}
+                      onChange={(val) => {
+                        const ids = Array.isArray(val) ? val : [val];
+                        setSelectedAssigneeIds(ids);
+                      }}
+                      options={(employees ?? []).map((emp) => ({
+                        value: emp.employeeId,
+                        label: emp.employeeName,
+                      }))}
+                      isMulti={true}
+                      placeholder="Select employees..."
+                      labelClass="text-md font-semibold text-slate-800 mb-1.5 block"
+                      triggerClassName="h-10 rounded-lg border-slate-200 text-md"
+                    />
+                  )
                 )}
               </div>
             )}
           </div>
 
           {/* ── Unified Footer ── */}
-          {(activeTab === "general" ||
+          {canEdit && (activeTab === "general" ||
             activeTab === "progress" ||
             activeTab === "dependency" ||
             activeTab === "assign") && (
@@ -842,8 +968,8 @@ export default function GanttItemDetailModal({
               ) : activeTab === "assign" ? (
                 <Button
                   type="button"
-                  onClick={() => handleAssign(selectedAssigneeId)}
-                  disabled={assignMutation.isPending || !selectedAssigneeId}
+                  onClick={() => handleAssign(selectedAssigneeIds.length > 0 ? selectedAssigneeIds : null)}
+                  disabled={assignMutation.isPending}
                   className=" ml-auto"
                 >
                   {assignMutation.isPending ? (
@@ -852,7 +978,7 @@ export default function GanttItemDetailModal({
                       Saving...
                     </>
                   ) : (
-                    "Save Assignee"
+                    "Save Assignees"
                   )}
                 </Button>
               ) : (

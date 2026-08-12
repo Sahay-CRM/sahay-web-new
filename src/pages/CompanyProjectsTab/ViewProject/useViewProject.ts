@@ -2,6 +2,7 @@ import {
   useAddUpdateCompanyProject,
   useGetAllProjectStatus,
   useGetCompanyProjectById,
+  useGetCompanySubProjects,
 } from "@/features/api/companyProject";
 import { useState } from "react";
 import { useSelector } from "react-redux";
@@ -21,8 +22,13 @@ export default function useViewProject() {
   const navigate = useNavigate();
   const { id: companyProjectId } = useParams();
   const permission = useSelector(getUserPermission);
-  const { data: projectApiData } = useGetCompanyProjectById(
+  const { data: projectApiData, isLoading: projectLoading } = useGetCompanySubProjects(
     companyProjectId || "",
+  );
+  const [activeProjectId, setActiveProjectId] = useState<string | null>(null);
+  const effectiveProjectId = activeProjectId || companyProjectId || "";
+  const { data: selectedProjectData, isLoading: selectedProjectLoading } = useGetCompanyProjectById(
+    activeProjectId || "",
   );
   const [isProjStatusSearch, setIsProjStatusSearch] = useState("");
   const [showCommentInput, setShowCommentInput] = useState(false);
@@ -41,7 +47,7 @@ export default function useViewProject() {
   });
 
   const { mutate: addProject } = useAddUpdateCompanyProject();
-  const commentsData = useGetProjectComments(projectId || "");
+  const commentsData = useGetProjectComments(effectiveProjectId);
   const { mutate: addcomment, isPending } = addUpdateCommentMutation();
   const { mutate: deleteComment } = deleteCommentMutation();
 
@@ -56,7 +62,7 @@ export default function useViewProject() {
   ) => {
     if (!editingText.trim()) return;
     addcomment({
-      projectId: projectId!,
+      projectId: effectiveProjectId,
       comment: editingText,
       projectCommentId,
       tagPerson,
@@ -77,7 +83,7 @@ export default function useViewProject() {
   const onSubmitComment = (tagPerson?: string[]) => {
     if (!newComment.trim()) return;
     addcomment({
-      projectId: projectId!,
+      projectId: effectiveProjectId,
       comment: newComment,
       tagPerson,
     });
@@ -140,10 +146,10 @@ export default function useViewProject() {
   //     }))
   //   : [];
 
-  const handleStatusChange = (ele: string) => {
+  const handleStatusChange = (ele: string, id?: string) => {
     const payload = {
       projectStatusId: ele,
-      projectId: companyProjectId,
+      projectId: id || effectiveProjectId,
     };
     addProject(payload);
   };
@@ -175,7 +181,8 @@ export default function useViewProject() {
 
   const filteredComments = (commentsData.data || []).filter((comment) => {
     if (filterUserId === "all") return true;
-    const selectedEmployee = projectApiData?.data?.otherEmployee?.find(
+    const activeProject = activeProjectId ? selectedProjectData?.data : projectApiData?.data;
+    const selectedEmployee = activeProject?.otherEmployee?.find(
       (emp) => emp.employeeId === filterUserId,
     );
     if (!selectedEmployee) return true;
@@ -227,5 +234,12 @@ export default function useViewProject() {
     handleEditComment,
     isPending,
     currentUserId: useSelector(getUserId),
+    subProjectsRes: projectApiData,
+    subProjectsLoading: projectLoading,
+    activeProjectId,
+    setActiveProjectId,
+    effectiveProjectId,
+    selectedProjectData,
+    selectedProjectLoading,
   };
 }

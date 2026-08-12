@@ -192,8 +192,8 @@ export default function useAddEmployee() {
     const [countryCode, setCountryCode] = useState<string>("+91");
 
     const employeeTypeOptions = [
-      { value: "EMPLOYEE", label: "EMPLOYEE" },
-      { value: "OWNER", label: "OWNER" },
+      { value: "EMPLOYEE", label: "Employee" },
+      { value: "OWNER", label: "Owner" },
     ];
 
     return (

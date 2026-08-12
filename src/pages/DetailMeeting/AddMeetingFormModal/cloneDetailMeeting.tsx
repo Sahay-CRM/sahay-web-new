@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
 import { FormProvider, useFormContext, Controller } from "react-hook-form";
 
@@ -22,6 +22,8 @@ import { getEmployee } from "@/features/api/companyEmployee";
 import { useGetAdminMeetingTemplatesAll } from "@/features/api/detailMeeting";
 import PageNotAccess from "@/pages/PageNoAccess";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown";
+import { getMeetingType } from "@/features/api/meetingType";
 
 const MeetingTemplateStep = () => {
   const {
@@ -35,7 +37,8 @@ const MeetingTemplateStep = () => {
     search: "",
   });
 
-  const { data: templatesRes, isLoading } = useGetAdminMeetingTemplatesAll(paginationFilter);
+  const { data: templatesRes, isLoading } =
+    useGetAdminMeetingTemplatesAll(paginationFilter);
   const templates = templatesRes?.data || [];
 
   const mappedTemplates = templates.map((item, index) => ({
@@ -139,6 +142,21 @@ const MeetingInfoStep = () => {
     control,
   } = useFormContext();
 
+  // Meeting Type options
+  const { data: meetingTypeData } = getMeetingType({
+    filter: { currentPage: 1, pageSize: 100 },
+  });
+
+  const meetingTypeOptions = useMemo(() => {
+    return (
+      meetingTypeData?.data?.map((t) => ({
+        label: t.meetingTypeName || "",
+        value: t.meetingTypeId || "",
+        parentType: t.parentType || "",
+      })) || []
+    );
+  }, [meetingTypeData]);
+
   return (
     <div className="grid grid-cols-2 gap-4">
       <Card className="col-span-2 px-4 py-4 grid grid-cols-2 gap-4 h-fit content-start">
@@ -149,69 +167,108 @@ const MeetingInfoStep = () => {
           isMandatory
           placeholder="Enter Meeting Name"
         />
-           <Controller
-          control={control}
-          name="meetingTimePlanned"
-          rules={{
-            required: "Planned time is required",
-            validate: (value) => {
-              if (Number(value) <= 0) {
-                return "Planned time must be greater than 0";
-              }
-              return true;
-            },
-          }}
-          render={({ field }) => {
-            const totalMinutes = Number(field.value) || 0;
-            const hours = totalMinutes > 0 ? Math.floor(totalMinutes / 60) : 0;
-            const minutes = totalMinutes % 60;
+        <div className="flex items-start gap-4">
+          <div className="flex-1">
+            <label className="block mb-3 text-md font-semibold text-gray-900 ">
+              Meeting Type <span className="text-red-500">*</span>
+            </label>
+            <Controller
+              control={control}
+              name="meetingTypeId"
+              rules={{ required: "Please select Meeting Type" }}
+              render={({ field }) => {
+                const rawVal =
+                  field.value?.meetingTypeId || field.value;
+                return (
+                  <SearchDropdown
+                    className="w-full border-gray-200 text-base  h-auto font-normal"
+                    options={meetingTypeOptions}
+                    selectedValues={rawVal ? [rawVal] : []}
+                    onSelect={(value) => {
+                      const matched = meetingTypeData?.data?.find(
+                        (o) => o.meetingTypeId === value.value,
+                      );
+                      field.onChange(matched || value.value);
+                    }}
+                    placeholder="Select Meeting Type..."
+                    error={errors.meetingTypeId}
+                    isCrossShow={false}
+                  />
+                );
+              }}
+            />
+          </div>
+          <div className="flex-1">
+            <Controller
+              control={control}
+              name="meetingTimePlanned"
+              rules={{
+                required: "Planned time is required",
+                validate: (value) => {
+                  if (Number(value) <= 0) {
+                    return "Planned time must be greater than 0";
+                  }
+                  return true;
+                },
+              }}
+              render={({ field }) => {
+                const totalMinutes = Number(field.value) || 0;
+                const hours = totalMinutes > 0 ? Math.floor(totalMinutes / 60) : 0;
+                const minutes = totalMinutes % 60;
 
-            const handleHoursChange = (hVal: string) => {
-              const h = parseInt(hVal.replace(/\D/g, ""), 10) || 0;
-              field.onChange(h * 60 + minutes);
-            };
+                const handleHoursChange = (hVal: string) => {
+                  const h = parseInt(hVal.replace(/\D/g, ""), 10) || 0;
+                  field.onChange(h * 60 + minutes);
+                };
 
-            const handleMinutesChange = (mVal: string) => {
-              const m = parseInt(mVal.replace(/\D/g, ""), 10) || 0;
-              field.onChange(hours * 60 + m);
-            };
+                const handleMinutesChange = (mVal: string) => {
+                  const m = parseInt(mVal.replace(/\D/g, ""), 10) || 0;
+                  field.onChange(hours * 60 + m);
+                };
 
-            return (
-              <div className="flex flex-col mb-2">
-                <FormLabel>
-                  Planned Time <span className="text-red-500 text-[20px]">*</span>
-                </FormLabel>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="flex items-center gap-1.5">
-                    <Input
-                      type="text"
-                      value={hours || ""}
-                      onChange={(e) => handleHoursChange(e.target.value)}
-                      className="w-16 text-center text-[20px]"
-                      placeholder="0"
-                    />
-                    <span className="text-sm font-semibold text-gray-500">h</span>
+                return (
+                  <div className="flex flex-col mb-2">
+                    <FormLabel>
+                      Planned Time{" "}
+                      <span className="text-red-500 text-[20px]">*</span>
+                    </FormLabel>
+                    <div className="flex items-center gap-2 mt-2">
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          type="text"
+                          value={hours || ""}
+                          onChange={(e) => handleHoursChange(e.target.value)}
+                          className="w-16 text-center text-[20px]"
+                          placeholder="0"
+                        />
+                        <span className="text-sm font-semibold text-gray-500">
+                          h
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          type="text"
+                          value={minutes || ""}
+                          onChange={(e) => handleMinutesChange(e.target.value)}
+                          className="w-16 text-center text-[20px]"
+                          placeholder="0"
+                        />
+                        <span className="text-sm font-semibold text-gray-500">
+                          m
+                        </span>
+                      </div>
+                    </div>
+                    {errors.meetingTimePlanned && (
+                      <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] mt-1">
+                        {String(errors.meetingTimePlanned.message)}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Input
-                      type="text"
-                      value={minutes || ""}
-                      onChange={(e) => handleMinutesChange(e.target.value)}
-                      className="w-16 text-center text-[20px]"
-                      placeholder="0"
-                    />
-                    <span className="text-sm font-semibold text-gray-500">m</span>
-                  </div>
-                </div>
-                {errors.meetingTimePlanned && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] mt-1">
-                    {String(errors.meetingTimePlanned.message)}
-                  </span>
-                )}
-              </div>
-            );
-          }}
-        />
+                );
+              }}
+            />
+          </div>
+        </div>
         <FormInputField
           label="Meeting Description"
           {...register("meetingDescription", {
@@ -235,13 +292,14 @@ const MeetingInfoStep = () => {
                 onChange={(date) => {
                   field.onChange(date?.toISOString());
                 }}
-                disablePastDates={true}
+                disablePastDays={
+                  Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                }
                 error={errors.meetingDateTime}
               />
             );
           }}
         />
-     
       </Card>
     </div>
   );

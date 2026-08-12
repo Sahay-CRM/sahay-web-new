@@ -14,17 +14,20 @@ interface MeetingSearchResponse {
   detail: MeetingSearchItem[];
 }
 
-export default function useGetMeetingSearch(searchTerm: string) {
+export default function useGetMeetingSearch(searchTerm: string, meetingId?: string) {
   // const debouncedSearch = useDebounce(searchTerm, 500);
 
   return useQuery({
-    queryKey: ["get-meeting-search", searchTerm],
+    queryKey: ["get-meeting-search", searchTerm, meetingId],
     queryFn: async () => {
       const { data } = await Api.post<{
         data: MeetingSearchResponse;
       }>({
         url: Urls.getMeetingSearch(),
-        data: { search: searchTerm || "" },
+        data: { 
+          search: searchTerm || "",
+          ...(meetingId ? { meetingId } : {}),
+        },
       });
       return data;
     },

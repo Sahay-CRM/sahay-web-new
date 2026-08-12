@@ -1,7 +1,5 @@
-import { useForm } from "react-hook-form";
-import { useNavigate, useParams } from "react-router-dom";
-import { Calendar, Edit } from "lucide-react";
-import { useEffect, useState, useRef } from "react";
+import { useNavigate } from "react-router-dom";
+import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
@@ -12,361 +10,291 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
-import Pagination from "@/components/shared/Pagination/Pagination";
+import TableData from "@/components/shared/DataTable/DataTable";
 
-import { TaskForm } from "./taskForm";
+import ProjectTaskDrawer from "./projectTaskDrawer";
 
+import { useAllCompanyTask } from "@/features/api/companyTask";
 import {
-  addUpdateCompanyTaskMutation,
-  useDdTaskType,
-  useGetAllTaskStatus,
-  useGetCompanyTask,
-  useGetCompanyTaskById,
-} from "@/features/api/companyTask";
-import { getInitials, formatToLocalDateTime } from "@/features/utils/app.utils";
+  useGetCompanyProjectById,
+  useGetAllProjectStatus,
+} from "@/features/api/companyProject";
+import { formatToLocalDateTime, getInitials } from "@/features/utils/app.utils";
 import { queryClient } from "@/queryClient";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useGetEmployeeDd } from "@/features/api/companyEmployee";
-import { useGetMeetingSearch } from "@/features/api/companyMeeting";
+import { isColorDark } from "@/features/utils/color.utils";
 
-export default function ProjectTaskList() {
-  const { id: projectId } = useParams();
+export default function ProjectTaskList({
+  activeProjectId,
+  className,
+  statusFilter = "all",
+  hideAddButton = false,
+}: {
+  activeProjectId: string;
+  className?: string;
+  statusFilter?: "all" | "pending" | "completed";
+  hideAddButton?: boolean;
+}) {
   const navigate = useNavigate();
   const taskPermission = useSelector(getUserPermission).TASK;
-  const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
-  const [isAddTaskOpen, setIsAddTaskOpen] = useState(false);
-  const [editingTaskId, setEditingTaskId] = useState<string | null>(null);
-  const { data: taskDataById } = useGetCompanyTaskById(editingTaskId || "");
-  const [isMeetingSearch, setIsMeetingSearch] = useState("");
-  const [isTypeSearch, setIsTypeSearch] = useState("");
-  const [isStatusSearch, setIsStatusSearch] = useState("");
-  const [paginationFilter, setPaginationFilter] = useState<PaginationFilter>({
-    currentPage: 1,
-    pageSize: 25,
-    search: "",
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [selectedTaskForEdit, setSelectedTaskForEdit] = useState<TaskGetPaging | null>(null);
+  const [taskSearch, setTaskSearch] = useState({ search: "" });
+
+  const { data: tasks } = useAllCompanyTask({
+    filter: {
+      projectId: activeProjectId,
+    },
   });
 
-  const {
-    control,
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-    reset,
-    watch,
-  } = useForm();
+  const { data: projectData } = useGetCompanyProjectById(activeProjectId);
+  const { data: projectStatusList } = useGetAllProjectStatus({
+    filter: {},
+    enable: true,
+  });
 
-  const taskNameValue = watch("taskName") || "";
-  const taskDescriptionValue = watch("taskDescription") || "";
-  const prevTaskNameRef = useRef(taskNameValue);
+  const isProjectClosed = useMemo(() => {
+    const projectStatusId = projectData?.data?.projectStatusId;
+    if (!projectStatusId || !projectStatusList?.data) return false;
 
-  useEffect(() => {
-    if (taskDescriptionValue === "" || taskDescriptionValue === prevTaskNameRef.current) {
-      if (taskDescriptionValue !== taskNameValue) {
-        setValue("taskDescription", taskNameValue);
+    const currentStatus = projectStatusList.data.find(
+      (status) => status.projectStatusId === projectStatusId
+    );
+
+    return (
+      currentStatus?.winLostProject === 1 || currentStatus?.winLostProject === 0
+    );
+  }, [projectData?.data?.projectStatusId, projectStatusList?.data]);
+
+  const taskTableData = (tasks?.data ?? [])
+    .filter((task) => {
+      if (statusFilter === "pending") {
+        const status = task.taskStatus?.toLowerCase() || "";
+        return status !== "completed" && status !== "cancelled" && status !== "cancel";
       }
-    }
-    prevTaskNameRef.current = taskNameValue;
-  }, [taskNameValue, taskDescriptionValue, setValue]);
-
-  const defaultValue = {
-    meetingId: "",
-    taskName: "",
-    taskDescription: "",
-    taskDeadline: null,
-    taskStatusId: "",
-    taskTypeId: "",
-    assignUsers: [],
-  };
-
-  const { data: tasks } = useGetCompanyTask({
-    filter: {
-      ...paginationFilter,
-      projectId: projectId,
-    },
-  });
-
-  const { data: taskTypeData } = useDdTaskType({
-    filter: { search: isTypeSearch.length >= 3 ? isTypeSearch : undefined },
-  });
-
-  const { data: taskStatus } = useGetAllTaskStatus({
-    filter: {
-      search: isStatusSearch.length >= 3 ? isStatusSearch : undefined,
-      pageSize: 25,
-    },
-  });
-
-  const { data: employeedata } = useGetEmployeeDd({
-    filter: { isDeactivated: false },
-  });
-
-  const { data: searchMeetingData } = useGetMeetingSearch(isMeetingSearch);
-
-  const employeeOption = employeedata
-    ? employeedata.data.map((status) => ({
-        label: status.employeeName,
-        value: status.employeeId,
-      }))
-    : [];
-
-  const meetingDataOption = [
-    ...(searchMeetingData?.data?.normal?.length
-      ? [{ label: "NORMAL meetings", value: "header-normal", isHeader: true }]
-      : []),
-    ...(searchMeetingData?.data?.normal ?? []).map((item) => ({
-      label: item.meetingName ?? "",
-      value: item.meetingId ?? "",
-    })),
-    ...(searchMeetingData?.data?.detail?.length
-      ? [{ label: "DETAIL meetings", value: "header-detail", isHeader: true }]
-      : []),
-    ...(searchMeetingData?.data?.detail ?? []).map((item) => ({
-      label: item.meetingName ?? "",
-      value: item.meetingId ?? "",
-    })),
-  ];
-
-  const taskStatusOptions = taskStatus
-    ? taskStatus.data.map((status) => ({
-        label: status.taskStatus,
-        value: status.taskStatusId,
-        color: status.color || "#2e3195",
-      }))
-    : [];
-
-  const taskTypeOptions = taskTypeData
-    ? taskTypeData.data.map((status) => ({
-        label: status.taskTypeName || "Unnamed",
-        value: status.taskTypeId || "",
-      }))
-    : [];
-
-  const defaultTaskStatus = (taskStatus?.data || [])
-    .slice()
-    .sort((a, b) => (a.taskStatusOrder || 0) - (b.taskStatusOrder || 0))[0];
-
-  useEffect(() => {
-    if (!editingTaskId && defaultTaskStatus && !watch("taskStatusId")) {
-      setValue("taskStatusId", defaultTaskStatus.taskStatusId);
-    }
-  }, [defaultTaskStatus, editingTaskId, setValue, watch]);
-
-  useEffect(() => {
-    if (taskDataById?.data && editingTaskId) {
-      reset({
-        taskId: taskDataById.data.taskId || "",
-        meetingId: taskDataById.data?.meetingId || "",
-        taskName: taskDataById.data.taskName || "",
-        taskDescription: taskDataById.data.taskDescription || "",
-        taskDeadline: taskDataById.data.taskDeadline
-          ? new Date(taskDataById.data.taskDeadline)
-          : null,
-        taskStatusId: taskDataById.data.taskStatusId || "",
-        taskTypeId: taskDataById.data.taskTypeId || "",
-        assignUsers: taskDataById.data.assignUsers
-          ? taskDataById.data.assignUsers.map((u) => u.employeeId)
-          : [],
-      });
-    }
-  }, [editingTaskId, taskDataById, reset]);
-
-  const onSubmitTask = handleSubmit(async (data) => {
-    const assigneeIds = data.assignUsers;
-    const payload = {
-      taskId: editingTaskId || undefined,
-      taskName: data.taskName,
-      taskDescription: data.taskDescription,
-      taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
-      taskStatusId: data?.taskStatusId,
-      employeeIds: assigneeIds,
-      projectId: projectId,
-      meetingId: data.meetingId,
-      taskTypeId: data.taskTypeId,
-    };
-
-    addUpdateTask(payload, {
-      onSuccess: () => {
-        queryClient.resetQueries({
-          queryKey: ["get-project-by-id", projectId],
-        });
-        setIsAddTaskOpen(false);
-        setEditingTaskId(null);
-        reset();
-      },
-    });
-  });
+      if (statusFilter === "completed") {
+        return task.taskStatus?.toLowerCase() === "completed";
+      }
+      return true;
+    })
+    .filter((task) => {
+      if (!taskSearch.search) return true;
+      const search = taskSearch.search.toLowerCase();
+      return (
+        task.taskName?.toLowerCase().includes(search) ||
+        task.taskDescription?.toLowerCase().includes(search) ||
+        task.taskStatus?.toLowerCase().includes(search)
+      );
+    })
+    .map((item, index) => ({
+      ...item,
+      srNo: index + 1,
+      rawTaskDeadline: item.taskDeadline,
+      taskDeadline: item.taskDeadline
+        ? formatToLocalDateTime(item.taskDeadline)
+        : "",
+      assigneeNames: item.TaskEmployeeJunction
+        ? item.TaskEmployeeJunction.map((j) => j.Employee?.employeeName)
+            .filter(Boolean)
+            .join(", ")
+        : "",
+    }));
 
   return (
-    <div className="bg-white p-1 border h-[calc(100vh-120px)] rounded-2xl shadow-md flex flex-col">
-      {/* Header */}
-      <div className="sticky top-0 bg-white z-20 px-5 pt-2 mb-4">
-        <div className="flex justify-between items-center w-full gap-4">
-          <SearchInput
-            placeholder="Search..."
-            searchValue={paginationFilter?.search || ""}
-            setPaginationFilter={setPaginationFilter}
-            className="w-80 h-9"
-          />
-          {taskPermission.Add && (
-            <Button
-              className="py-2 w-fit h-9"
-              onClick={() => {
-                setEditingTaskId(null);
-                setIsAddTaskOpen(true);
-                reset(defaultValue);
-              }}
-            >
-              Add Task
-            </Button>
-          )}
+    <div
+      className={`bg-white border rounded-2xl shadow-md flex flex-col ${className || "h-auto"}`}
+    >
+      {/* Task List (scroll container includes header so it stays sticky) */}
+      <div className="px-5 pb-2">
+        {/* Header */}
+        <div className="sticky top-0 bg-white z-20 -mx-5 px-5 mt-4">
+          <div className="flex justify-between items-center w-full gap-4 pb-4">
+            <SearchInput
+              placeholder="Search..."
+              searchValue={taskSearch.search}
+              setPaginationFilter={setTaskSearch}
+              className="w-80 h-9"
+            />
+            {taskPermission.Add && !hideAddButton && !isProjectClosed && (
+              <Button
+                className="py-2 w-fit h-9"
+                onClick={() => {
+                  setSelectedTaskForEdit(null);
+                  setIsDrawerOpen(true);
+                }}
+              >
+                Add Task
+              </Button>
+            )}
+          </div>
         </div>
-      </div>
 
-      {/* Add Task Form */}
-      {isAddTaskOpen && (
-        <TaskForm
-          key="add-task-form"
-          control={control}
-          errors={errors}
-          register={register}
-          setValue={setValue}
-          onSubmitTask={onSubmitTask}
-          reset={reset}
-          defaultValue={defaultValue}
-          setIsAddTaskOpen={setIsAddTaskOpen}
-          setEditingTaskId={setEditingTaskId}
-          editingTaskId={editingTaskId}
-          meetingDataOption={meetingDataOption}
-          taskTypeOptions={taskTypeOptions}
-          taskStatusOptions={taskStatusOptions}
-          employeeOption={employeeOption}
-          handleMeetingSearch={setIsMeetingSearch}
-          handleTypeSearch={setIsTypeSearch}
-          handleStatusSearch={setIsStatusSearch}
-        />
-      )}
-
-      {/* Task List */}
-      <div className="flex-1 overflow-auto p-5">
-        <div className="space-y-4">
-          {tasks?.data?.length ? (
-            tasks.data.map((task) => (
-              <div key={task.taskId}>
-                <div
-                  onClick={() =>
-                    taskPermission.View &&
-                    navigate(`/dashboard/tasks/view/${task.taskId}`)
+        <div className="mt-2">
+          <TableData
+            tableData={taskTableData}
+            columns={{
+              taskName: {
+                label: "Task Name",
+                width: "w-[45%]",
+                render: (_, item) => {
+                  const row = item as TaskGetPaging;
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="break-words whitespace-normal cursor-pointer">
+                            {row.taskName}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[300px] p-2 bg-slate-900 border border-slate-800 text-white rounded-md shadow-md">
+                          <p className="text-[11px] text-white break-words whitespace-pre-wrap">
+                            {row.taskDescription || "No description"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+              // taskDescription: "Task Description",
+              taskDeadline: {
+                label: "Task Deadline",
+                width: "w-[35%]",
+              },
+              assigneeNames: {
+                label: "Assignees",
+                width: "w-[20%]",
+                render: (_, item) => {
+                  const row = item as TaskGetPaging;
+                  const assignees = row.TaskEmployeeJunction || [];
+                  if (assignees.length === 0) {
+                    return <span className="text-xs text-slate-400">Unassigned</span>;
                   }
-                  className="p-2 rounded-xl border hover:shadow-md transition cursor-pointer"
-                >
-                  <div className="flex justify-between items-start mb-1">
-                    <h3 className="px-1 text-lg font-semibold">
-                      {task.taskName}
-                    </h3>
-                    <div className="flex flex-row gap-1 items-center">
-                      <span
-                        className="px-2 py-1 rounded-full text-xs font-medium"
-                        style={{
-                          backgroundColor: task.color || "#e5e7eb",
-                        }}
-                      >
-                        {task.taskStatus}
-                      </span>
-                      {taskPermission.Edit && (
-                        <span
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setIsAddTaskOpen(false);
-                            setEditingTaskId(
-                              editingTaskId === task.taskId
-                                ? null
-                                : task.taskId,
-                            );
-                          }}
-                        >
-                          <Edit className="w-4 h-4 text-primary cursor-pointer" />
-                        </span>
-                      )}
-                    </div>
-                  </div>
-
-                  <p className="text-sm px-1 text-muted-foreground mb-1">
-                    {task.taskDescription || "-"}
-                  </p>
-
-                  <div className="flex px-1 flex-wrap gap-x-6 gap-y-2 text-sm">
-                    <div className="flex items-center gap-2">
-                      <Calendar className="h-4 w-4 text-muted-foreground" />
-                      <span className="font-medium">Deadline:</span>
-                      <span>
-                        {task.taskDeadline
-                          ? formatToLocalDateTime(task.taskDeadline)
-                          : "-"}
-                      </span>
-                    </div>
-
-                    <div className="flex items-center gap-2">
-                      <span className="font-medium">Assignees:</span>
-                      <div className="flex gap-1 flex-wrap">
-                        {task.TaskEmployeeJunction &&
-                          task.TaskEmployeeJunction.map((a) => (
-                            <TooltipProvider key={a.employeeId}>
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <div className="h-7 w-7 rounded-full bg-gray-200 text-xs flex items-center justify-center font-medium cursor-default">
-                                    {getInitials(a.Employee.employeeName)}
-                                  </div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  {a.Employee.employeeName}
-                                </TooltipContent>
-                              </Tooltip>
-                            </TooltipProvider>
-                          ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {editingTaskId === task.taskId && (
-                  <TaskForm
-                    key={`edit-${task.taskId}`}
-                    control={control}
-                    errors={errors}
-                    register={register}
-                    setValue={setValue}
-                    onSubmitTask={onSubmitTask}
-                    reset={reset}
-                    defaultValue={defaultValue}
-                    setIsAddTaskOpen={setIsAddTaskOpen}
-                    setEditingTaskId={setEditingTaskId}
-                    editingTaskId={editingTaskId}
-                    meetingDataOption={meetingDataOption}
-                    taskTypeOptions={taskTypeOptions}
-                    taskStatusOptions={taskStatusOptions}
-                    employeeOption={employeeOption}
-                    handleMeetingSearch={setIsMeetingSearch}
-                    handleTypeSearch={setIsTypeSearch}
-                    handleStatusSearch={setIsStatusSearch}
-                  />
-                )}
-              </div>
-            ))
-          ) : (
-            <p className="text-center text-muted-foreground">No Tasks Found</p>
-          )}
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex -space-x-2 overflow-hidden cursor-pointer">
+                            {assignees.slice(0, 3).map((junction, idx) => {
+                              const name = junction.Employee?.employeeName || "";
+                              if (!name) return null;
+                              return (
+                                <div
+                                  key={idx}
+                                  className="rounded-full h-6 w-6 bg-slate-100 text-sm flex items-center justify-center  text-black border border-slate-200/50 ring-2 ring-white hover:bg-slate-200 hover:z-10 transition-all"
+                                >
+                                  {getInitials(name)}
+                                </div>
+                              );
+                            })}
+                            {assignees.length > 3 && (
+                              <div className="rounded-full h-6 w-6 bg-slate-200 text-[10px] flex items-center justify-center  text-black border border-slate-350 ring-2 ring-white hover:bg-slate-300 hover:z-10 transition-all">
+                                +{assignees.length - 3}
+                              </div>
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[250px] p-2.5 bg-slate-900 border border-slate-800 text-white rounded-md shadow-md">
+                          <div className="space-y-1">
+                            <ul className="text-[10px] text-white list-disc list-inside space-y-0.5">
+                              {assignees.map((junction, idx) => {
+                                const name = junction.Employee?.employeeName || "";
+                                if (!name) return null;
+                                return <li key={idx}>{name}</li>;
+                              })}
+                            </ul>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+            }}
+            primaryKey="taskId"
+            onEdit={
+              taskPermission.Edit && !isProjectClosed
+                ? (row) => {
+                    setSelectedTaskForEdit(row);
+                    setIsDrawerOpen(true);
+                  }
+                : undefined
+            }
+            viewButton={false}
+            isActionButton={() => !isProjectClosed}
+            canDelete={() => false}
+            moduleKey="TASK"
+            onRowClick={(row) => {
+              if (taskPermission.View) {
+                navigate(`/dashboard/tasks/view/${row.taskId}`);
+              }
+            }}
+            sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
+            actionColumnWidth="w-[70px]"
+            extraColumns={[
+              {
+                label: "Status",
+                width: "w-[80px]",
+                render: (row) => {
+                  const getStatusInitial = (status: string) => {
+                    const s = status?.toLowerCase() || "";
+                    if (s.includes("progress")) return "P";
+                    if (s.includes("yet")) return "Y";
+                    if (s.includes("complete")) return "C";
+                    if (s.includes("delay")) return "D";
+                    return s.charAt(0).toUpperCase();
+                  };
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`rounded-full h-6 w-6 flex items-center justify-center text-[10px] font-bold border border-slate-350 shadow-sm cursor-default select-none ${
+                              row.color && isColorDark(row.color as string)
+                                ? "text-white"
+                                : "text-slate-800"
+                            }`}
+                            style={{
+                              backgroundColor: (row.color as string) || "#e5e7eb",
+                            }}
+                          >
+                            {getStatusInitial(row.taskStatus as string)}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {row.taskStatus as string}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+            ]}
+          />
         </div>
       </div>
 
-      {/* Pagination */}
-      {tasks && tasks.data?.length > 0 && (
-        <div className="sticky bottom-0 bg-white z-10 py-1">
-          <Pagination
-            paginationDetails={tasks as PaginationFilter}
-            setPaginationFilter={setPaginationFilter}
-          />
-        </div>
+      {isDrawerOpen && (
+        <ProjectTaskDrawer
+          open={isDrawerOpen}
+          onClose={() => {
+            setIsDrawerOpen(false);
+            setSelectedTaskForEdit(null);
+          }}
+          taskData={selectedTaskForEdit}
+          projectId={activeProjectId}
+          onSuccess={() => {
+            queryClient.invalidateQueries({
+              queryKey: ["get-all-task-dropdown", { projectId: activeProjectId }],
+            });
+            queryClient.resetQueries({
+              queryKey: ["get-project-by-id", activeProjectId],
+            });
+            queryClient.resetQueries({
+              queryKey: ["get-company-sub-projects", activeProjectId],
+            });
+          }}
+        />
       )}
     </div>
   );

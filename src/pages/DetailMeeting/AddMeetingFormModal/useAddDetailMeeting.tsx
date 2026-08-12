@@ -9,6 +9,8 @@ import {
 } from "@/features/api/detailMeeting";
 import { useSelector } from "react-redux";
 import { getUserPermission, getUserDetail } from "@/features/selectors/auth.selector";
+import { docUploadMutation } from "@/features/api/file";
+import { queryClient } from "@/queryClient";
 
 // Renamed function
 export default function useAddDetailMeeting() {
@@ -19,6 +21,7 @@ export default function useAddDetailMeeting() {
 
   const { mutate: addDetailMeeting, isPending } =
     addUpdateDetailMeetingMutation();
+  const { mutate: docUpload } = docUploadMutation();
   const navigate = useNavigate();
   const { data: meetingData } = useGetMeetingTiming(companyMeetingId || "");
 
@@ -42,6 +45,13 @@ export default function useAddDetailMeeting() {
           : null,
         meetingTypeId: data.meetingType || undefined,
         employeeId: data.joiners,
+        meetingDocuments: Array.isArray(data.files)
+          ? data.files.map((f: { fileId: string; fileName: string }) => ({
+              fileId: f.fileId,
+              fileName: f.fileName,
+            }))
+          : [],
+        removedFileIdsArray: [],
       });
     } else {
       if (!companyMeetingId) {
@@ -59,6 +69,8 @@ export default function useAddDetailMeeting() {
                 },
               ]
             : [],
+          meetingDocuments: [],
+          removedFileIdsArray: [],
         });
       }
     }
@@ -116,7 +128,19 @@ export default function useAddDetailMeeting() {
         };
 
     addDetailMeeting(payload, {
-      onSuccess: () => {
+      onSuccess: (response) => {
+        const meetingId = Array.isArray(response?.data)
+          ? response?.data[0]?.meetingId
+          : (response?.data as { meetingId?: string })?.meetingId;
+
+        if (typeof meetingId === "string" && meetingId) {
+          handleFileOperations(
+            meetingId,
+            data.meetingDocuments || [],
+            data.removedFileIdsArray || [],
+          );
+        }
+
         handleModalClose();
         if (searchParams.get("from") === "task") {
           navigate("/dashboard/tasks/add");
@@ -126,6 +150,57 @@ export default function useAddDetailMeeting() {
       },
     });
   });
+
+  const handleFileOperations = async (
+    meetingId: string,
+    currentFiles: (File | string | { fileId: string; fileName: string })[],
+    removedIds: string[],
+  ) => {
+    const uploadMeetingFile = (
+      file: File | string,
+      fileType: string = "2040",
+    ) => {
+      const formData = new FormData();
+      formData.append("refId", meetingId);
+      formData.append("imageType", "MEETING");
+      formData.append("isMaster", "0");
+      formData.append("fileType", fileType);
+      if (file instanceof File || typeof file === "string") {
+        formData.append("files", file);
+        docUpload(formData, {
+          onSuccess: () => {
+            queryClient.invalidateQueries({
+              queryKey: ["get-meeting-details-timing", meetingId],
+            });
+            queryClient.invalidateQueries({ queryKey: ["get-meeting-list"] });
+          },
+        });
+      }
+    };
+
+    const newFilesToUpload = currentFiles.filter(
+      (file) => file instanceof File || typeof file === "string",
+    ) as (File | string)[];
+
+    newFilesToUpload.forEach((file) => {
+      uploadMeetingFile(file);
+    });
+
+    if (removedIds.length > 0) {
+      const formData = new FormData();
+      formData.append("refId", meetingId);
+      formData.append("imageType", "MEETING");
+      formData.append("isMaster", "0");
+      formData.append("removedFiles", removedIds.join(","));
+      docUpload(formData, {
+        onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: ["get-meeting-details-timing", meetingId],
+          });
+        },
+      });
+    }
+  };
 
   const handleModalClose = () => {
     reset();
@@ -138,12 +213,16 @@ export default function useAddDetailMeeting() {
     watchedDateTime,
     watchedType,
     watchedJoiners,
+    watchedDocs,
+    watchedRemovedIds,
   ] = watch([
     "meetingName",
     "meetingDescription",
     "meetingDateTime",
     "meetingTypeId",
     "employeeId",
+    "meetingDocuments",
+    "removedFileIdsArray",
   ]);
 
   const isFormDirty = (() => {
@@ -206,13 +285,17 @@ export default function useAddDetailMeeting() {
     const teamLeadersChanged =
       originalTLIds.join(",") !== currentTLIds.join(",");
 
+    const filesChanged =
+      (watchedDocs || []).length !== (meetingApiData.files || []).length;
+
     return (
       nameChanged ||
       descChanged ||
       startChanged ||
       typeChanged ||
       joinersListChanged ||
-      teamLeadersChanged
+      teamLeadersChanged ||
+      filesChanged
     );
   })();
 
@@ -229,5 +312,7 @@ export default function useAddDetailMeeting() {
     meetingApiData,
     permission,
     isFormDirty,
+    meetingDocsVal: watchedDocs || [],
+    removedFileIdsArrayVal: watchedRemovedIds || [],
   };
 }

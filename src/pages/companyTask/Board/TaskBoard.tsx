@@ -224,7 +224,12 @@ export default function TaskBoard() {
 
     if (newStatusId !== initialStatusId) {
       updateTask(
-        { taskId, taskStatusId: newStatusId },
+        {
+          taskId,
+          taskStatusId: newStatusId,
+          projectId: task.projectId,
+          meetingId: task.meetingId,
+        },
         {
           onSuccess: () => {
             toast.success("Task status updated");

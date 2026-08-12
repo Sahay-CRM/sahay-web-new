@@ -99,6 +99,7 @@ interface KpisProps {
   isTeamLeader?: boolean | undefined;
   follow?: boolean;
   meetingRes: MeetingResFire | null;
+  headerLeft?: React.ReactNode;
 }
 
 interface SortConfig {
@@ -115,6 +116,7 @@ export default function KPITable({
   isTeamLeader,
   follow,
   meetingRes,
+  headerLeft,
 }: KpisProps) {
   const userId = useSelector(getUserId);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -624,21 +626,25 @@ export default function KPITable({
 
   return (
     <FormProvider {...methods}>
-      <div className="w-full">
-        {isTeamLeader && (
-          <Suspense fallback={<KpisSearchDropdownFallback />}>
-            <KpisSearchDropdown
-              onAdd={handleAddKpis}
-              minSearchLength={2}
-              filterProps={{ pageSize: 20 }}
-            />
-          </Suspense>
-        )}
+      <div className="flex gap-5 justify-between mb-3 shrink-0 items-center w-full">
+        <div className="flex items-center">{headerLeft}</div>
+        <div className="flex gap-5 items-center ml-auto">
+          {isTeamLeader && (
+            <Suspense fallback={<KpisSearchDropdownFallback />}>
+              <KpisSearchDropdown
+                onAdd={handleAddKpis}
+                minSearchLength={2}
+                filterProps={{ pageSize: 20 }}
+                placeholder="Add kpis in meeting"
+              />
+            </Suspense>
+          )}
+        </div>
       </div>
 
       {selectedKpisTyped && selectedKpisTyped.length > 0 && (
         <>
-          <div className="sticky top-0 z-10 bg-white px-4 py-2 m-0">
+          <div className="sticky top-0 z-10 bg-white px-4 m-0">
             <div className="flex justify-between">
               <div className="flex justify-between items-center">
                 <Suspense fallback={<TabsSectionFallback />}>
@@ -691,7 +697,7 @@ export default function KPITable({
             </div>
           </div>
 
-          <div className="flex w-full gap-0 p-2">
+          <div className="flex w-full gap-0 py-2">
             <div
               ref={leftScrollRef}
               className="max-h-[78vh] overflow-y-scroll scrollbar-hide border shadow-sm"

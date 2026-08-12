@@ -11,13 +11,14 @@ export default function useAddUpdateCompanyMeeting() {
   const addUpdateCompanyMeetingMutation = useMutation({
     mutationKey: ["add-or-update-meeting-list"],
     mutationFn: async (data: CompanyMeetingDataProps) => {
-      const isUpdate = Boolean(data?.companyMeetingId);
+      const { companyMeetingId, ...rest } = data;
+      const isUpdate = Boolean(companyMeetingId);
 
       const config = {
         url: isUpdate
-          ? Urls.updateCompanyMeeting(data.companyMeetingId!)
+          ? Urls.updateCompanyMeeting(companyMeetingId!)
           : Urls.addCompanyMeeting(),
-        data: data,
+        data: rest,
       };
 
       const { data: resData } = isUpdate
@@ -31,8 +32,10 @@ export default function useAddUpdateCompanyMeeting() {
       queryClient.resetQueries({ queryKey: ["get-meeting-list"] });
       queryClient.resetQueries({ queryKey: ["get-meeting-dropdown"] });
     },
-    onError: (error: AxiosError<{ message?: string }>) => {
-      toast.error(error.response?.data?.message);
+    onError: (error: AxiosError<{ message?: string; status?: number }>) => {
+      if (error.response?.status !== 417 && error.response?.data?.status !== 417) {
+        toast.error(error.response?.data?.message);
+      }
     },
   });
   return addUpdateCompanyMeetingMutation;

@@ -6,5 +6,6 @@ export { default as useGetCompanyMeetingById } from "./useGetCompanyMeetingById"
 export { default as useDdCompanyMeeting } from "./useDdCompanyMeeting";
 
 export { default as useGetBothCompanyMeeting } from "./useGetBothCompanyMeeting";
+export { default as useGetAllBothCompanyMeeting } from "./useGetAllBothCompanyMeeting";
 export { default as useGetCompanyMeetingSearch } from "./useGetCompanyMeetingSearch";
 export { default as useGetMeetingSearch } from "./useGetMeetingSearch";

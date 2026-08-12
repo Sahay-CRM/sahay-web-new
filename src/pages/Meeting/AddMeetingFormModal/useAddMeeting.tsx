@@ -10,12 +10,19 @@ import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useState } from "react";
 import { useSelector } from "react-redux";
 import { getUserDetail } from "@/features/selectors/auth.selector";
+import { AxiosError } from "axios";
+import { toast } from "sonner";
 
 // Renamed function
 export default function useAddMeeting() {
   const { id: companyMeetingId } = useParams();
   const [isModalOpen, setModalOpen] = useState(false);
   const userDetail = useSelector(getUserDetail);
+
+  const [isConfModalOpen, setIsConfModalOpen] = useState(false);
+  const [reasons, setReasons] = useState("");
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [savedPayload, setSavedPayload] = useState<any>(null);
 
   const { mutate: addMeeting, isPending } = useAddUpdateCompanyMeeting();
   const navigate = useNavigate();
@@ -108,11 +115,6 @@ export default function useAddMeeting() {
         (ele: { employeeId: string }) => ele?.employeeId,
       ),
       companyMeetingId: companyMeetingId || "",
-      teamLeaders: Array.isArray(data?.employeeId)
-        ? data.employeeId
-            .filter((emp: EmployeeDetails) => emp.isTeamLeader)
-            .map((emp: EmployeeDetails) => emp.employeeId)
-        : [],
     };
 
     addMeeting(payload, {
@@ -156,6 +158,24 @@ export default function useAddMeeting() {
             projectId ? `&projectId=${String(projectId)}` : ""
           }`,
         );
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+
+        if (axiosError.response?.data?.status === 417 || axiosError.response?.status === 417) {
+          setSavedPayload(payload);
+          setReasons("");
+          setIsConfModalOpen(true);
+        } else {
+          toast.error(
+            `Error: ${
+              axiosError.response?.data?.message || "An error occurred"
+            }`,
+          );
+        }
       },
     });
   });
@@ -327,6 +347,73 @@ export default function useAddMeeting() {
     );
   })();
 
+  const onConfirmSubmit = () => {
+    if (!reasons.trim()) {
+      toast.error("Please provide a reason.");
+      return;
+    }
+
+    const finalPayload = {
+      ...savedPayload,
+      isForceChangeDeadline: true,
+      reasons: reasons,
+    };
+
+    addMeeting(finalPayload, {
+      onSuccess: (response) => {
+        setIsConfModalOpen(false);
+        const meetingId = Array.isArray(response?.data)
+          ? response?.data[0]?.meetingId
+          : (response?.data as { meetingId?: string })?.meetingId;
+
+        if (typeof meetingId === "string" && meetingId) {
+          handleFileOperations(
+            meetingId,
+            methods.getValues().meetingDocuments || [],
+            methods.getValues().removedFileIdsArray || [],
+          );
+        }
+
+        handleModalClose();
+
+        const from = searchParams.get("from");
+        const projectId = searchParams.get("projectId");
+        const taskId = searchParams.get("taskId");
+
+        // ✅ Decide base path
+        let basePath = "/dashboard/meeting";
+
+        if (from === "task") {
+          basePath = taskId ? `/dashboard/tasks/edit/${taskId}` : "/dashboard/tasks/add";
+        } else if (from === "tasksrepeat") {
+          basePath = taskId ? `/dashboard/tasksrepeat/edit/${taskId}` : "/dashboard/tasksrepeat/add";
+        }
+
+        // ✅ If it's meeting (no task path), go direct
+        if (basePath === "/dashboard/meeting") {
+          navigate(basePath);
+          return;
+        }
+
+        // ✅ Navigate to task or repeat task path
+        navigate(
+          `${basePath}?meetingId=${meetingId}${
+            projectId ? `&projectId=${String(projectId)}` : ""
+          }`,
+        );
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+        toast.error(
+          `Error: ${axiosError.response?.data?.message || "An error occurred"}`,
+        );
+      },
+    });
+  };
+
   return {
     isModalOpen,
     handleClose,
@@ -339,5 +426,10 @@ export default function useAddMeeting() {
     isPending,
     meetingApiData,
     isFormDirty,
+    isConfModalOpen,
+    setIsConfModalOpen,
+    reasons,
+    setReasons,
+    onConfirmSubmit,
   };
 }

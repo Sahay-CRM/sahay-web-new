@@ -18,6 +18,10 @@ interface Props {
   hideTime?: boolean;
   disabled?: boolean;
   portalId?: string;
+  filterTime?: (time: Date) => boolean;
+  minDate?: Date | null;
+  maxDate?: Date | null;
+  isClearable?: boolean;
 }
 
 export default function FormDateTimePicker({
@@ -33,6 +37,10 @@ export default function FormDateTimePicker({
   hideTime = false,
   disabled = false,
   portalId = "root",
+  filterTime,
+  minDate,
+  maxDate,
+  isClearable = false,
 }: Props) {
   const dateValue = typeof value === "string" ? new Date(value) : value;
 
@@ -118,10 +126,18 @@ export default function FormDateTimePicker({
           popperClassName="responsive-datepicker-popper"
           filterDate={filterDate}
           disabled={disabled}
+          filterTime={filterTime}
+          minDate={minDate || undefined}
+          maxDate={maxDate || undefined}
+          isClearable={isClearable}
         />
         <CalendarIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none" />
       </div>
-      {error && <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">{error.message}</span>}
+      {error && (
+        <span className="text-red-600 text-[calc(1em-3px)] tb:text-[calc(1em-2px)] before:content-['*']">
+          {error.message}
+        </span>
+      )}
       <style>
         {`
           .responsive-datepicker-popper {
@@ -148,6 +164,31 @@ export default function FormDateTimePicker({
               width: 100px;
               min-width: 0;
             }
+          }
+          
+          /* Sleek Custom styles for clear/close button */
+          .react-datepicker__close-icon {
+            padding: 0 12px 0 0 !important;
+            height: 100% !important;
+            display: flex !important;
+            align-items: center !important;
+            top: 0 !important;
+          }
+          .react-datepicker__close-icon::after {
+            background-color: transparent !important;
+            color: #94a3b8 !important;
+            font-size: 18px !important;
+            content: "×" !important;
+            height: auto !important;
+            width: auto !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            line-height: 1 !important;
+            font-weight: normal !important;
+            transition: color 0.15s ease;
+          }
+          .react-datepicker__close-icon:hover::after {
+            color: #ef4444 !important;
           }
         `}
       </style>

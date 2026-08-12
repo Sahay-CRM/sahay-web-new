@@ -240,7 +240,7 @@ export default function RepeatTaskToDo() {
                 </Tooltip>
               </TooltipProvider>
 
-              {permission.Edit && (
+              {permission.Edit && userData.employeeType === "CONSULTANT" && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>

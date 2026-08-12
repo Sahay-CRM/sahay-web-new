@@ -8,7 +8,8 @@ import useDebounce from "@/hooks/useDebounce";
 
 export default function useGetCompanyMeetingSearch(
   searchTerm: string,
-  detailMeetingStatus?: boolean
+  detailMeetingStatus?: boolean,
+  enabled?: boolean
 ) {
   const debouncedSearch = useDebounce(searchTerm, 300);
 
@@ -28,5 +29,6 @@ export default function useGetCompanyMeetingSearch(
       });
       return data;
     },
+    enabled: enabled !== undefined ? enabled : true,
   });
 }

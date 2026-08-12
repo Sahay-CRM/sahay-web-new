@@ -23,7 +23,7 @@ export function capitalizeFirstLetter(str: string): string {
 
 export function formatEmployeeType(type: string): string {
   if (!type) return "";
-  if (type === "SAHAYTEAMMATE") return "SAHAY Teammate";
+  if (type === "SAHAYTEAMMATE") return "Sahay Teammate";
   return capitalizeFirstLetter(type);
 }
 
@@ -423,4 +423,34 @@ export const formatAgendaTime = (time: string) => {
 
   return parts.length > 0 ? parts.join(" ") : "-";
 };
+
+export function formatTo12HourLower(timeStr?: string): string {
+  if (!timeStr) return "Not set";
+  const parts = timeStr.split(":");
+  if (parts.length < 2) return timeStr;
+  const hour = parseInt(parts[0], 10);
+  const minute = parts[1];
+  if (isNaN(hour)) return timeStr;
+  const ampm = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour}:${minute} ${ampm}`;
+}
+
+export function generateTimeOptions(): { label: string; value: string }[] {
+  const options: { label: string; value: string }[] = [];
+  for (let hour = 0; hour < 24; hour++) {
+    for (let minute = 0; minute < 60; minute += 15) {
+      const hh = String(hour).padStart(2, "0");
+      const mm = String(minute).padStart(2, "0");
+      const value = `${hh}:${mm}`; // e.g., "19:30"
+      
+      const ampm = hour >= 12 ? "PM" : "AM";
+      const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+      const label = `${displayHour}:${mm} ${ampm}`; // e.g., "7:30 PM" or "10:00 AM"
+      
+      options.push({ label, value });
+    }
+  }
+  return options;
+}
 

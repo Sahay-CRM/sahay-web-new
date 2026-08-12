@@ -7,9 +7,8 @@ import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import { Check, ChevronDown } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { getMeetingType } from "@/features/api/meetingType";
@@ -25,25 +24,30 @@ type MeetingFormData = {
   meetingTypeId: string;
   meetingStatusId: string;
   employeeId: string[];
-  teamLeaders: string[];
+  estimatedHours?: string;
+  estimatedMinutes?: string;
+  remarks?: string;
 };
 
 interface MeetingDrawerProps {
   open: boolean;
   onClose: () => void;
   onMeetingCreated?: (meeting: CompanyMeetingDataProps) => void;
+  isPlanningMode?: boolean;
+  onPlanningSubmit?: (meeting: { meetingId: string; estimatedTime: number; remarks: string; title: string }) => void;
 }
 
 export default function MeetingDrawer({
   open,
   onClose,
   onMeetingCreated,
+  isPlanningMode = false,
+  onPlanningSubmit,
 }: MeetingDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isStatusSearch, setIsStatusSearch] = useState("");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [employeeSearch, setEmployeeSearch] = useState("");
 
   const { data: meetingTypeData } = getMeetingType({
@@ -74,7 +78,10 @@ export default function MeetingDrawer({
   }, [meetingStatusData]);
 
   const { data: employeedata } = useGetEmployeeDd({
-    filter: { isDeactivated: false },
+    filter: {
+      isDeactivated: false,
+      search: employeeSearch.trim().length >= 3 ? employeeSearch : undefined,
+    },
   });
 
   const employeeOptions = employeedata?.data
@@ -83,10 +90,6 @@ export default function MeetingDrawer({
         value: emp.employeeId || "",
       }))
     : [];
-
-  const filteredEmployees = employeeOptions.filter((opt) =>
-    opt.label.toLowerCase().includes(employeeSearch.toLowerCase())
-  );
 
   const { mutate: addMeeting, isPending: isCreatingMeeting } = useAddUpdateCompanyMeeting();
 
@@ -98,7 +101,6 @@ export default function MeetingDrawer({
     watch,
     formState: { errors },
     setValue,
-    trigger,
   } = useForm<MeetingFormData>({
     defaultValues: {
       meetingId: "",
@@ -109,7 +111,9 @@ export default function MeetingDrawer({
       meetingTypeId: "",
       meetingStatusId: "",
       employeeId: [],
-      teamLeaders: [],
+      estimatedHours: "",
+      estimatedMinutes: "",
+      remarks: "",
     },
   });
 
@@ -159,10 +163,11 @@ export default function MeetingDrawer({
         meetingTypeId: meetingTypeData?.data?.[0]?.meetingTypeId || "",
         meetingStatusId: meetingStatusOptions?.[0]?.value || "",
         employeeId: [],
-        teamLeaders: [],
+        estimatedHours: "",
+        estimatedMinutes: "",
+        remarks: "",
       });
       setShowDropdown(false);
-      setIsDropdownOpen(false);
       setEmployeeSearch("");
     }
   }, [open, reset, meetingTypeData, meetingStatusOptions]);
@@ -202,36 +207,19 @@ export default function MeetingDrawer({
     };
   }, [open, onClose]);
 
-  const selectedJoinersIds = watch("employeeId") || [];
-  const teamLeadersIds = watch("teamLeaders") || [];
-
-  const handleSelectAttendee = (id: string) => {
-    if (selectedJoinersIds.includes(id)) {
-      const updatedJoiners = selectedJoinersIds.filter((item) => item !== id);
-      const updatedLeaders = teamLeadersIds.filter((item) => item !== id);
-      setValue("employeeId", updatedJoiners);
-      setValue("teamLeaders", updatedLeaders);
-    } else {
-      const updatedJoiners = [...selectedJoinersIds, id];
-      setValue("employeeId", updatedJoiners);
-      // Auto-set the first attendee as Team Leader if none exists
-      if (teamLeadersIds.length === 0) {
-        setValue("teamLeaders", [id]);
-      }
-    }
-    trigger("employeeId");
-  };
-
-  const handleToggleTeamLeader = (id: string) => {
-    if (teamLeadersIds.includes(id)) {
-      setValue("teamLeaders", teamLeadersIds.filter((item) => item !== id));
-    } else {
-      setValue("teamLeaders", [...teamLeadersIds, id]);
-    }
-    trigger("employeeId");
-  };
+  // selectedJoinersIds and handleSelectAttendee removed
 
   const onSubmit = (data: MeetingFormData) => {
+    if (isPlanningMode) {
+      const hours = Number(data.estimatedHours) || 0;
+      const minutes = Number(data.estimatedMinutes) || 0;
+      const mins = hours * 60 + minutes;
+      if (mins <= 0) {
+        toast.error("Estimated time must be greater than 0");
+        return;
+      }
+    }
+
     const payload = {
       meetingName: data.meetingName,
       meetingDescription: data.meetingDescription || data.meetingName,
@@ -244,7 +232,6 @@ export default function MeetingDrawer({
       meetingTypeId: data.meetingTypeId,
       meetingStatusId: data.meetingStatusId,
       joiners: data.employeeId,
-      teamLeaders: data.teamLeaders,
     } as unknown as CompanyMeetingDataProps;
 
     addMeeting(payload, {
@@ -253,13 +240,24 @@ export default function MeetingDrawer({
         const meeting = Array.isArray(res?.data)
           ? res?.data[0]
           : res?.data;
-        if (onMeetingCreated && meeting) {
-          onMeetingCreated(meeting);
+        if (isPlanningMode && onPlanningSubmit && meeting?.meetingId) {
+          const mins = (Number(data.estimatedHours) || 0) * 60 + (Number(data.estimatedMinutes) || 0);
+          const remarksVal = data.remarks || "";
+          onPlanningSubmit({
+            meetingId: meeting.meetingId,
+            estimatedTime: mins,
+            remarks: remarksVal,
+            title: meeting.meetingName || data.meetingName,
+          });
+        } else {
+          if (onMeetingCreated && meeting) {
+            onMeetingCreated(meeting);
+          }
+          onClose();
         }
-        onClose();
       },
       onError: (error: Error) => {
-        const axiosError = error as AxiosError<{ message?: string }>;
+        const axiosError = error as AxiosError<{ message?: string }>; 
         toast.error(axiosError.response?.data?.message || "Failed to create meeting");
       },
     });
@@ -276,7 +274,7 @@ export default function MeetingDrawer({
         style={{ pointerEvents: open ? "auto" : "none" }}
       >
         <div className="flex justify-between items-center p-4 border-b shrink-0">
-          <h2 className="text-lg font-semibold text-gray-800">Add Company Meeting</h2>
+          <h2 className="text-lg font-semibold text-gray-800">Add Company Meeting </h2>
           <button
             onClick={onClose}
             type="button"
@@ -449,169 +447,69 @@ export default function MeetingDrawer({
               )}
             />
 
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 mb-1.5">
-                Joiners <span className="text-red-500">*</span>
-              </label>
-              <Controller
-                control={control}
-                name="employeeId"
-                rules={{
-                  validate: {
-                    atLeastOne: (val) => (!val || val.length === 0 ? "Please select at least one joiner" : true),
-                    hasLeader: () => {
-                      const leaders = watch("teamLeaders") || [];
-                      return leaders.length === 0 ? "At least one joiner must be marked as Team Leader" : true;
+            <Controller
+              control={control}
+              name="employeeId"
+              rules={{ required: "Please select at least one joiner" }}
+              render={({ field }) => (
+                <SearchDropdown
+                  className="w-full border-gray-200 text-base py-2.5 h-auto font-normal shadow-none"
+                  label="Joiners"
+                  isMandatory
+                  placeholder="Select joiners..."
+                  options={employeeOptions}
+                  selectedValues={field.value || []}
+                  multiSelect={true}
+                  onSelect={(item) => {
+                    const currentVals = Array.isArray(field.value) ? field.value : [];
+                    if (currentVals.includes(item.value)) {
+                      field.onChange(currentVals.filter((v) => v !== item.value));
+                    } else {
+                      field.onChange([...currentVals, item.value]);
                     }
-                  }
-                }}
-                render={() => (
-                  <Popover open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        type="button"
-                        className="w-full h-10 px-3.5 text-sm justify-between text-left font-normal border-gray-200 hover:bg-slate-50 relative shadow-none"
-                      >
-                        <span className={`truncate pr-8 ${selectedJoinersIds.length === 0 ? "text-gray-400" : "text-gray-900 font-normal"}`}>
-                          {selectedJoinersIds.length > 0
-                            ? employeeOptions
-                                .filter((opt) => selectedJoinersIds.includes(opt.value))
-                                .map((opt) => {
-                                  const isLeader = teamLeadersIds.includes(opt.value);
-                                  return opt.label + (isLeader ? " (TL)" : "");
-                                })
-                                .join(", ")
-                            : "Select attendees..."}
-                        </span>
-                        <ChevronDown className="absolute right-3 text-gray-500 w-4 h-4" />
-                      </Button>
-                    </PopoverTrigger>
-
-                    <PopoverContent
-                      align="start"
-                      side="bottom"
-                      sideOffset={4}
-                      className="p-0 pointer-events-auto w-[var(--radix-popover-trigger-width)] bg-white border border-gray-200 rounded-md shadow-md z-[9999]"
-                    >
-                      <div className="p-2 border-b border-gray-100">
-                        <Input
-                          placeholder="Search joiners..."
-                          value={employeeSearch}
-                          onChange={(e) => setEmployeeSearch(e.target.value)}
-                          className="h-8 text-xs border-gray-200 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0 font-normal"
-                        />
-                      </div>
-
-                      <div
-                        className="max-h-56 overflow-y-auto"
-                        onWheel={(e) => e.stopPropagation()}
-                      >
-                        {filteredEmployees.length > 0 ? (
-                          filteredEmployees.map((item) => {
-                            const isSelected = selectedJoinersIds.includes(item.value);
-                            const isLeader = teamLeadersIds.includes(item.value);
-
-                            return (
-                              <div
-                                key={item.value}
-                                className={`px-3 py-2 flex items-center justify-between text-xs transition-colors cursor-pointer border-b last:border-b-0 border-gray-50 font-normal ${
-                                  isSelected ? "bg-slate-50" : "hover:bg-slate-50"
-                                }`}
-                                onClick={() => handleSelectAttendee(item.value)}
-                              >
-                                <div className="flex items-center space-x-2 truncate">
-                                  <div className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
-                                    isSelected ? "bg-primary border-primary text-white" : "border-gray-300 bg-white"
-                                  }`}>
-                                    {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
-                                  </div>
-                                  <span className="truncate text-slate-700 font-normal">
-                                    {item.label}
-                                  </span>
-                                </div>
-
-                                {isSelected && (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      handleToggleTeamLeader(item.value);
-                                    }}
-                                    className={`text-[10px] font-semibold px-2 py-0.5 rounded transition-colors border select-none shrink-0 ${
-                                      isLeader
-                                        ? "bg-amber-100 text-amber-800 border-amber-300"
-                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-100"
-                                    }`}
-                                  >
-                                    {isLeader ? "Team Leader" : "Set TL"}
-                                  </button>
-                                )}
-                              </div>
-                            );
-                          })
-                        ) : (
-                          <div className="px-3 py-2 text-xs text-gray-500">
-                            No results found
-                          </div>
-                        )}
-                      </div>
-                    </PopoverContent>
-                  </Popover>
-                )}
-              />
-              {errors.employeeId && (
-                <span className="text-red-600 text-xs mt-1 block before:content-['*']">
-                  {errors.employeeId.message}
-                </span>
+                  }}
+                  onSearchChange={setEmployeeSearch}
+                  error={errors.employeeId}
+                  isCrossShow={false}
+                />
               )}
-            </div>
+            />
 
-            {selectedJoinersIds.length > 0 && (
-              <div className="space-y-2 border border-gray-150 rounded-lg p-3.5 bg-gray-50/50">
-                <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">
-                  Manage Attendees ({selectedJoinersIds.length})
-                </p>
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {selectedJoinersIds.map((id) => {
-                    const emp = employeeOptions.find((opt) => opt.value === id);
-                    if (!emp) return null;
-                    const isLeader = teamLeadersIds.includes(id);
 
-                    return (
-                      <div
-                        key={id}
-                        className="flex items-center justify-between bg-white px-3 py-2 rounded-md border border-gray-150 shadow-sm"
-                      >
-                        <span className="text-sm font-medium text-gray-700">
-                          {emp.label}
-                        </span>
-                        <div className="flex items-center space-x-2">
-                          <button
-                            type="button"
-                            onClick={() => handleToggleTeamLeader(id)}
-                            className={`text-xs font-semibold px-2.5 py-1 rounded transition-colors border ${
-                              isLeader
-                                ? "bg-amber-100 text-amber-800 border-amber-200 hover:bg-amber-200"
-                                : "bg-white text-gray-600 border-gray-200 hover:bg-gray-50"
-                            }`}
-                          >
-                            {isLeader ? "Team Leader" : "Set Team Leader"}
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleSelectAttendee(id)}
-                            className="text-gray-400 hover:text-red-500 text-xl font-medium focus:outline-none px-1"
-                            title="Remove Attendee"
-                          >
-                            &times;
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+            {isPlanningMode && (
+              <>
+                <div className="grid grid-cols-2 gap-4 mt-4">
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-gray-700">Estimated Hours</label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="0"
+                      {...register("estimatedHours")}
+                      className="border-gray-200 focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-sm font-semibold text-gray-700">Estimated Minutes</label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={59}
+                      placeholder="0"
+                      {...register("estimatedMinutes")}
+                      className="border-gray-200 focus:border-primary"
+                    />
+                  </div>
                 </div>
-              </div>
+                <div className="space-y-1 mt-4">
+                  <label className="text-sm font-semibold text-gray-700">Remarks</label>
+                  <Textarea
+                    placeholder="Add planning remarks..."
+                    {...register("remarks")}
+                    className="border-gray-200 focus:border-primary resize-none min-h-[80px]"
+                  />
+                </div>
+              </>
             )}
           </div>
 

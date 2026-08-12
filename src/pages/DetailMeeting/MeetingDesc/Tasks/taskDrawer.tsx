@@ -94,6 +94,8 @@ export default function TaskDrawer({
   const { data: projectListdata } = useGetCompanyProjectAll({
     filter: {
       search: isProjectSearch.length >= 3 ? isProjectSearch : undefined,
+      isMeeting: true,
+      projectId: taskData?.projectId || undefined, 
     },
     enable: isProjectSearch.length >= 3 || isProjectSearch.length === 0,
   });

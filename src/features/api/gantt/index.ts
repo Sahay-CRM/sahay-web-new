@@ -12,6 +12,7 @@ export {
 } from "./useGanttTemplateMutations";
 
 export { useGanttWorkspaces } from "./useGanttWorkspaces";
+export { default as useGetGanttItems } from "./useGetGanttItems";
 export { useGanttWorkspaceDetail } from "./useGanttWorkspaceDetail";
 export {
   useCreateGanttWorkspace,
@@ -33,3 +34,10 @@ export {
   useCreateGanttDependency,
   useDeleteGanttDependency,
 } from "./useGanttDependencyMutations";
+
+export {
+  useCreateGanttPhase,
+  useUpdateGanttPhase,
+  useDeleteGanttPhase,
+  useReorderGanttPhases,
+} from "./useGanttPhaseMutations";

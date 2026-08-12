@@ -170,18 +170,49 @@ export function useRepeatTaskToDo() {
     updateRepeatTask(payload);
   };
 
-  const employeeOption = [
-    {
-      label: "All",
-      value: "ALL",
-    },
-    ...(employeeList?.data
-      ? employeeList.data.map((emp) => ({
+  const employeeOption = useMemo((): { label: string; value: string; isHeader?: boolean }[] => {
+    const list: { label: string; value: string; isHeader?: boolean }[] = [
+      {
+        label: "All",
+        value: "ALL",
+      },
+    ];
+
+    if (!employeeList?.data) return list;
+
+    const sahayEmployees = employeeList.data.filter((emp) => emp.isSahayEmployee);
+    const companyEmployees = employeeList.data.filter((emp) => !emp.isSahayEmployee);
+
+    if (companyEmployees.length > 0) {
+      list.push({
+        label: "Company Employees",
+        value: "company-header",
+        isHeader: true,
+      });
+      companyEmployees.forEach((emp) => {
+        list.push({
           label: emp.employeeName || "Unnamed",
           value: emp.employeeId || "",
-        }))
-      : []),
-  ];
+        });
+      });
+    }
+
+    if (sahayEmployees.length > 0) {
+      list.push({
+        label: "Sahay Employees",
+        value: "sahay-header",
+        isHeader: true,
+      });
+      sahayEmployees.forEach((emp) => {
+        list.push({
+          label: emp.employeeName || "Unnamed",
+          value: emp.employeeId || "",
+        });
+      });
+    }
+
+    return list;
+  }, [employeeList]);
 
   const handleEditTask = (data: RepeatTaskAllRes) => {
     setIsModalOpen(true);

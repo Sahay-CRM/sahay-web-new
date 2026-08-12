@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -35,6 +35,7 @@ import {
   getRepeatTypeOrCustomForRepeatMeeting,
 } from "@/components/shared/RepeatOption/repeatOption";
 import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
 import CustomModalFile from "@/components/shared/CustomModalRepeatMeeting";
@@ -112,17 +113,39 @@ export default function useAddEmployee() {
     currentPage: 1,
     pageSize: 25,
     search: "",
-  });
+  }); 
 
   const { data: projectListdata } = useGetCompanyProject({
-    filter: projectPagination,
+    filter: {
+      ...projectPagination,
+      projectId: taskdata?.projectId || undefined,
+    },
     enable: !!projectPagination,
   });
 
   const { data: meetingData, isLoading: meetingLoading } =
     useGetBothCompanyMeeting({
-      filter: localPagination,
+      filter: {
+        ...localPagination,
+        meetingId: taskdata?.meetingId || undefined,
+      },
     });
+
+interface GroupedCompanyMeetings {
+  detailMeetings?: CompanyMeetingDataProps[];
+  normalMeetings?: CompanyMeetingDataProps[];
+}
+
+  const flatMeetings = useMemo((): CompanyMeetingDataProps[] => {
+    if (!meetingData?.data) return [];
+    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+    return Array.isArray(rawData)
+      ? (rawData as CompanyMeetingDataProps[])
+      : [
+          ...(rawData.normalMeetings || []),
+          ...(rawData.detailMeetings || []),
+        ];
+  }, [meetingData]);
 
   const { data: employeedata } = getEmployee({
     filter: { ...employeePagination, isDeactivated: false },
@@ -138,10 +161,9 @@ export default function useAddEmployee() {
           ? taskDeadlineDate
           : null;
 
-      const employeeIds = t?.employeeIds ?? [];
-
-      const targetProjectId = queryProjectId || t.projectId;
-      const targetMeetingId = queryMeetingId || t.meetingId;
+      const employeeIds = t.assignUsers?.map((u) => u.employeeId) || [];
+      const targetProjectId = queryProjectId || t.projectId || "";
+      const targetMeetingId = queryMeetingId || t.meetingId || "";
 
       setValue("repetitiveTaskId", t.repetitiveTaskId);
       setValue("repeatTime", convertUtcTimeToLocal(t.repeatTime));
@@ -149,11 +171,10 @@ export default function useAddEmployee() {
         "project",
         projectListdata?.data?.find((p) => p.projectId === targetProjectId) || null,
       );
+      const foundMeeting = flatMeetings.find((m) => m.meetingId === targetMeetingId);
       setValue(
         "meeting",
-        (meetingData &&
-          meetingData?.data?.find((m) => m.meetingId === targetMeetingId)) ||
-          null,
+        foundMeeting || null,
       );
       setValue("taskName", t.taskName || "");
       setValue("taskDescription", t.taskDescription || "");
@@ -176,15 +197,30 @@ export default function useAddEmployee() {
         setCustomRepeatData(t.customObj);
       }
       setSelectedRepeat(getRepeatTypeOrCustomForRepeatMeeting(t));
+      if (t.duration && t.duration > 0) {
+        setValue("hasDuration", true);
+        const totalMinutes = t.duration;
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        setValue("durationHours", h > 0 ? String(h) : "");
+        setValue("durationMinutes", m > 0 ? String(m) : "");
+      } else {
+        setValue("hasDuration", false);
+        setValue("durationHours", "");
+        setValue("durationMinutes", "");
+      }
     } else {
       setValue("isActive", "active");
       setSelectedRepeat("");
+      setValue("hasDuration", false);
+      setValue("durationHours", "");
+      setValue("durationMinutes", "");
     }
   }, [
     repetitiveTaskId,
     taskDataById,
     projectListdata?.data,
-    meetingData?.data,
+    flatMeetings,
     employeedata?.data,
     setValue,
     meetingData,
@@ -212,6 +248,10 @@ export default function useAddEmployee() {
         0,
       ),
     );
+    const durationMinutes = data.hasDuration
+      ? (Number(data.durationHours) || 0) * 60 + (Number(data.durationMinutes) || 0)
+      : null;
+
     const payload = data.repetitiveTaskId
       ? {
           repetitiveTaskId: repetitiveTaskId,
@@ -238,6 +278,7 @@ export default function useAddEmployee() {
           repeatType: data.repeatType,
           customObj: data.customObj,
           isChildDataKey: data.additionalKey,
+          duration: durationMinutes,
         }
       : {
           taskName: data.taskName,
@@ -264,6 +305,7 @@ export default function useAddEmployee() {
           repeatType: data.repeatType,
           // repeatType: data.repeatType.toUpperCase(),
           customObj: data.customObj,
+          duration: durationMinutes,
         };
 
     addUpdateTask(payload, {
@@ -427,10 +469,10 @@ export default function useAddEmployee() {
           render={({ field }) => (
             <TableData
               {...field}
-              tableData={meetingData?.data?.map((item, index: number) => ({
+              tableData={flatMeetings.map((item, index: number) => ({
                 ...item,
                 srNo:
-                  (meetingData.currentPage - 1) * meetingData.pageSize +
+                 
                   index +
                   1,
               }))}
@@ -443,7 +485,7 @@ export default function useAddEmployee() {
               multiSelect={false}
               selectedValue={
                 field.value?.meetingId &&
-                meetingData?.data?.find(
+                flatMeetings.find(
                   (item) => item.meetingId === field.value.meetingId,
                 )
               }
@@ -457,8 +499,8 @@ export default function useAddEmployee() {
                 }
               }}
               onCheckbox={() => true}
-              paginationDetails={meetingData as PaginationFilter}
-              setPaginationFilter={setLocalPagination}
+              // paginationDetails={meetingData as PaginationFilter}
+              // setPaginationFilter={setLocalPagination}
               showActionsColumn={false}
               isLoading={meetingLoading}
               tableHeightClass="flex-1"
@@ -590,6 +632,69 @@ export default function useAddEmployee() {
                 <span className="text-red-600 text-sm before:content-['*']">
                   {errors.taskDescription?.message as string}
                 </span>
+              )}
+            </div>
+
+            {/* Duration Option */}
+            <div className="flex items-center gap-3 mt-4 pt-2 border-t border-slate-100 flex-wrap">
+              <div className="flex items-center gap-2">
+                <Label className="text-sm font-semibold text-slate-700 select-none">Set Task Duration</Label>
+                <Switch
+                  checked={watch("hasDuration") || false}
+                  onCheckedChange={(checked) => {
+                    setValue("hasDuration", checked);
+                    if (!checked) {
+                      setValue("durationHours", "");
+                      setValue("durationMinutes", "");
+                    }
+                  }}
+                />
+              </div>
+
+              {(watch("hasDuration") || false) && (
+                <div className="flex items-center gap-2 ml-2 animate-in fade-in-50 slide-in-from-left-1 duration-150">
+                  {/* Hours */}
+                  <div className="flex items-baseline gap-1">
+                    <input
+                      type="number"
+                      min={0}
+                      placeholder="0"
+                      {...register("durationHours", {
+                        onChange: (e) => {
+                          const val = e.target.value;
+                          if (val !== "" && (Number(val) < 0 || val.includes("."))) {
+                            setValue("durationHours", "");
+                          }
+                        }
+                      })}
+                      className="w-10 text-center text-sm font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-primary focus:outline-none pb-0.5 placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="text-slate-500 font-medium text-xs">hr</span>
+                  </div>
+
+                  {/* Separator */}
+                  <span className="text-slate-300 text-sm font-light pb-0.5">:</span>
+
+                  {/* Minutes */}
+                  <div className="flex items-baseline gap-1">
+                    <input
+                      type="number"
+                      min={0}
+                      max={59}
+                      placeholder="00"
+                      {...register("durationMinutes", {
+                        onChange: (e) => {
+                          const val = e.target.value;
+                          if (val !== "" && (Number(val) < 0 || Number(val) > 59 || val.includes("."))) {
+                            setValue("durationMinutes", "");
+                          }
+                        }
+                      })}
+                      className="w-10 text-center text-sm font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-primary focus:outline-none pb-0.5 placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <span className="text-slate-500 font-medium text-xs">min</span>
+                  </div>
+                </div>
               )}
             </div>
           </div>
@@ -727,7 +832,7 @@ export default function useAddEmployee() {
                   </>
                 );
               }}
-            />
+            />            
 
             <div className="flex gap-4">
               <div className="w-1/2">
@@ -887,6 +992,7 @@ export default function useAddEmployee() {
     AssignUserStep,
     setValue,
     meetingData,
+    flatMeetings,
     projectListdata,
     handleKeepAll,
     handleDeleteAll,

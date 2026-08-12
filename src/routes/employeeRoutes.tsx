@@ -3,7 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 
 import DashboardLayout from "@/features/layouts/DashboardLayout/dashboardLayout";
 import AddCompanyEmployee from "@/pages/companyEmployee/AddEmployeeFromModal";
-import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
+// import AddCompanyTaskList from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskList";
 import AddCompanyTaskSingle from "@/pages/companyTask/CompanyTaskFormModal/AddCompanyTaskSingle";
 import AddCompanyMeeting from "@/pages/Meeting/AddMeetingFormModal/addMeeting";
 
@@ -150,6 +150,8 @@ const FormSubmissionDetail = lazy(
 
 const HandOverData = lazy(() => import("../pages/HandOverData"));
 const Reports = lazy(() => import("../pages/Reports/report"));
+const CompanyReportsList = lazy(() => import("../pages/CompanyReports/CompanyReportsList"));
+const CompanyReportRunView = lazy(() => import("../pages/CompanyReports/CompanyReportRunView"));
 const DashboardReport = lazy(
   () => import("../pages/DashboardReport/DashboardReport"),
 );
@@ -157,9 +159,9 @@ const DashboardReportView = lazy(
   () => import("../pages/DashboardReport/DashboardReportView"),
 );
 
-const DailyPlanning = lazy(
-  () => import("../pages/DailyPlanning/DailyPlanning"),
-);
+// const DailyPlanning = lazy(
+//   () => import("../pages/DailyPlanning/DailyPlanning"),
+// );
 const CheckIn = lazy(() => import("../pages/DailyPlanning/CheckIn/CheckIn"));
 const CheckOut = lazy(() => import("../pages/DailyPlanning/CheckOut/CheckOut"));
 const Blueprint = lazy(() => import("../pages/MenuBlueprint/MenuBlueprint"));
@@ -187,7 +189,7 @@ export default function EmployeeRoutes() {
         <Route path="employees/add" element={<AddCompanyEmployee />} />
         <Route path="employees/edit/:id" element={<AddCompanyEmployee />} />
         <Route path="calendar" Component={CompanyImportantDates} />
-        <Route path="daily-planning" element={<DailyPlanning />} />
+        {/* <Route path="daily-planning" element={<DailyPlanning />} /> */}
         <Route path="daily-planning/check-in" element={<CheckIn />} />
         <Route path="daily-planning/check-out" element={<CheckOut />} />
 
@@ -222,12 +224,12 @@ export default function EmployeeRoutes() {
         />
         {/* <Route path="tasks/add" element={<AddCompanyTaskList />} /> */}
         <Route path="tasks/add" element={<AddCompanyTaskSingle />} />
-        <Route path="tasks/add-stepped" element={<AddCompanyTaskList />} />
+        {/* <Route path="tasks/add-stepped" element={<AddCompanyTaskList />} /> */}
         <Route path="tasks/view/:id" element={<CompanyTaskView />} />
 
         {/* <Route path="tasks/edit/:id" element={<AddCompanyTaskList />} /> */}
         <Route path="tasks/edit/:id" element={<AddCompanyTaskSingle />} />
-        <Route path="tasks/edit-stepped/:id" element={<AddCompanyTaskList />} />
+        {/* <Route path="tasks/edit-stepped/:id" element={<AddCompanyTaskList />} /> */}
         <Route path="tasksrepeat/add" element={<AddCompanyTaskListRepeat />} />
         <Route
           path="tasksrepeat/edit/:id"
@@ -302,6 +304,8 @@ export default function EmployeeRoutes() {
           )}
         />
         <Route path="reports" Component={Reports} />
+        <Route path="company-reports" element={<CompanyReportsList />} />
+        <Route path="company-reports/run/:id" element={<CompanyReportRunView />} />
         <Route path="report-builder" Component={DashboardReport} />
         <Route path="report-builder/view" Component={DashboardReportView} />
         <Route
@@ -317,7 +321,7 @@ export default function EmployeeRoutes() {
           )}
         />
         {/* Gantt routes */}
-        {/* <Route
+        <Route
           path="gantt/templates"
           Component={lazy(() => import("../pages/gantt/GanttTemplatePage"))}
         />
@@ -332,13 +336,13 @@ export default function EmployeeRoutes() {
           Component={lazy(
             () => import("../pages/gantt/GanttWorkspaceListPage"),
           )}
-        /> */}
-        {/* <Route
+        />
+        <Route
           path="gantt/workspaces/:id"
           Component={lazy(
             () => import("../pages/gantt/GanttWorkspaceDetailPage"),
           )}
-        /> */}
+        />
       </Route>
 
       <Route path="*" element={<Navigate to="/dashboard" replace />} />

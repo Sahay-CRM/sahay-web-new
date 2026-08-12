@@ -16,8 +16,10 @@ import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import {
   formatIndianNumber,
   formatUTCDateToLocal,
+  formatTo12HourLower,
+  generateTimeOptions,
 } from "@/features/utils/app.utils";
-import FormFile, {
+import FormFile, { 
   FilePreview,
 } from "@/components/shared/Form/FormFile/FormFile";
 import PageNotAccess from "../PageNoAccess";
@@ -25,6 +27,15 @@ import ImageCropModal from "@/components/shared/Modal/ImageCropModal";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import AddHolidaysForm from "../CompanyHoliday/AddHolidayFormModal";
+
+const toMinutes = (timeStr?: string | null): number | null => {
+  if (!timeStr) return null;
+  const parts = timeStr.split(":");
+  const h = parseInt(parts[0], 10);
+  const m = parseInt(parts[1], 10);
+  if (isNaN(h) || isNaN(m)) return null;
+  return h * 60 + m;
+};
 
 export default function CompanyProfile() {
   const {
@@ -64,7 +75,13 @@ export default function CompanyProfile() {
     handleDelete,
     // formatOptions,
     handleAdd,
+    trigger,
   } = useCompany();
+
+  const timeOptions = generateTimeOptions();
+
+  const watchedStartTime = watch("companyStartTime");
+  const watchedEndTime = watch("companyEndTime");
 
   if (!companyData) {
     return (
@@ -511,6 +528,108 @@ export default function CompanyProfile() {
                         </label>
                         <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
                           {companyData.cityName}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-1/2">
+                    {isEditing ? (
+                      <Controller
+                        name="companyStartTime"
+                        control={control}
+                        rules={{
+                          required: "Company Start Time is required",
+                          validate: (val) => {
+                            if (!val) return true;
+                            const startMin = toMinutes(val);
+                            const endMin = toMinutes(watchedEndTime);
+                            if (startMin !== null && endMin !== null) {
+                              if (startMin === endMin) {
+                                return "Start time cannot be equal to End time";
+                              }
+                              if (startMin > endMin) {
+                                return "Start time must be before End time";
+                              }
+                            }
+                            return true;
+                          },
+                        }}
+                        render={({ field }) => (
+                          <SearchDropdown
+                            options={timeOptions}
+                            selectedValues={field.value ? [field.value] : []}
+                            onSelect={(val) => {
+                              field.onChange(val.value);
+                              setTimeout(() => {
+                                trigger(["companyStartTime", "companyEndTime"]);
+                              }, 0);
+                            }}
+                            label="Company Start Time"
+                            placeholder="Select Start Time"
+                            error={errors.companyStartTime}
+                            isSearchable={false}
+                          />
+                        )}
+                      />
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Company Start Time
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {formatTo12HourLower(companyData.companyStartTime)}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <div className="w-full sm:w-1/2">
+                    {isEditing ? (
+                      <Controller
+                        name="companyEndTime"
+                        control={control}
+                        rules={{
+                          required: "Company End Time is required",
+                          validate: (val) => {
+                            if (!val) return true;
+                            const startMin = toMinutes(watchedStartTime);
+                            const endMin = toMinutes(val);
+                            if (startMin !== null && endMin !== null) {
+                              if (startMin === endMin) {
+                                return "End time cannot be equal to Start time";
+                              }
+                              if (startMin > endMin) {
+                                return "End time must be after Start time";
+                              }
+                            }
+                            return true;
+                          },
+                        }}
+                        render={({ field }) => (
+                          <SearchDropdown
+                            options={timeOptions}
+                            selectedValues={field.value ? [field.value] : []}
+                            onSelect={(val) => {
+                              field.onChange(val.value);
+                              setTimeout(() => {
+                                trigger(["companyStartTime", "companyEndTime"]);
+                              }, 0);
+                            }}
+                            label="Company End Time"
+                            placeholder="Select End Time"
+                            error={errors.companyEndTime}
+                            isSearchable={false}
+                          />
+                        )}
+                      />
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Company End Time
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {formatTo12HourLower(companyData.companyEndTime)}
                         </p>
                       </>
                     )}

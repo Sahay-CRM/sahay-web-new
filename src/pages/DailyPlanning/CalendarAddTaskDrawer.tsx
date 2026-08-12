@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
 import { useForm, Controller } from "react-hook-form";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,18 +47,32 @@ interface FormValues {
   meeting: string;
   assignUser: string[];
   comment: string;
+  estimatedHours?: string;
+  estimatedMinutes?: string;
+  remarks?: string;
+}
+
+interface GroupedCompanyMeetings {
+  detailMeetings?: CompanyMeetingDataProps[];
+  normalMeetings?: CompanyMeetingDataProps[];
 }
 
 interface CalendarAddTaskDrawerProps {
   open: boolean;
   onClose: () => void;
   onTaskCreated?: (task: { taskId: string; taskName: string; taskDescription: string }) => void;
+  isPlanningMode?: boolean;
+  onPlanningSubmit?: (task: { taskId: string; estimatedTime: number; remarks: string; title: string }) => void;
+  hideProjectMeetingAdd?: boolean;
 }
 
 export default function CalendarAddTaskDrawer({
   open,
   onClose,
   onTaskCreated,
+  isPlanningMode = false,
+  onPlanningSubmit,
+  hideProjectMeetingAdd = false,
 }: CalendarAddTaskDrawerProps) {
   const queryClient = useQueryClient();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -103,6 +117,9 @@ export default function CalendarAddTaskDrawer({
       meeting: "",
       assignUser: [],
       comment: "",
+      estimatedHours: "",
+      estimatedMinutes: "",
+      remarks: "",
     },
     mode: "onChange",
   });
@@ -131,6 +148,9 @@ export default function CalendarAddTaskDrawer({
         meeting: "",
         assignUser: [],
         comment: "",
+        estimatedHours: "",
+        estimatedMinutes: "",
+        remarks: "",
       });
     }
   }, [open, reset]);
@@ -200,17 +220,40 @@ export default function CalendarAddTaskDrawer({
     value: proj.projectId || "",
   }));
 
-  const meetingOptions = (meetingData?.data || []).map((meet) => ({
-    label: meet.meetingName || "Unnamed",
-    value: meet.meetingId || "",
-  }));
+  const meetingOptions = useMemo(() => {
+    if (!meetingData?.data) return [];
+    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+    const allMeetings: CompanyMeetingDataProps[] = Array.isArray(rawData)
+      ? (rawData as CompanyMeetingDataProps[])
+      : [
+          ...(rawData.normalMeetings || []),
+          ...(rawData.detailMeetings || []),
+        ];
+    return allMeetings.map((meet) => ({
+      label: meet.meetingName || "Unnamed",
+      value: meet.meetingId || "",
+    }));
+  }, [meetingData]);
 
   const handleSuccess = (newTask: any) => {
     queryClient.invalidateQueries({ queryKey: ["get-all-task-dropdown"] });
-    if (onTaskCreated) {
-      onTaskCreated(newTask);
+    if (isPlanningMode && onPlanningSubmit && newTask?.taskId) {
+      const hours = Number(watch("estimatedHours")) || 0;
+      const minutes = Number(watch("estimatedMinutes")) || 0;
+      const mins = hours * 60 + minutes;
+      const remarksVal = watch("remarks") || "";
+      onPlanningSubmit({
+        taskId: newTask.taskId,
+        estimatedTime: mins,
+        remarks: remarksVal,
+        title: newTask.taskName || watch("taskName"),
+      });
+    } else {
+      if (onTaskCreated) {
+        onTaskCreated(newTask);
+      }
+      onClose();
     }
-    onClose();
   };
 
   const onConfirmSubmit = () => {
@@ -243,6 +286,16 @@ export default function CalendarAddTaskDrawer({
   };
 
   const onSubmit = (data: FormValues) => {
+    if (isPlanningMode) {
+      const hours = Number(data.estimatedHours) || 0;
+      const minutes = Number(data.estimatedMinutes) || 0;
+      const mins = hours * 60 + minutes;
+      if (mins <= 0) {
+        toast.error("Estimated time must be greater than 0");
+        return;
+      }
+    }
+
     const payload = {
       taskName: data.taskName,
       taskDescription: data.taskDescription,
@@ -319,7 +372,7 @@ export default function CalendarAddTaskDrawer({
                 className="border-gray-200 focus:border-primary"
               />
               {errors.taskName && (
-                <span className="text-red-500 text-xs">{errors.taskName.message}</span>
+                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">{errors.taskName.message}</span>
               )}
             </div>
 
@@ -335,7 +388,7 @@ export default function CalendarAddTaskDrawer({
                 className="border-gray-200 focus:border-primary"
               />
               {errors.taskDescription && (
-                <span className="text-red-500 text-xs">{errors.taskDescription.message}</span>
+                <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">{errors.taskDescription.message}</span>
               )}
             </div>
 
@@ -345,13 +398,15 @@ export default function CalendarAddTaskDrawer({
                 <Label className="text-sm font-semibold text-gray-700">
                   Project <span className="text-red-500">*</span>
                 </Label>
-                <button
-                  type="button"
-                  onClick={() => setIsOpenProjectDrawer(true)}
-                  className="text-xs font-semibold text-primary hover:underline focus:outline-none"
-                >
-                  + Add Project
-                </button>
+                {!hideProjectMeetingAdd && (
+                  <button
+                    type="button"
+                    onClick={() => setIsOpenProjectDrawer(true)}
+                    className="text-xs font-semibold text-primary hover:underline focus:outline-none cursor-pointer"
+                  >
+                    + Add Project
+                  </button>
+                )}
               </div>
               <Controller
                 name="project"
@@ -368,6 +423,7 @@ export default function CalendarAddTaskDrawer({
                     }
                     isCrossShow={true}
                     error={errors.project}
+                    isMandatory
                   />
                 )}
               />
@@ -377,22 +433,25 @@ export default function CalendarAddTaskDrawer({
             <div className="space-y-1">
               <div className="flex justify-between items-center mb-1">
                 <Label className="text-sm font-semibold text-gray-700">
-                  Meeting
+                  Meeting <span className="text-red-500">*</span>
                 </Label>
-                <button
-                  type="button"
-                  onClick={() => setIsOpenMeetingDrawer(true)}
-                  className="text-xs font-semibold text-primary hover:underline focus:outline-none"
-                >
-                  + Add Meeting
-                </button>
+                {!hideProjectMeetingAdd && (
+                  <button
+                    type="button"
+                    onClick={() => setIsOpenMeetingDrawer(true)}
+                    className="text-xs font-semibold text-primary hover:underline focus:outline-none cursor-pointer"
+                  >
+                    + Add Meeting
+                  </button>
+                )}
               </div>
               <Controller
                 name="meeting"
                 control={control}
+                rules={{ required: "Please select a Meeting" }}
                 render={({ field }) => (
                   <SearchDropdown
-                    placeholder="Search meeting (optional)..."
+                    placeholder="Search Meeting..."
                     options={meetingOptions}
                     selectedValues={field.value ? [field.value] : []}
                     onSelect={(item) => field.onChange(item.value)}
@@ -400,6 +459,8 @@ export default function CalendarAddTaskDrawer({
                       setPaginationFilterMeeting((prev) => ({ ...prev, search: val }))
                     }
                     isCrossShow={true}
+                    isMandatory
+                    error={errors.meeting}
                   />
                 )}
               />
@@ -500,6 +561,42 @@ export default function CalendarAddTaskDrawer({
                 className="border-gray-200 focus:border-primary resize-none min-h-[80px]"
               />
             </div>
+
+            {isPlanningMode && (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-sm font-semibold text-gray-700">Estimated Hours</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      placeholder="0"
+                      {...register("estimatedHours")}
+                      className="border-gray-200 focus:border-primary"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-sm font-semibold text-gray-700">Estimated Minutes</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={59}
+                      placeholder="0"
+                      {...register("estimatedMinutes")}
+                      className="border-gray-200 focus:border-primary"
+                    />
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <Label className="text-sm font-semibold text-gray-700">Remarks</Label>
+                  <Textarea
+                    placeholder="Add planning remarks..."
+                    {...register("remarks")}
+                    className="border-gray-200 focus:border-primary resize-none min-h-[80px]"
+                  />
+                </div>
+              </>
+            )}
 
           </div>
 

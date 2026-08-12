@@ -20,6 +20,7 @@ export default function useDeleteKPIMerge() {
     onSuccess: (response) => {
       toast.success(response?.message || "Group KPI deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["kpi-list-dd-all"] });
+      queryClient.invalidateQueries({ queryKey: ["get-all-kpi-merge"] });
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message || "Failed to delete Group KPI");

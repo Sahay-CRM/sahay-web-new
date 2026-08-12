@@ -2,7 +2,7 @@ export const companyNavigationData = [
   {
     id: 1,
     icon: "CalendarRange",
-    label: "My Day",
+    label: "Routine Task",
     link: "/dashboard/repeat-task-list",
     permission: "View",
     moduleKey: "ROUTINE_TASK",
@@ -10,7 +10,7 @@ export const companyNavigationData = [
   {
     id: 2,
     icon: "Presentation",
-    label: "Organization",
+    label: "Organization ",
     permission: "View",
     moduleKey: [
       "DESIGNATION",
@@ -56,7 +56,7 @@ export const companyNavigationData = [
       {
         id: 5,
         icon: "Users",
-        label: "Sahay Teammate",
+        label: "Supports",
         link: "/dashboard/sahay-teammate",
         permission: "View",
         moduleKey: "SAHAY_EMP",
@@ -154,6 +154,13 @@ export const companyNavigationData = [
         permission: "View",
         moduleKey: "ROUTINE_TASK",
       },
+      // {
+      //   id: 3,
+      //   label: "Reports Library",
+      //   link: "/dashboard/company-reports",
+      //   permission: "View",
+      //   moduleKey: "TASK",
+      // },
     ],
   },
   {
@@ -230,8 +237,8 @@ export const companyNavigationData = [
     icon: "Presentation",
     label: "Other",
     permission: "View",
-    moduleKey: ["TASK", "FORM", "REQUESTMASTER", "HANDOVER"],
-    // link: "/dashboard/meeting",
+    moduleKey: ["TICKET", "FORM", "REQUESTMASTER", "HANDOVER"],
+  
     items: [
       {
         id: 1,
@@ -239,7 +246,7 @@ export const companyNavigationData = [
         label: "My Ticket",
         link: "/dashboard/requests",
         permission: "View",
-        moduleKey: "TASK",
+        moduleKey: "TICKET",
       },
       {
         id: 2,
@@ -290,52 +297,52 @@ export const companyNavigationData = [
       },
     ],
   },
-  // {
-  //   id: 14,
-  //   icon: "CalendarRange",
-  //   label: "Daily Planning",
-  //   permission: "View",
-  //   // moduleKey: ["ROLES_PERMISSION", "KPI_PERMISSION"],
-  //   items: [
-  //     {
-  //       id: 1,
-  //       label: "Check-in",
-  //       link: "/dashboard/daily-planning/check-in",
-  //       permission: "View",
-  //       moduleKey: "ROLES_PERMISSION",
-  //     },
-  //     {
-  //       id: 2,
-  //       label: "Check-out",
-  //       link: "/dashboard/daily-planning/check-out",
-  //       permission: "View",
-  //       moduleKey: "ROLES_PERMISSION",
-  //     },
-  //   ],
-  // },
-  // {
-  //   id: 23,
-  //   icon: "GanttChart",
-  //   label: "Gantt",
-  //   permission: "View",
-  //   moduleKey: "GANTT_CHART",
-  //   items: [
-  //     {
-  //       id: 1,
-  //       label: "Workspaces",
-  //       link: "/dashboard/gantt/workspaces",
-  //       permission: "View",
-  //       moduleKey: "GANTT_CHART",
-  //     },
-  //     {
-  //       id: 2,
-  //       label: "Templates",
-  //       link: "/dashboard/gantt/templates",
-  //       permission: "View",
-  //       moduleKey: "GANTT_CHART",
-  //     },
-  //   ],
-  // },
+  {
+    id: 14,
+    icon: "CalendarRange",
+    label: "Daily Planning",
+    permission: "View",
+    // moduleKey: ["ROLES_PERMISSION", "KPI_PERMISSION"],
+    items: [
+      {
+        id: 1,
+        label: "Check-in",
+        link: "/dashboard/daily-planning/check-in",
+        permission: "View",
+        moduleKey: "ROLES_PERMISSION",
+      },
+      {
+        id: 2,
+        label: "Check-out",
+        link: "/dashboard/daily-planning/check-out",
+        permission: "View",
+        moduleKey: "ROLES_PERMISSION",
+      },
+    ],
+  },
+  {
+    id: 23,
+    icon: "GanttChart",
+    label: "Gantt",
+    permission: "View",
+    moduleKey: "GANTT_CHART",
+    items: [
+      {
+        id: 1,
+        label: "Workspaces",
+        link: "/dashboard/gantt/workspaces",
+        permission: "View",
+        moduleKey: "GANTT_CHART",
+      },
+      {
+        id: 2,
+        label: "Templates",
+        link: "/dashboard/gantt/templates",
+        permission: "View",
+        moduleKey: "GANTT_CHART",
+      },
+    ],
+  },
 ];
 
 export const getRouteByLabel = (label: string): string | null => {

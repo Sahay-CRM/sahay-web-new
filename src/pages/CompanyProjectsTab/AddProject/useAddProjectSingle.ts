@@ -5,6 +5,8 @@ import {
   useGetAllProjectStatus,
   useGetCompanyProjectById,
   useGetSubParaFilter,
+  // useGetCompanyProjectAll,
+  useGetCompanyProject,
 } from "@/features/api/companyProject";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
@@ -27,6 +29,7 @@ interface FormValues {
   employeeId: string[];
   projectDocuments: (File | { fileId: string; fileName: string })[];
   removedFileIdsArray: string[];
+  parentProjectId?: string;
 }
 
 export default function useAddProjectSingle() {
@@ -45,6 +48,7 @@ export default function useAddProjectSingle() {
   const [reasons, setReasons] = useState("");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [savedPayload, setSavedPayload] = useState<any>(null);
+  const [parentProjectSearch, setParentProjectSearch] = useState("");
 
   const [paginationFilterEmployee, setPaginationFilterEmployee] = useState<PaginationFilter>({
     currentPage: 1,
@@ -83,12 +87,28 @@ export default function useAddProjectSingle() {
     value: status.coreParameterId,
     label: status.coreParameterName,
   }));
-
-  /** Mutations & API */
-  const { mutate: addProject, isPending } = useAddUpdateCompanyProject();
   const { data: projectApiData } = useGetCompanyProjectById(
     companyProjectId || "",
   );
+  const { data: allProjectsData, isLoading: allProjectsLoading } = useGetCompanyProject({
+    filter: {
+      search: parentProjectSearch || undefined,
+      projectId: projectApiData?.data?.parentProjectId || undefined,
+    },
+    enable: true,
+  }); 
+
+  const parentProjectOptions = (allProjectsData?.data || [])
+    .filter((proj) => proj.projectId && proj.projectName && proj.projectId !== companyProjectId)
+    .map((proj) => ({
+      value: proj.projectId as string,
+      label: proj.projectName as string,
+    }));
+
+
+  /** Mutations & API */
+  const { mutate: addProject, isPending } = useAddUpdateCompanyProject();
+
 
   /** Form setup */
   const methods = useForm<FormValues>({
@@ -104,6 +124,7 @@ export default function useAddProjectSingle() {
       employeeId: userDetail?.employeeId ? [userDetail.employeeId] : [],
       projectDocuments: [],
       removedFileIdsArray: [],
+      parentProjectId: searchParams.get("parentProjectId") || "",
     },
   });
 
@@ -158,6 +179,7 @@ export default function useAddProjectSingle() {
             )
           : [],
         removedFileIdsArray: [],
+        parentProjectId: projectApiData.data.parentProjectId || "",
       });
 
       setTimeout(() => {
@@ -180,10 +202,11 @@ export default function useAddProjectSingle() {
           employeeId: userDetail?.employeeId ? [userDetail.employeeId] : [],
           projectDocuments: [],
           removedFileIdsArray: [],
+          parentProjectId: searchParams.get("parentProjectId") || "",
         });
       }
     }
-  }, [projectApiData, reset, companyProjectId, userDetail]);
+  }, [projectApiData, reset, companyProjectId, userDetail, searchParams]);
 
   const defaultStatus = (StatusOptionsData?.data || [])
     .slice()
@@ -243,6 +266,9 @@ export default function useAddProjectSingle() {
             queryKey: ["get-project-by-id", projectId],
           });
           queryClient.resetQueries({
+            queryKey: ["get-company-sub-projects", projectId],
+          });
+          queryClient.resetQueries({
             queryKey: ["get-project-list-meeting"],
           });
         },
@@ -268,6 +294,9 @@ export default function useAddProjectSingle() {
           queryClient.resetQueries({
             queryKey: ["get-project-by-id", projectId],
           });
+          queryClient.resetQueries({
+            queryKey: ["get-company-sub-projects", projectId],
+          });
         },
       });
     }
@@ -284,6 +313,7 @@ export default function useAddProjectSingle() {
           projectStatusId: data.projectStatusId,
           subParameterIds: data.subParameterId,
           otherProjectEmployees: data.employeeId,
+          parentProjectId: data.parentProjectId || null,
         }
       : {
           projectName: data.projectName,
@@ -292,6 +322,7 @@ export default function useAddProjectSingle() {
           projectStatusId: data.projectStatusId,
           subParameterIds: data.subParameterId,
           otherProjectEmployees: data.employeeId,
+          parentProjectId: data.parentProjectId || null,
         };
 
     addProject(payload, {
@@ -415,5 +446,8 @@ export default function useAddProjectSingle() {
     coreParamsLoading,
     subParaLoading,
     employeeLoading,
+    parentProjectOptions,
+    allProjectsLoading,
+    setParentProjectSearch,
   };
 }

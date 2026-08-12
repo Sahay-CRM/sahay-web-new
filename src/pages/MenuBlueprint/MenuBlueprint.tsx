@@ -1,4 +1,4 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Button } from "@/components/ui/button";
 import { 
   LayoutTemplate, 
@@ -14,12 +14,10 @@ import {
   AlertTriangle
 } from "lucide-react";
 
-// DnD Kit imports for Core Values reordering
 import { DndContext, closestCenter } from "@dnd-kit/core";
 import { SortableContext, verticalListSortingStrategy, useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
-// Pre-existing project components
 import { 
   Tooltip, 
   TooltipContent, 
@@ -34,9 +32,11 @@ import useBlueprint, { UISelectedCoreValue } from "./useBlueprint";
 interface SortableCoreValueRowProps {
   cv: UISelectedCoreValue;
   handleRemoveCoreValue: (id: string) => void;
+  canDeleteBlueprint: boolean;
+  canEditBlueprint: boolean;
 }
 
-function SortableCoreValueRow({ cv, handleRemoveCoreValue }: SortableCoreValueRowProps) {
+function SortableCoreValueRow({ cv, handleRemoveCoreValue, canDeleteBlueprint, canEditBlueprint }: SortableCoreValueRowProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: cv.CodeValueId
   });
@@ -56,15 +56,21 @@ function SortableCoreValueRow({ cv, handleRemoveCoreValue }: SortableCoreValueRo
       className={`border-b border-gray-200 hover:bg-slate-50/80 transition-colors ${isDragging ? "shadow-xs" : ""}`}
     >
       <td className="p-3 text-center align-top w-[40px]">
-        <button
-          type="button"
-          {...attributes}
-          {...listeners}
-          className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-slate-100 transition-colors inline-flex items-center justify-center"
-          title="Drag to reorder"
-        >
-          <GripVertical className="w-4 h-4" />
-        </button>
+        {canEditBlueprint ? (
+          <button
+            type="button"
+            {...attributes}
+            {...listeners}
+            className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 p-1 rounded-md hover:bg-slate-100 transition-colors inline-flex items-center justify-center"
+            title="Drag to reorder"
+          >
+            <GripVertical className="w-4 h-4" />
+          </button>
+        ) : (
+          <span className="text-gray-300 inline-flex items-center justify-center p-1">
+            <GripVertical className="w-4 h-4" />
+          </span>
+        )}
       </td>
       <td className="p-3 text-left font-semibold text-slate-800 align-top">
         {cv.coreValue}
@@ -73,14 +79,16 @@ function SortableCoreValueRow({ cv, handleRemoveCoreValue }: SortableCoreValueRo
         {cv.actionStatement || "-"}
       </td>
       <td className="p-3 text-center align-top w-[60px]">
-        <button
-          type="button"
-          onClick={() => handleRemoveCoreValue(cv.CodeValueId)}
-          className="text-gray-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition-colors"
-          title="Remove core value"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {canDeleteBlueprint && (
+          <button
+            type="button"
+            onClick={() => handleRemoveCoreValue(cv.CodeValueId)}
+            className="text-gray-400 hover:text-red-500 p-1 rounded-lg hover:bg-red-50 transition-colors"
+            title="Remove core value"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </td>
     </tr>
   );
@@ -89,6 +97,7 @@ function SortableCoreValueRow({ cv, handleRemoveCoreValue }: SortableCoreValueRo
 export default function MenuBlueprint() {
   const {
     hasBlueprintPermission,
+    permission,
     isLoading,
     saveBlueprintMutation,
     handleSave,
@@ -164,18 +173,20 @@ export default function MenuBlueprint() {
             <h1 className="text-base font-bold text-gray-900 leading-tight">Blueprint</h1>
           </div>
         </div>
-        <Button 
-          className="py-2 w-fit"
-          onClick={handleSave}
-          disabled={saveBlueprintMutation.isPending}
-        >
-          {saveBlueprintMutation.isPending ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4" />
-          )}
-          Save Blueprint
-        </Button>
+        {permission.Edit && (
+          <Button 
+            className="py-2 w-fit"
+            onClick={handleSave}
+            disabled={saveBlueprintMutation.isPending}
+          >
+            {saveBlueprintMutation.isPending ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Save className="w-4 h-4" />
+            )}
+            Save 
+          </Button>
+        )}
       </div>
 
        {/* SECTION 1: Core Values */}
@@ -185,16 +196,18 @@ export default function MenuBlueprint() {
           
           {/* Custom Popover Dropdown Container */}
           <div className="relative" ref={coreValuePopoverRef}>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCoreValuesSelect(!showCoreValuesSelect)}
-              className="text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              <span>Add Core Value</span>
-            </Button>
+            {permission.Add && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCoreValuesSelect(!showCoreValuesSelect)}
+                className="text-xs border-indigo-200 text-indigo-700 hover:bg-indigo-50 flex items-center gap-1.5"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Add Core Value</span>
+              </Button>
+            )}
 
             {/* Custom Multi-Select Dropdown Popover */}
             {showCoreValuesSelect && (
@@ -222,19 +235,19 @@ export default function MenuBlueprint() {
 
                 {/* Core Values Option List */}
                 <div className="max-h-56 overflow-y-auto space-y-1 pr-1">
-                  {coreValuesMasterList.filter((cv: any) => {
-                    const title = cv.coreValue || cv.codeValue || "";
+                  {coreValuesMasterList.filter((cv) => {
+                    const title = cv.coreValue  || "";
                     return title.toLowerCase().includes(coreValueSearchTerm.toLowerCase());
                   }).length === 0 ? (
                     <p className="text-xs text-gray-400 italic py-2 text-center">No core values found</p>
                   ) : (
                     coreValuesMasterList
-                      .filter((cv: any) => {
-                        const title = cv.coreValue || cv.codeValue || "";
+                      .filter((cv) => {
+                        const title = cv.coreValue || "";
                         return title.toLowerCase().includes(coreValueSearchTerm.toLowerCase());
                       })
-                      .map((cv: any) => {
-                        const id = String(cv.CodeValueId || cv.blueprintCoreValueId || cv.id || "");
+                      .map((cv) => {
+                        const id = String(cv.CodeValueId || "");
                         const isSelected = selectedCoreValues.some(selected => selected.CodeValueId === id);
                         
                         return (
@@ -251,7 +264,7 @@ export default function MenuBlueprint() {
                               {isSelected && <Check className="w-3 h-3 stroke-[3]" />}
                             </div>
                             <div className="flex-1 min-w-0">
-                              <p className="font-semibold truncate">{cv.coreValue || cv.codeValue}</p>
+                              <p className="font-semibold truncate">{cv.coreValue}</p>
                               {cv.actionStatement && (
                                 <p className="text-[11px] text-gray-500 line-clamp-1 mt-0.5">{cv.actionStatement}</p>
                               )}
@@ -298,6 +311,8 @@ export default function MenuBlueprint() {
                           key={cv.CodeValueId}
                           cv={cv}
                           handleRemoveCoreValue={handleRemoveCoreValue}
+                          canDeleteBlueprint={permission.Delete}
+                          canEditBlueprint={permission.Edit}
                         />
                       ))}
                     </tbody>
@@ -320,10 +335,12 @@ export default function MenuBlueprint() {
               <label className="text-sm font-semibold text-gray-700 block">Why we exist ?</label>
               <textarea 
                 rows={4}
-                className="w-full border border-gray-200 rounded-xl p-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none resize-none text-sm text-gray-800 placeholder:text-gray-400 shadow-sm bg-white min-h-[120px]" 
+                className="w-full border border-gray-200 rounded-xl p-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none resize-none text-sm text-gray-800 placeholder:text-gray-400 shadow-sm bg-white min-h-[120px] disabled:bg-gray-50/50" 
                 placeholder="Explain why customers choose your products or services..." 
                 value={whyChooseUs} 
                 onChange={(e) => setWhyChooseUs(e.target.value)}
+                readOnly={!permission.Edit}
+                disabled={!permission.Edit}
               />
             </div>
 
@@ -332,10 +349,12 @@ export default function MenuBlueprint() {
               <label className="text-sm font-semibold text-gray-700 block">Our USP</label>
               <textarea 
                 rows={4}
-                className="w-full flex-1 border border-gray-200 rounded-xl p-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none resize-none text-sm text-gray-800 placeholder:text-gray-400 shadow-sm bg-white min-h-[120px]" 
+                className="w-full flex-1 border border-gray-200 rounded-xl p-3 focus:border-primary focus:ring-1 focus:ring-primary transition-all outline-none resize-none text-sm text-gray-800 placeholder:text-gray-400 shadow-sm bg-white min-h-[120px] disabled:bg-gray-50/50" 
                 placeholder="Explain what differentiates us in the market..." 
                 value={whyConvenient} 
                 onChange={(e) => setWhyConvenient(e.target.value)}
+                readOnly={!permission.Edit}
+                disabled={!permission.Edit}
               />
             </div>
           </div>
@@ -350,16 +369,18 @@ export default function MenuBlueprint() {
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-base font-semibold text-gray-800">Objectives</h3>
-            <Button 
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleAddObjectiveYear}
-              className="flex items-center gap-1.5 text-xs text-primary border-primary/20 hover:bg-indigo-50/50 rounded-xl"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              Add Year Column
-            </Button>
+            {permission.Add && (
+              <Button 
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddObjectiveYear}
+                className="flex items-center gap-1.5 text-xs text-primary border-primary/20 hover:bg-indigo-50/50 rounded-xl"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                Add Year Column
+              </Button>
+            )}
           </div>
           {!blueprintRes?.objectives || blueprintRes.objectives.length === 0 ? (
             <div className="border border-dashed border-gray-200 rounded-2xl py-8 px-4 text-center">
@@ -400,10 +421,12 @@ export default function MenuBlueprint() {
                           <td className="p-2 text-center w-[100px] border-l border-gray-100">
                             <input 
                               type="text" 
-                              className="w-full h-[36px] text-center border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-xs font-semibold text-gray-700 bg-slate-50/50 focus:bg-white transition-all shadow-sm mx-auto block" 
+                              className="w-full h-[36px] text-center border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-xs font-semibold text-gray-700 bg-slate-50/50 focus:bg-white transition-all shadow-sm mx-auto block disabled:bg-gray-50/50" 
                               placeholder="₹ / %" 
                               value={objectiveUnits[obj.companyBlueprintGoalId] || ""} 
                               onChange={(e) => handleObjectiveUnitChange(obj.companyBlueprintGoalId, e.target.value)}
+                              readOnly={!permission.Edit}
+                              disabled={!permission.Edit}
                             />
                           </td>
                         </tr>
@@ -422,14 +445,16 @@ export default function MenuBlueprint() {
                         <th key={yr} className="p-3 text-center font-semibold text-white h-[45px] relative group w-[110px] min-w-[110px] max-w-[110px]">
                           <div className="flex items-center justify-center gap-1.5">
                             <span>{getObjectiveYearLabel(yr)}</span>
-                            <button
-                              type="button"
-                              onClick={() => handleRemoveObjectiveYear(yr)}
-                              className="text-white/60 hover:text-white rounded-full p-0.5 hover:bg-white/10 transition-colors"
-                              title="Delete year column"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
+                            {permission.Delete && (
+                              <button
+                                type="button"
+                                onClick={() => handleRemoveObjectiveYear(yr)}
+                                className="text-white/60 hover:text-white rounded-full p-0.5 hover:bg-white/10 transition-colors"
+                                title="Delete year column"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </th>
                       ))}
@@ -449,10 +474,12 @@ export default function MenuBlueprint() {
                             <td key={yr} className="p-2 text-center w-[110px] min-w-[110px] max-w-[110px]">
                               <input 
                                 type="text"
-                                className="w-[80px] h-[40px] text-center border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-sm font-semibold text-gray-800 bg-white transition-all shadow-sm mx-auto block"
+                                className="w-[80px] h-[40px] text-center border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-sm font-semibold text-gray-800 bg-white transition-all shadow-sm mx-auto block disabled:bg-gray-50/50"
                                 placeholder="-"
                                 value={displayObjVal}
                                 onChange={(e) => handleObjectiveValueChange(obj.companyBlueprintGoalId, yr, e.target.value)}
+                                readOnly={!permission.Edit}
+                                disabled={!permission.Edit}
                               />
                             </td>
                           );
@@ -472,29 +499,33 @@ export default function MenuBlueprint() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-6">
               <h3 className="text-base font-semibold text-gray-800">Subjectives</h3>
-              <Button 
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddSubjective}
-                className="flex items-center gap-1.5 text-xs text-primary border-primary/20 hover:bg-indigo-50/50 rounded-xl"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add Row
-              </Button>
+              {permission.Add && (
+                <Button 
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddSubjective}
+                  className="flex items-center gap-1.5 text-xs text-primary border-primary/20 hover:bg-indigo-50/50 rounded-xl"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Row
+                </Button>
+              )}
             </div>
             
             <div className="flex items-center gap-2">
-              <Button 
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={handleAddSubjectiveYear}
-                className="flex items-center gap-1.5 text-xs text-primary border-primary/20 hover:bg-indigo-50/50 rounded-xl"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                Add Year Column
-              </Button>
+              {permission.Add && (
+                <Button 
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={handleAddSubjectiveYear}
+                  className="flex items-center gap-1.5 text-xs text-primary border-primary/20 hover:bg-indigo-50/50 rounded-xl"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Add Year Column
+                </Button>
+              )}
             </div>
           </div>
           <div className="flex w-full gap-2 items-stretch">
@@ -523,19 +554,23 @@ export default function MenuBlueprint() {
                         <td className="p-2 text-left w-[300px]">
                           <input 
                             type="text"
-                            className="w-full h-[36px] px-2.5 border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-xs font-semibold text-gray-800 bg-white transition-all shadow-sm block"
+                            className="w-full h-[36px] px-2.5 border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-xs font-semibold text-gray-800 bg-white transition-all shadow-sm block disabled:bg-gray-50/50"
                             placeholder="Enter Key..."
                             value={row.key}
                             onChange={(e) => handleUpdateSubjectiveKey(row.id!, e.target.value)}
+                            readOnly={!permission.Edit}
+                            disabled={!permission.Edit}
                           />
                         </td>
                         <td className="p-2 text-center w-[100px] border-l border-gray-100">
                           <input 
                             type="text" 
-                            className="w-full h-[36px] text-center border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-xs font-semibold text-gray-700 bg-slate-50/50 focus:bg-white transition-all shadow-sm mx-auto block" 
+                            className="w-full h-[36px] text-center border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-xs font-semibold text-gray-700 bg-slate-50/50 focus:bg-white transition-all shadow-sm mx-auto block disabled:bg-gray-50/50" 
                             placeholder="₹ / %" 
                             value={row.unit || ""} 
                             onChange={(e) => handleUpdateSubjectiveUnit(row.id!, e.target.value)}
+                            readOnly={!permission.Edit}
+                            disabled={!permission.Edit}
                           />
                         </td>
                       </tr>
@@ -554,14 +589,16 @@ export default function MenuBlueprint() {
                       <th key={yr} className="p-3 text-center font-semibold text-white h-[45px] relative group w-[110px] min-w-[110px] max-w-[110px]">
                         <div className="flex items-center justify-center gap-1.5">
                           <span>{getSubjectiveYearLabel(yr)}</span>
-                          <button
-                            type="button"
-                            onClick={() => handleRemoveSubjectiveYear(yr)}
-                            className="text-white/60 hover:text-white rounded-full p-0.5 hover:bg-white/10 transition-colors"
-                            title="Delete year column"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
+                          {permission.Delete && (
+                            <button
+                              type="button"
+                              onClick={() => handleRemoveSubjectiveYear(yr)}
+                              className="text-white/60 hover:text-white rounded-full p-0.5 hover:bg-white/10 transition-colors"
+                              title="Delete year column"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
                         </div>
                       </th>
                     ))}
@@ -589,21 +626,25 @@ export default function MenuBlueprint() {
                             <td key={yr} className="p-2 text-center w-[110px] min-w-[110px] max-w-[110px]">
                               <input 
                                 type="text" 
-                                className="w-[80px] h-[40px] text-center border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-sm font-semibold text-gray-800 bg-white transition-all shadow-sm mx-auto block"
+                                className="w-[80px] h-[40px] text-center border border-slate-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none rounded-md text-sm font-semibold text-gray-800 bg-white transition-all shadow-sm mx-auto block disabled:bg-gray-50/50"
                                 placeholder="-"
                                 value={displaySubVal}
                                 onChange={(e) => handleSubjectiveValueChange(row.id!, yr, e.target.value)}
+                                readOnly={!permission.Edit}
+                                disabled={!permission.Edit}
                               />
                             </td>
                           );
                         })}
                         <td className="p-2 text-center w-[70px] min-w-[70px] max-w-[70px]">
-                          <button 
-                            onClick={() => handleRemoveSubjective(row.id!)}
-                            className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
-                          >
-                            <Trash2 className="w-4.5 h-4.5" />
-                          </button>
+                          {permission.Delete && (
+                            <button 
+                              onClick={() => handleRemoveSubjective(row.id!)}
+                              className="text-gray-400 hover:text-red-500 p-1.5 rounded-lg hover:bg-red-50 transition-colors"
+                            >
+                              <Trash2 className="w-4.5 h-4.5" />
+                            </button>
+                          )}
                         </td>
                         <td className="p-0 border-b border-gray-200 bg-white w-auto"></td>
                       </tr>

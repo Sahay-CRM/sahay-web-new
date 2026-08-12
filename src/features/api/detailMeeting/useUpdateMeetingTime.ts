@@ -11,9 +11,10 @@ export default function useUpdateMeetingTime() {
   const addMeetingTimeMutation = useMutation({
     mutationKey: ["add-meeting-agenda"],
     mutationFn: async (data: MeetingDetailsTiming) => {
+      const { meetingId, ...rest } = data;
       const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.updateDetailMeetingById(data.meetingId),
-        data: data,
+        url: Urls.updateDetailMeetingById(meetingId),
+        data: rest,
       });
 
       return resData;

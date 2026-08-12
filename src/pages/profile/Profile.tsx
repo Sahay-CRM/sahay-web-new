@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import userDummy from "../../../public/userDummy.jpg";
 import { getUserDetail } from "@/features/selectors/auth.selector";
-import { capitalizeFirstLetter } from "@/features/utils/app.utils";
+import {  formatEmployeeType } from "@/features/utils/app.utils";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { useEffect, useState } from "react";
 import useAddOrUpdateEmployee from "@/features/api/companyEmployee/useAddEmployee";
@@ -175,7 +175,7 @@ export default function Profile() {
                 label="Employee Type"
                 value={
                   profileData?.role ||
-                  capitalizeFirstLetter(profileData?.employeeType || "")
+                  formatEmployeeType(profileData?.employeeType || "")
                 }
               />
 

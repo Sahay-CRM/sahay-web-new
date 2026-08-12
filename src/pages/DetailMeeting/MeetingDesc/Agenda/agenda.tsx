@@ -10,6 +10,8 @@ import {
   CornerDownLeft,
   Crown,
   FileText,
+  Layers,
+  LayoutList,
   List,
   Plus,
   Target,
@@ -299,6 +301,54 @@ export default function Agenda({
   ).length;
 
   const [showMaxAgendaModal, setShowMaxAgendaModal] = useState(false);
+  const [layoutMode, setLayoutMode] = useState<"stacked" | "tab">("tab");
+
+  const defaultAgendaOrder = ["tasks", "kpis", "projects"];
+  const configuredAgendaOrder = (
+    import.meta.env.VITE_AGENDA_SECTION_ORDER || ""
+  )
+    .split(",")
+    .map((key: string) => key.trim().toLowerCase())
+    .filter((key: string) => ["tasks", "kpis", "projects"].includes(key));
+
+  const sectionOrder = configuredAgendaOrder.length
+    ? configuredAgendaOrder
+    : defaultAgendaOrder;
+
+  const tabConfigs: Record<
+    string,
+    {
+      key: "kpis" | "projects" | "tasks";
+      label: string;
+      count: number | undefined;
+      icon: React.ReactNode;
+    }
+  > = {
+    kpis: {
+      key: "kpis",
+      label: "KPIs",
+      count: detailAgendaData?.noOfKPIs,
+      icon: <BarChart2 className="h-5 w-5" />,
+    },
+    projects: {
+      key: "projects",
+      label: "Projects",
+      count: detailAgendaData?.noOfProjects,
+      icon: <CheckSquare className="h-5 w-5" />,
+    },
+    tasks: {
+      key: "tasks",
+      label: "Tasks",
+      count: detailAgendaData?.noOfTasks,
+      icon: <List className="h-5 w-5" />,
+    },
+  };
+
+  useEffect(() => {
+    if (sectionOrder.length > 0 && !sectionOrder.includes(activeTab)) {
+      handleTabChange(sectionOrder[0] as "kpis" | "projects" | "tasks");
+    }
+  }, [sectionOrder, activeTab, handleTabChange]);
 
   const [confirmModal, setConfirmModal] = useState<{
     open: boolean;
@@ -936,78 +986,47 @@ export default function Agenda({
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex justify-between">
-            {meetingStatus === "DISCUSSION" && (
+          <div className="flex justify-between items-center">
+            {meetingStatus === "DISCUSSION" && layoutMode === "tab" && (
               <div className="w-full">
                 <div className="flex gap-4">
                   <nav className="z-20 flex">
                     <div className="mr-5 flex gap-3 items-center rounded-2xl ">
-                      {/* KPIs */}
-                      <Button
-                        className={`w-32 mx-auto border border-b-0 rounded-b-none hover:bg-white cursor-pointer flex items-center ${
-                          activeTab === "kpis"
-                            ? "bg-white h-[50px] border-t-4 border-l-1 border-r-1 border-primary z-10"
-                            : "bg-gray-100 h-12"
-                        }`}
-                        style={
-                          activeTab === "kpis"
-                            ? { marginBottom: "-2px", color: "#2f318e" }
-                            : { marginBottom: "1px", color: "gray" }
-                        }
-                        onClick={() => {
-                          if (follow || unFollowByUser) handleTabChange("kpis");
-                        }}
-                      >
-                        <BarChart2 className="h-5 w-5" />
-                        <span>KPIs ({detailAgendaData?.noOfKPIs})</span>
-                      </Button>
-
-                      {/* Projects */}
-                      <Button
-                        className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
-                          activeTab === "projects"
-                            ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
-                            : "bg-gray-100 h-12"
-                        }`}
-                        style={
-                          activeTab === "projects"
-                            ? { marginBottom: "-2px", color: "#2f318e" }
-                            : { marginBottom: "1px", color: "gray" }
-                        }
-                        onClick={() => {
-                          if (follow || unFollowByUser)
-                            handleTabChange("projects");
-                        }}
-                      >
-                        <CheckSquare className="h-5 w-5" />
-                        <span>Projects ({detailAgendaData?.noOfProjects})</span>
-                      </Button>
-
-                      {/* Tasks */}
-                      <Button
-                        className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
-                          activeTab === "tasks"
-                            ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
-                            : "bg-gray-100 h-12"
-                        }`}
-                        style={
-                          activeTab === "tasks"
-                            ? { marginBottom: "-2px", color: "#2f318e" }
-                            : { marginBottom: "1px", color: "gray" }
-                        }
-                        onClick={() => {
-                          if (follow || unFollowByUser)
-                            handleTabChange("tasks");
-                        }}
-                      >
-                        <List className="h-5 w-5" />
-                        <span>Tasks ({detailAgendaData?.noOfTasks})</span>
-                      </Button>
+                      {sectionOrder.map((key: string) => {
+                        const config = tabConfigs[key];
+                        if (!config) return null;
+                        const isActive = activeTab === config.key;
+                        return (
+                          <Button
+                            key={config.key}
+                            className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
+                              isActive
+                                ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
+                                : "bg-gray-100 h-12"
+                            }`}
+                            style={
+                              isActive
+                                ? { marginBottom: "-2px", color: "#2f318e" }
+                                : { marginBottom: "1px", color: "gray" }
+                            }
+                            onClick={() => {
+                              if (follow || unFollowByUser)
+                                handleTabChange(config.key);
+                            }}
+                          >
+                            {config.icon}
+                            <span>
+                              {config.label} ({config.count ?? 0})
+                            </span>
+                          </Button>
+                        );
+                      })}
                     </div>
                   </nav>
                 </div>
               </div>
             )}
+
             {(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") && (
               <div className="mb-2">
                 <div className="flex gap-4 items-center break-all mb-2 flex-wrap">
@@ -1104,7 +1123,50 @@ export default function Agenda({
                 </div>
               </div>
             )}
-            <div className="flex flex-wrap md:flex-nowrap items-center gap-3 md:w-auto">
+            <div className="flex flex-wrap md:flex-nowrap mb-2 items-center gap-3 md:w-auto ml-auto">
+              {meetingStatus === "DISCUSSION" && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={layoutMode === "stacked"}
+                        onClick={() =>
+                          setLayoutMode((prev) =>
+                            prev === "tab" ? "stacked" : "tab",
+                          )
+                        }
+                        className="relative inline-flex h-9 w-18 shrink-0 cursor-pointer items-center rounded-full bg-primary p-1 transition-colors duration-200 focus:outline-none select-none shadow-xs"
+                      >
+                        <span
+                          className={cn(
+                            "pointer-events-none z-10 flex h-7 w-7 transform items-center justify-center rounded-full bg-white text-primary shadow-md transition-transform duration-200 ease-in-out",
+                            layoutMode === "stacked"
+                              ? "translate-x-9"
+                              : "translate-x-0",
+                          )}
+                        >
+                          {layoutMode === "tab" ? (
+                            <Layers className="h-4 w-4 text-primary" />
+                          ) : (
+                            <LayoutList className="h-4 w-4 text-primary" />
+                          )}
+                        </span>
+                        <div className="absolute inset-0 flex items-center justify-between px-2.5 pointer-events-none text-white/70">
+                          <Layers className="h-4 w-4" />
+                          <LayoutList className="h-4 w-4" />
+                        </div>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      {layoutMode === "stacked"
+                        ? "Switch to Tab View"
+                        : "Switch to List View"}
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
               {(isTeamLeader || isSuperAdmin) && (
                 <>
                   {meetingStatus === "DISCUSSION" && (
@@ -1194,7 +1256,9 @@ export default function Agenda({
 
     ${
       meetingStatus === "DISCUSSION" &&
-      " border-t-1 border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
+      (layoutMode === "tab"
+        ? " border-t-1 border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
+        : " border-1 rounded-[10px]")
     }
 
     ${meetingStatus === "CONCLUSION" && "h-[calc(var(--vh,100vh)-220px)]"}
@@ -1309,72 +1373,115 @@ export default function Agenda({
                 </div>
               </div>
             ) : meetingStatus === "DISCUSSION" ? (
-              detailAgendaData && (
-                <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-hidden mt-5 px-2 w-full">
-                  <Suspense fallback={<div>Loading...</div>}>
-                    {activeTab === "tasks" && (
-                      <Tasks
-                        tasksFireBase={tasksFireBase}
-                        issueId={
-                          ioType === "ISSUE"
-                            ? agendaList?.find(
-                                (Item) =>
-                                  Item.issueObjectiveId === isSelectedAgenda,
-                              )?.issueId
-                            : agendaList?.find(
-                                (obj) =>
-                                  obj.issueObjectiveId === isSelectedAgenda,
-                              )?.objectiveId
-                        }
-                        ioType={ioType}
-                        selectedIssueId={isSelectedAgenda}
-                        isTeamLeader={isTeamLeader || isSuperAdmin}
-                      />
+              detailAgendaData &&
+              (() => {
+                const selectedIoId =
+                  ioType === "ISSUE"
+                    ? agendaList?.find(
+                        (Item) => Item.issueObjectiveId === isSelectedAgenda,
+                      )?.issueId
+                    : agendaList?.find(
+                        (obj) => obj.issueObjectiveId === isSelectedAgenda,
+                      )?.objectiveId;
+
+                // const agendaSectionLabels: Record<string, string> = {
+                //   tasks: "Tasks",
+                //   kpis: "KPIs",
+                //   projects: "Projects",
+                // };
+
+                // Helper to create individual section label — matches tab button style
+                const sectionLabel = (label: string, count?: number) => (
+                  <div className="flex items-center gap-1 text-lg font-semibold text-black">
+                    <span>{label}</span>
+                    {count !== undefined && (
+                      <span className="text-sm font-normal text-gray-600">
+                        ({count})
+                      </span>
                     )}
-                    {activeTab === "projects" && (
-                      <Projects
-                        projectsFireBase={projectsFireBase}
-                        issueId={
-                          ioType === "ISSUE"
-                            ? agendaList?.find(
-                                (Item) =>
-                                  Item.issueObjectiveId === isSelectedAgenda,
-                              )?.issueId
-                            : agendaList?.find(
-                                (obj) =>
-                                  obj.issueObjectiveId === isSelectedAgenda,
-                              )?.objectiveId
-                        }
-                        ioType={ioType}
-                        selectedIssueId={isSelectedAgenda}
-                        isTeamLeader={isTeamLeader || isSuperAdmin}
-                      />
-                    )}
-                    {activeTab === "kpis" && (
-                      <KPITable
-                        meetingId={meetingId}
-                        kpisFireBase={kpisFireBase}
-                        ioId={
-                          ioType === "ISSUE"
-                            ? agendaList?.find(
-                                (Item) =>
-                                  Item.issueObjectiveId === isSelectedAgenda,
-                              )?.issueId
-                            : agendaList?.find(
-                                (obj) =>
-                                  obj.issueObjectiveId === isSelectedAgenda,
-                              )?.objectiveId
-                        }
-                        ioType={ioType}
-                        selectedIssueId={isSelectedAgenda}
-                        isTeamLeader={isTeamLeader || isSuperAdmin}
-                        follow={follow}
-                        meetingRes={meetingResponse!}
-                      />
-                    )}
-                  </Suspense>
-                </div>
-              )
+                  </div>
+                );
+
+                const agendaSections: Record<string, React.ReactNode> = {
+                  tasks: (
+                    <Tasks
+                      key="tasks"
+                      tasksFireBase={tasksFireBase}
+                      issueId={selectedIoId}
+                      ioType={ioType}
+                      selectedIssueId={isSelectedAgenda}
+                      isTeamLeader={isTeamLeader || isSuperAdmin}
+                      headerLeft={
+                        layoutMode === "stacked"
+                          ? sectionLabel("Tasks", detailAgendaData?.noOfTasks)
+                          : undefined
+                      }
+                    />
+                  ),
+                  kpis: (
+                    <KPITable
+                      key="kpis"
+                      meetingId={meetingId}
+                      kpisFireBase={kpisFireBase}
+                      ioId={selectedIoId}
+                      ioType={ioType}
+                      selectedIssueId={isSelectedAgenda}
+                      isTeamLeader={isTeamLeader || isSuperAdmin}
+                      follow={follow}
+                      meetingRes={meetingResponse!}
+                      headerLeft={
+                        layoutMode === "stacked"
+                          ? sectionLabel("KPIs", detailAgendaData?.noOfKPIs)
+                          : undefined
+                      }
+                    />
+                  ),
+                  projects: (
+                    <Projects
+                      key="projects"
+                      projectsFireBase={projectsFireBase}
+                      issueId={selectedIoId}
+                      ioType={ioType}
+                      selectedIssueId={isSelectedAgenda}
+                      isTeamLeader={isTeamLeader || isSuperAdmin}
+                      headerLeft={
+                        layoutMode === "stacked"
+                          ? sectionLabel(
+                              "Projects",
+                              detailAgendaData?.noOfProjects,
+                            )
+                          : undefined
+                      }
+                    />
+                  ),
+                };
+
+                return (
+                  <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-y-auto overflow-x-hidden mt-5 px-2 w-full">
+                    <Suspense fallback={<div>Loading...</div>}>
+                      {layoutMode === "tab" ? (
+                        <div className="w-full">
+                          {activeTab === "kpis" && agendaSections["kpis"]}
+                          {activeTab === "projects" &&
+                            agendaSections["projects"]}
+                          {activeTab === "tasks" && agendaSections["tasks"]}
+                        </div>
+                      ) : (
+                        <div className="flex flex-col gap-6 w-full">
+                          {sectionOrder.map((key: string, idx: number) => (
+                            <React.Fragment key={key}>
+                              {idx > 0 && (
+                                <div className="border-t-4 border-gray-500 w-full my-1" />
+                              )}
+                              <div>{agendaSections[key]}</div>
+                            </React.Fragment>
+                          ))}
+                        </div>
+                      )}
+                    </Suspense>
+                  </div>
+                );
+              })()
             ) : conclusionLoading ? (
               <div className="flex justify-center items-center h-20">
                 <div className="animate-spin">

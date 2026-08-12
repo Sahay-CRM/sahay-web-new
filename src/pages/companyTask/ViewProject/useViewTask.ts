@@ -85,6 +85,8 @@ export default function useViewCompanyTask() {
     const payload = {
       taskStatusId: data,
       taskId: taskId,
+      projectId: taskApiData?.data?.projectId ,
+      meetingId: taskApiData?.data?.meetingId ,
     };
 
     updateCompanyTask(payload);

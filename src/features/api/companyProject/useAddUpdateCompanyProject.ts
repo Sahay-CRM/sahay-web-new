@@ -11,13 +11,14 @@ export default function useAddUpdateCompanyProject() {
   const addUpdateCompanyProjectMutation = useMutation({
     mutationKey: ["add-or-update-project-list"],
     mutationFn: async (data: CompanyProjectDataProps) => {
-      const isUpdate = Boolean(data.projectId);
+      const { projectId, ...rest } = data;
+      const isUpdate = Boolean(projectId);
 
       const config = {
         url: isUpdate
-          ? Urls.updateCompanyProject(data.projectId!)
+          ? Urls.updateCompanyProject(projectId!)
           : Urls.addCompanyProject(),
-        data: data,
+        data: isUpdate ? rest : data,
       };
 
       // Send request
@@ -33,6 +34,9 @@ export default function useAddUpdateCompanyProject() {
       queryClient.resetQueries({ queryKey: ["get-project-list-dropdown"] });
       queryClient.resetQueries({
         queryKey: ["get-project-by-id", res.data.projectId],
+      });
+      queryClient.resetQueries({
+        queryKey: ["get-company-sub-projects", res.data.projectId],
       });
     },
     onError: (error: AxiosError<{ message?: string }>) => {

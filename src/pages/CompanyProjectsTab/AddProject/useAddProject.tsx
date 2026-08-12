@@ -341,6 +341,9 @@ export default function useAddProject() {
               queryKey: ["get-project-by-id", projectId],
             });
             queryClient.resetQueries({
+              queryKey: ["get-company-sub-projects", projectId],
+            });
+            queryClient.resetQueries({
               queryKey: ["get-project-list-meeting"],
             });
           },
@@ -366,6 +369,9 @@ export default function useAddProject() {
         onSuccess: () => {
           queryClient.resetQueries({
             queryKey: ["get-project-by-id", projectId],
+          });
+          queryClient.resetQueries({
+            queryKey: ["get-company-sub-projects", projectId],
           });
         },
       });

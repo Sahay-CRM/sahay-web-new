@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { AxiosError } from "axios";
 import { formatToLocalDateTime } from "@/features/utils/app.utils";
 import { useParams } from "react-router-dom";
@@ -7,7 +7,10 @@ import { toast } from "sonner";
 import { queryClient } from "@/queryClient";
 import { database } from "@/firebaseConfig";
 
-import TableData from "@/components/shared/DataTable/DataTable";
+import TableData, {
+  ColumnConfig,
+} from "@/components/shared/DataTable/DataTable";
+import AssigneeAvatars from "@/components/shared/AssigneeAvatars/AssigneeAvatars";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
 import {
   Tooltip,
@@ -38,6 +41,7 @@ interface ProjectProps {
   ioType?: string;
   selectedIssueId?: string;
   isTeamLeader?: boolean | undefined;
+  headerLeft?: React.ReactNode;
 }
 
 export default function Projects({
@@ -46,6 +50,7 @@ export default function Projects({
   ioType,
   selectedIssueId,
   isTeamLeader,
+  headerLeft,
 }: ProjectProps) {
   const { id: meetingId } = useParams();
   const { mutate: addMeetingProject } = addMeetingProjectDataMutation();
@@ -96,24 +101,54 @@ export default function Projects({
   };
 
   const [columnToggleOptions, setColumnToggleOptions] = useState([
-    { key: "srNo", label: "Sr No", visible: true },
+    { key: "srNo", label: "#", visible: true },
     { key: "projectName", label: "Project Name", visible: true },
     {
       key: "projectDeadline",
       label: "Project Deadline",
       visible: true,
     },
+    { key: "assigneeNames", label: "Assignees", visible: true },
     { key: "projectDescription", label: "Project Description", visible: true },
     { key: "projectStatus", label: "Status", visible: true },
   ]);
 
-  const visibleColumns = columnToggleOptions.reduce(
-    (acc, col) => {
-      if (col.visible) acc[col.key] = col.label;
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
+  const tableColumns = useMemo(() => {
+    const cols: Record<string, string | ColumnConfig> = {};
+    columnToggleOptions.forEach((col) => {
+      if (col.visible) {
+        if (col.key === "assigneeNames") {
+          cols[col.key] = {
+            label: col.label,
+            render: (_val: unknown, item: unknown) => {
+              const project = item as CompanyProjectDataProps & {
+                ProjectEmployees?: {
+                  employeeId?: string;
+                  employeeName?: string;
+                  employeeImage?: string;
+                }[];
+                assignUsers?: {
+                  employeeId?: string;
+                  employeeName?: string;
+                  employeeImage?: string;
+                }[];
+                employeeNames?: string[];
+              };
+              const assignees =
+                project?.ProjectEmployees ||
+                project?.assignUsers ||
+                project?.employeeNames ||
+                [];
+              return <AssigneeAvatars users={assignees} />;
+            },
+          };
+        } else {
+          cols[col.key] = col.label;
+        }
+      }
+    });
+    return cols;
+  }, [columnToggleOptions]);
 
   const canToggleColumns = columnToggleOptions.length > 3;
 
@@ -203,9 +238,10 @@ export default function Projects({
   }
 
   return (
-    <div className="h-full flex flex-col overflow-hidden">
-      <div className="flex gap-5 justify-between mb-5 shrink-0">
-        <div className="flex gap-5 items-center">
+    <div className="flex flex-col">
+      <div className="flex gap-5 justify-between mb-5 shrink-0 items-center">
+        <div className="flex items-center">{headerLeft}</div>
+        <div className="flex gap-5 items-center ml-auto">
           {isTeamLeader && (
             <>
               <ProjectSearchDropdown
@@ -251,7 +287,7 @@ export default function Projects({
             status: item.projectStatusId,
           })) ?? []
         }
-        columns={visibleColumns}
+        columns={tableColumns}
         primaryKey="projectId"
         showIndexColumn={false}
         isActionButton={() => true}

@@ -63,6 +63,7 @@ const Urls = {
   deleteCompanyProject: (id: string) =>
     `${baseUrl}/company/project/delete/${id}`,
   getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
+  getCompanySubProjects: (id: string) => `${baseUrl}/company/project/sub/view/${id}`,
   getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
   getCompanyProjectSearch: () => `${baseUrl}/company/project/search`,
 
@@ -275,6 +276,7 @@ const Urls = {
   createKPIMerge: () => `${baseUrl}/company/kpi-merge/create`,
   updateKPIMerge: (id: string) => `${baseUrl}/company/kpi-merge/update/${id}`,
   deleteKPIMerge: (id: string) => `${baseUrl}/company/kpi-merge/delete/${id}`,
+  getAllKpiMerge: () => `${baseUrl}/company/kpi-merge/get-all`,
 
   deleteCompanyMeetingNote: (id: string) =>
     `${baseUrl}/company/detail-meeting/note/delete/${id}`,
@@ -410,6 +412,7 @@ const Urls = {
     `${baseUrl}/company/kpi-data/note-delete/${id}`,
 
   getBothMeeting: () => `${baseUrl}/company/meeting/get-both`,
+  getAllBothMeeting: () => `${baseUrl}/company/meeting/get-all-both`,
   kpiNewValidation: () => `${baseUrl}/company/kpi/kpi-new-validation`,
   kpiResetValidation: () => `${baseUrl}/company/kpi/kpi-new-reset`,
   getReports: () => `${baseUrl}/company/reports/get-report`,
@@ -482,6 +485,7 @@ const Urls = {
 
   // Workspaces
   ganttWorkspaceList: () => `${baseUrl}/company/gantt/workspace/get`,
+  ganttTodayItems: () => `${baseUrl}/company/gantt/item/today`,
   ganttWorkspaceDetail: (id: string) =>
     `${baseUrl}/company/gantt/workspace/get/${id}`,
   ganttWorkspaceCreate: () => `${baseUrl}/company/gantt/workspace/create`,
@@ -493,6 +497,11 @@ const Urls = {
     `${baseUrl}/company/gantt/workspace/delete/${id}`,
   ganttWorkspaceImport: (id: string) =>
     `${baseUrl}/company/gantt/workspace/import/${id}`,
+  // Phases
+  ganttPhaseCreate: () => `${baseUrl}/company/gantt/phase/create`,
+  ganttPhaseUpdate: (id: string) => `${baseUrl}/company/gantt/phase/update/${id}`,
+  ganttPhaseDelete: (id: string) => `${baseUrl}/company/gantt/phase/delete/${id}`,
+  ganttPhaseReorder: () => `${baseUrl}/company/gantt/phase/reorder`,
 
   // Items
   ganttItemCreate: () => `${baseUrl}/company/gantt/item/create`,
@@ -536,6 +545,12 @@ const Urls = {
     `${baseUrl}/company/employee/daily-plan/item-history`,
   getDailyPlanItems: () =>
     `${baseUrl}/company/employee/daily-plan/get-items`,
+  finalSubmitDailyPlan: () =>
+    `${baseUrl}/company/employee/daily-plan/final-submit`,
+  checkTodaySubmitPlan: () =>
+    `${baseUrl}/company/employee/daily-plan/check-today-submit`,
+  checkInDailyPlan: () => `${baseUrl}/company/employee/daily-plan/check-in`,
+  checkOutDailyPlan: () => `${baseUrl}/company/employee/daily-plan/check-out`,
 
   // Blueprint Endpoints
   blueprintCoreValueGetAll: () => `${baseUrl}/blueprint-core-value/get-all`,
@@ -551,6 +566,14 @@ const Urls = {
   companyGoalValueSave: () => `${baseUrl}/company/blueprint-goal/value/save`,
   companyGoalValueDelete: (id: string) => `${baseUrl}/company/blueprint-goal/value/delete/${id}`,
   companyBlueprintGoalSaveAll: () => `${baseUrl}/company/blueprint-goal/save-all`,
+
+  // Company Report Endpoints
+  companyReportTemplateGet: () => `${baseUrl}/company/report/template/get`,
+  companyReportLibraryGet: () => `${baseUrl}/company/report/library/get`,
+  companyReportLibraryCreateFromTemplate: () => `${baseUrl}/company/report/library/create-from-template`,
+  companyReportLibraryUpdate: (id: string) => `${baseUrl}/company/report/library/update/${id}`,
+  companyReportRun: (id: string) => `${baseUrl}/company/report/run/${id}`,
+  companyReportLibraryDelete: (id: string) => `${baseUrl}/company/report/library/delete/${id}`,
 };
 
 export default Urls;

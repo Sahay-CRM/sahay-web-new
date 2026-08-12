@@ -5,21 +5,23 @@ import { useQuery } from "@tanstack/react-query";
 interface HistoryParams {
   taskId?: string;
   meetingId?: string;
+  ganttItemId?: string;
 }
 
 export default function useGetDailyPlanItemHistory({
   taskId,
   meetingId,
+  ganttItemId,
 }: HistoryParams) {
   return useQuery({
-    queryKey: ["daily-plan-item-history", taskId, meetingId],
+    queryKey: ["daily-plan-item-history", taskId, meetingId, ganttItemId],
     queryFn: async () => {
       const { data } = await Api.post<{ data: DailyPlanItemHistoryEntry[] }>({
         url: Urls.getDailyPlanItemHistory(),
-        data: { taskId, meetingId },
+        data: { taskId, meetingId, ganttItemId },
       });
       return data;
     },
-    enabled: Boolean(taskId || meetingId),
+    enabled: Boolean(taskId || meetingId || ganttItemId),
   });
 }

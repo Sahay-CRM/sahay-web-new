@@ -7,7 +7,7 @@ import { toast } from "sonner";
 
 export interface AddTimeLogPayload {
   employeeId: string;
-  type: "TASK" | "MEETING";
+  type: "TASK" | "MEETING" | "GANTT";
   refId?: string;
   startHours: string;
   endHours: string;

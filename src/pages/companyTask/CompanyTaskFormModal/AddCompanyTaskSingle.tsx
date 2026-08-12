@@ -1,5 +1,5 @@
 import { Controller, FormProvider } from "react-hook-form";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { useQueryClient } from "@tanstack/react-query";
@@ -208,12 +208,51 @@ export default function AddCompanyTaskSingle() {
       }))
     : [];
 
-  const meetingOptions = meetingData?.data
-    ? meetingData.data.map((m) => ({
-        label: m.meetingName || "",
-        value: m.meetingId || "",
-      }))
-    : [];
+interface GroupedCompanyMeetings {
+  detailMeetings?: CompanyMeetingDataProps[];
+  normalMeetings?: CompanyMeetingDataProps[];
+}
+
+  const meetingOptions = useMemo(() => {
+    if (!meetingData?.data) return [];
+    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+
+    const normalMeetings = rawData.normalMeetings || [];
+    const detailMeetings = rawData.detailMeetings || [];
+
+    const options: { label: string; value: string; isHeader?: boolean }[] = [];
+
+    if (detailMeetings.length > 0) {
+      options.push({ label: "Detail Meetings", value: "detail-header", isHeader: true });
+      detailMeetings.forEach((m) => {
+        options.push({
+          label: m.meetingName || "",
+          value: m.meetingId || "",
+        });
+      });
+    }
+
+    if (normalMeetings.length > 0) {
+      options.push({ label: "Normal Meetings", value: "normal-header", isHeader: true });
+      normalMeetings.forEach((m) => {
+        options.push({
+          label: m.meetingName || "",
+          value: m.meetingId || "",
+        });
+      });
+    }
+
+    if (options.length === 0 && Array.isArray(meetingData.data)) {
+      (meetingData.data as CompanyMeetingDataProps[]).forEach((m) => {
+        options.push({
+          label: m.meetingName || "",
+          value: m.meetingId || "",
+        });
+      });
+    }
+
+    return options;
+  }, [meetingData]);
 
   const employeeOptions = employeedata?.data
     ? employeedata.data.map((e) => ({
@@ -223,7 +262,18 @@ export default function AddCompanyTaskSingle() {
     : [];
 
   const selectedProject = projectListdata?.data?.find((p) => p.projectId === projectVal);
-  const selectedMeeting = meetingData?.data?.find((m) => m.meetingId === meetingVal);
+  const selectedMeeting = useMemo(() => {
+    if (!meetingData?.data) return null;
+    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+    if (Array.isArray(rawData)) {
+      return (rawData as CompanyMeetingDataProps[]).find((m) => m.meetingId === meetingVal);
+    }
+    const allMeetings = [
+      ...(rawData.normalMeetings || []),
+      ...(rawData.detailMeetings || []),
+    ];
+    return allMeetings.find((m) => m.meetingId === meetingVal);
+  }, [meetingData, meetingVal]);
   const selectedStatus = taskStatusOptions.find((s) => s.value === statusVal);
 
   const selectedEmployees = (assignUserVal
@@ -287,7 +337,6 @@ export default function AddCompanyTaskSingle() {
     >
       <FormProvider {...methods}>
         <div className="w-full h-full p-6 flex flex-col overflow-y-auto bg-[#f8f8fb] font-sans">
-          
           {/* Header Row */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
             <div>
@@ -295,16 +344,13 @@ export default function AddCompanyTaskSingle() {
                 {taskId ? "Update Task" : "Create New Task"}
               </h1>
             </div>
-         
           </div>
 
           {/* Form Content Area */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
-            
             {/* Left Card: Form Inputs */}
             <div className="lg:col-span-2 space-y-6">
               <Card className="p-6 border border-gray-100 shadow-sm bg-white rounded-xl ">
-                
                 {/* Task Name and Description fields */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   {/* Task Name */}
@@ -316,10 +362,14 @@ export default function AddCompanyTaskSingle() {
                       <input
                         type="text"
                         className={`w-full border rounded-md px-3.5 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-                          errors.taskName ? "border-red-500 focus:ring-red-200" : "border-gray-200 focus:border-primary"
+                          errors.taskName
+                            ? "border-red-500 focus:ring-red-200"
+                            : "border-gray-200 focus:border-primary"
                         }`}
                         placeholder="Enter task name..."
-                        {...register("taskName", { required: "Task Name is required" })}
+                        {...register("taskName", {
+                          required: "Task Name is required",
+                        })}
                         onFocus={() => {
                           if (
                             shouldSearch &&
@@ -362,7 +412,9 @@ export default function AddCompanyTaskSingle() {
                     <input
                       type="text"
                       className={`w-full border rounded-md px-3.5 py-2.5 text-base focus:outline-none focus:ring-2 focus:ring-primary/20 ${
-                        errors.taskDescription ? "border-red-500 focus:ring-red-200" : "border-gray-200 focus:border-primary"
+                        errors.taskDescription
+                          ? "border-red-500 focus:ring-red-200"
+                          : "border-gray-200 focus:border-primary"
                       }`}
                       placeholder="Enter task description..."
                       {...register("taskDescription", {
@@ -411,6 +463,7 @@ export default function AddCompanyTaskSingle() {
                                 currentPage: 1,
                               }))
                             }
+                            isMandatory
                             error={errors.project}
                             isCrossShow={true}
                           />
@@ -422,7 +475,7 @@ export default function AddCompanyTaskSingle() {
                   <div>
                     <div className="flex justify-between items-center mb-1.5">
                       <label className="block text-md font-semibold text-gray-900">
-                        Meeting
+                        Meeting <span className="text-red-500">*</span>
                       </label>
                       <button
                         type="button"
@@ -436,10 +489,11 @@ export default function AddCompanyTaskSingle() {
                       <Controller
                         name="meeting"
                         control={control}
+                        rules={{ required: "Please select a Meeting" }}
                         render={({ field }) => (
                           <SearchDropdown
                             className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
-                            placeholder="Search meeting (optional)..."
+                            placeholder="Search Meeting..."
                             options={meetingOptions}
                             selectedValues={field.value ? [field.value] : []}
                             onSelect={(item) => field.onChange(item.value)}
@@ -450,6 +504,7 @@ export default function AddCompanyTaskSingle() {
                                 currentPage: 1,
                               }))
                             }
+                            isMandatory
                             error={errors.meeting}
                             isCrossShow={true}
                           />
@@ -469,21 +524,30 @@ export default function AddCompanyTaskSingle() {
                       <Controller
                         name="assignUser"
                         control={control}
-                        rules={{ required: "Please assign this task to at least one user" }}
+                        rules={{
+                          required:
+                            "Please assign this task to at least one user",
+                        }}
                         render={({ field }) => (
                           <SearchDropdown
                             className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
                             placeholder="Search employee..."
                             options={employeeOptions}
-                            selectedValues={Array.isArray(field.value) ? field.value : []}
+                            selectedValues={
+                              Array.isArray(field.value) ? field.value : []
+                            }
                             multiSelect={true}
                             onSelect={(item) => {
-                                const vals = Array.isArray(field.value) ? field.value : [];
-                                if (vals.includes(item.value)) {
-                                  field.onChange(vals.filter((v) => v !== item.value));
-                                } else {
-                                  field.onChange([...vals, item.value]);
-                                }
+                              const vals = Array.isArray(field.value)
+                                ? field.value
+                                : [];
+                              if (vals.includes(item.value)) {
+                                field.onChange(
+                                  vals.filter((v) => v !== item.value),
+                                );
+                              } else {
+                                field.onChange([...vals, item.value]);
+                              }
                             }}
                             onSearchChange={(val) =>
                               setPaginationFilterEmployee((prev) => ({
@@ -515,11 +579,13 @@ export default function AddCompanyTaskSingle() {
                               <button
                                 type="button"
                                 onClick={() => {
-                                  const vals = Array.isArray(assignUserVal) ? assignUserVal : [];
+                                  const vals = Array.isArray(assignUserVal)
+                                    ? assignUserVal
+                                    : [];
                                   setValue(
                                     "assignUser",
                                     vals.filter((v) => v !== emp.employeeId),
-                                    { shouldValidate: true }
+                                    { shouldValidate: true },
                                   );
                                 }}
                                 className="text-gray-400 hover:text-red-500 rounded-full focus:outline-none"
@@ -555,24 +621,34 @@ export default function AddCompanyTaskSingle() {
                               onChange={field.onChange}
                               error={errors.taskDeadline}
                               disablePastDays={
-                                Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                                Number(import.meta.env.VITE_DISABLEPASTDATES) ||
+                                3
                               }
-                              disabled={taskDataById?.data?.deadlineRequest === "PENDING"}
+                              disabled={
+                                taskDataById?.data?.deadlineRequest ===
+                                "PENDING"
+                              }
                             />
                           </div>
-                          {taskDataById?.data?.deadlineRequest === "PENDING" && (
+                          {taskDataById?.data?.deadlineRequest ===
+                            "PENDING" && (
                             <p className="text-xs text-primary mt-1">
                               Deadline change request is pending approval
                             </p>
                           )}
-                          
+
                           {/* Quick Deadline Chips */}
                           <div className="flex flex-wrap gap-1.5 mt-2">
                             {quickDeadlines.map((chip) => (
                               <button
                                 key={chip.value}
                                 type="button"
-                                onClick={() => handleQuickDeadline(chip.value, field.onChange)}
+                                onClick={() =>
+                                  handleQuickDeadline(
+                                    chip.value,
+                                    field.onChange,
+                                  )
+                                }
                                 className="px-2.5 py-1 text-[11px] bg-gray-100 hover:bg-primary/10 hover:text-primary text-gray-600 rounded-md font-medium transition-all"
                               >
                                 {chip.label}
@@ -640,7 +716,6 @@ export default function AddCompanyTaskSingle() {
                   </div>
                 </div>
 
-
                 {/* Comment field (Optional, Add mode only) */}
                 {!taskId && (
                   <div>
@@ -654,7 +729,6 @@ export default function AddCompanyTaskSingle() {
                     />
                   </div>
                 )}
-
               </Card>
 
               {/* Action Buttons (Bottom) */}
@@ -686,7 +760,6 @@ export default function AddCompanyTaskSingle() {
                   )}
                 </Button>
               </div>
-
             </div>
 
             {/* Right Card: Task Summary Sidebar */}
@@ -707,7 +780,9 @@ export default function AddCompanyTaskSingle() {
                         Project
                       </p>
                       <p className="text-sm font-semibold text-gray-700 mt-0.5">
-                        {selectedProject ? selectedProject.projectName : "Search project..."}
+                        {selectedProject
+                          ? selectedProject.projectName
+                          : "Search project..."}
                       </p>
                     </div>
                   </div>
@@ -722,7 +797,9 @@ export default function AddCompanyTaskSingle() {
                         Meeting
                       </p>
                       <p className="text-sm font-semibold text-gray-700 mt-0.5">
-                        {selectedMeeting ? selectedMeeting.meetingName : "Weekly Team Sync"}
+                        {selectedMeeting
+                          ? selectedMeeting.meetingName
+                          : "Weekly Team Sync"}
                       </p>
                     </div>
                   </div>
@@ -769,33 +846,37 @@ export default function AddCompanyTaskSingle() {
                         Deadline
                       </p>
                       <p className="text-sm font-semibold text-gray-700 mt-0.5">
-                        {formattedDeadline || "May 28, 2025 06:00 PM"}
+                        {formattedDeadline || "No deadline set"}
                       </p>
                     </div>
                   </div>
 
-
-
                   {/* Status Summary Block */}
                   <div className="flex items-start space-x-3">
-                    <div className="p-2 bg-gray-50 rounded-lg" style={{ color: selectedStatus?.color || "#556ee6" }}>
-                      <Circle className="w-4 h-4" style={{ fill: selectedStatus?.color || "#556ee6" }} />
+                    <div
+                      className="p-2 bg-gray-50 rounded-lg"
+                      style={{ color: selectedStatus?.color || "#556ee6" }}
+                    >
+                      <Circle
+                        className="w-4 h-4"
+                        style={{ fill: selectedStatus?.color || "#556ee6" }}
+                      />
                     </div>
                     <div>
                       <p className="text-[11px] text-gray-400 font-semibold tracking-wider uppercase">
                         Status
                       </p>
-                      <p className="text-sm font-semibold text-gray-700 mt-0.5" style={{ color: selectedStatus?.color }}>
+                      <p
+                        className="text-sm font-semibold text-gray-700 mt-0.5"
+                        style={{ color: selectedStatus?.color }}
+                      >
                         {selectedStatus ? selectedStatus.label : "In Progress"}
                       </p>
                     </div>
                   </div>
-
                 </div>
-
               </Card>
             </div>
-
           </div>
 
           {/* Deadline change reason dialog */}
@@ -806,12 +887,16 @@ export default function AddCompanyTaskSingle() {
                   Confirmation Required
                 </DialogTitle>
                 <DialogDescription className="text-sm text-gray-500 mt-1">
-                  The deadline has been changed. Please provide a reason to proceed with the update.
+                  The deadline has been changed. Please provide a reason to
+                  proceed with the update.
                 </DialogDescription>
               </DialogHeader>
               <div className="grid gap-4 py-3">
                 <div className="grid gap-2">
-                  <label htmlFor="reason" className="text-sm font-semibold text-gray-700">
+                  <label
+                    htmlFor="reason"
+                    className="text-sm font-semibold text-gray-700"
+                  >
                     Reason
                   </label>
                   <Textarea
@@ -849,7 +934,9 @@ export default function AddCompanyTaskSingle() {
             projectsFireBase={() => {}}
             onProjectCreated={(newProj) => {
               setValue("project", newProj.projectId || "");
-              queryClient.invalidateQueries({ queryKey: ["get-project-list-meeting"] });
+              queryClient.invalidateQueries({
+                queryKey: ["get-project-list-meeting"],
+              });
               queryClient.invalidateQueries({ queryKey: ["get-project-list"] });
             }}
           />
@@ -862,7 +949,6 @@ export default function AddCompanyTaskSingle() {
               queryClient.invalidateQueries({ queryKey: ["get-both-meeting"] });
             }}
           />
-
         </div>
       </FormProvider>
     </CompanyAccessGuard>

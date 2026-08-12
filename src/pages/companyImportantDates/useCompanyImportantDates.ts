@@ -1,11 +1,16 @@
-import { useDdCompanyMeeting } from "@/features/api/companyMeeting";
+import { useGetAllBothCompanyMeeting } from "@/features/api/companyMeeting";
 import { useAllCompanyTask } from "@/features/api/companyTask";
 import useGetHoliday from "@/features/api/Holiday/useGetHoliday";
 import { useGetImportantDates } from "@/features/api/importantDates";
 import { getUserPermission } from "@/features/selectors/auth.selector";
 import { isColorDark } from "@/features/utils/color.utils";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useSelector } from "react-redux";
+
+interface GroupedCompanyMeetings {
+  detailMeetings?: CompanyMeetingDataProps[];
+  normalMeetings?: CompanyMeetingDataProps[];
+}
 
 export default function useCalendar() {
   const [modalData, setModalData] = useState<ImportantDatesDataProps>(
@@ -25,7 +30,7 @@ export default function useCalendar() {
 
   const { data: importantDatesList } = useGetImportantDates();
   const { data: companyTask } = useAllCompanyTask({ filter: {} });
-  const { data: meetingData } = useDdCompanyMeeting();
+  const { data: meetingData } = useGetAllBothCompanyMeeting();
   const { data: holidayData } = useGetHoliday({
     filter: {
       monthFlag: 0,
@@ -71,7 +76,9 @@ export default function useCalendar() {
       // Use meetingDateTime for both start and end, matching local time
       const dateTime = item.meetingDateTime;
       const eventDate = dateTime ? new Date(dateTime) : new Date();
-      const bgColor = item.color || "#2e3195";
+      const bgColor = item.isDetailMeeting
+        ? "#2e3195"
+        : (item.meetingStatus?.color || item.color || "#2e3195");
       const textColor = isColorDark(bgColor) ? "#ffffff" : "#222222";
       return {
         title: (item.meetingName || "Meeting Name") + " (Meeting)",
@@ -115,6 +122,20 @@ export default function useCalendar() {
       };
     });
 
+  const flatMeetings = useMemo((): CompanyMeetingDataProps[] => {
+    if (!meetingData?.data) return [];
+    // The get-all-both API returns a flat array of meetings
+    if (Array.isArray(meetingData.data)) {
+      return meetingData.data;
+    }
+    // Fallback if data is returned as grouped normal/detail meetings
+    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+    return [
+      ...(rawData.normalMeetings || []),
+      ...(rawData.detailMeetings || []),
+    ];
+  }, [meetingData]);
+
   const taskEvents =
     companyTask && companyTask.data
       ? transformTaskDataToEvents(
@@ -124,10 +145,9 @@ export default function useCalendar() {
         )
       : [];
 
-  const meetingEvents =
-    meetingData && Array.isArray(meetingData)
-      ? transformMeetingDataToEvents(meetingData)
-      : [];
+  const meetingEvents = useMemo(() => {
+    return transformMeetingDataToEvents(flatMeetings);
+  }, [flatMeetings]);
   const importantDateEvents =
     importantDatesList && importantDatesList.data
       ? transformImportantDateDataToEvents(importantDatesList.data)
@@ -161,12 +181,7 @@ export default function useCalendar() {
     setTaskModalData(taskData!);
   };
   const handleMeetingModal = (meetingId: string) => {
-    const meetingsArray = Array.isArray(meetingData)
-      ? meetingData
-      : meetingData
-        ? [meetingData]
-        : [];
-    const meeting = meetingsArray.find(
+    const meeting = flatMeetings.find(
       (m: CompanyMeetingDataProps) => m.meetingId === meetingId,
     );
     if (meeting) {

@@ -12,12 +12,20 @@ import { Button } from "@/components/ui/button";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import AddMeetingModal from "./addMeetingModal";
 import { getInitials } from "@/features/utils/app.utils";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { getMeetingType } from "@/features/api/meetingType";
 import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import { useGetCompanyMeetingSearch } from "@/features/api/companyMeeting";
-import { cn } from "@/lib/utils";
 
 import {
   Calendar,
@@ -57,6 +65,11 @@ export default function AddMeeting() {
     companyMeetingId,
     isPending,
     meetingApiData,
+    isConfModalOpen,
+    setIsConfModalOpen,
+    reasons,
+    setReasons,
+    onConfirmSubmit,
   } = hookProps;
 
   const {
@@ -100,7 +113,12 @@ export default function AddMeeting() {
           ]
         : []),
     ]);
-  }, [companyMeetingId, meetingApiData?.data?.meetingName, setBreadcrumbs, isAuthorized]);
+  }, [
+    companyMeetingId,
+    meetingApiData?.data?.meetingName,
+    setBreadcrumbs,
+    isAuthorized,
+  ]);
 
   // Form values watchers
   const meetingNameValue = watch("meetingName") || "";
@@ -109,7 +127,10 @@ export default function AddMeeting() {
 
   // Auto-fill description if empty
   useEffect(() => {
-    if (meetingDescriptionValue === "" || meetingDescriptionValue === prevMeetingNameRef.current) {
+    if (
+      meetingDescriptionValue === "" ||
+      meetingDescriptionValue === prevMeetingNameRef.current
+    ) {
       if (meetingDescriptionValue !== meetingNameValue) {
         setValue("meetingDescription", meetingNameValue);
       }
@@ -122,7 +143,11 @@ export default function AddMeeting() {
   const [nameChanged, setNameChanged] = useState(false);
 
   useEffect(() => {
-    if (companyMeetingId && originalName === null && meetingNameValue.trim().length > 0) {
+    if (
+      companyMeetingId &&
+      originalName === null &&
+      meetingNameValue.trim().length > 0
+    ) {
       setOriginalName(meetingNameValue);
     }
   }, [companyMeetingId, originalName, meetingNameValue]);
@@ -182,11 +207,13 @@ export default function AddMeeting() {
   });
 
   const meetingTypeOptions = useMemo(() => {
-    return meetingTypeData?.data?.map((t) => ({
-      label: t.meetingTypeName || "",
-      value: t.meetingTypeId || "",
-      parentType: t.parentType || "",
-    })) || [];
+    return (
+      meetingTypeData?.data?.map((t) => ({
+        label: t.meetingTypeName || "",
+        value: t.meetingTypeId || "",
+        parentType: t.parentType || "",
+      })) || []
+    );
   }, [meetingTypeData]);
 
   // Meeting Status options
@@ -198,12 +225,14 @@ export default function AddMeeting() {
   });
 
   const meetingStatusOptions = useMemo(() => {
-    return meetingStatusData?.map((status) => ({
-      label: status.meetingStatus || "",
-      value: status.meetingStatusId || "",
-      order: status.meetingStatusOrder,
-      color: status.color || "#556ee6",
-    })) || [];
+    return (
+      meetingStatusData?.map((status) => ({
+        label: status.meetingStatus || "",
+        value: status.meetingStatusId || "",
+        order: status.meetingStatusOrder,
+        color: status.color || "#556ee6",
+      })) || []
+    );
   }, [meetingStatusData]);
 
   const meetingTypeVal = watch("meetingTypeId");
@@ -213,23 +242,47 @@ export default function AddMeeting() {
   const endDateVal = watch("endDate");
   const meetingDocsVal = watch("meetingDocuments") || [];
 
-  const selectedType = meetingTypeOptions.find((t) => t.value === (meetingTypeVal?.meetingTypeId || meetingTypeVal));
-  const selectedStatus = meetingStatusOptions.find((s) => s.value === meetingStatusVal);
+  const selectedType = meetingTypeOptions.find(
+    (t) => t.value === (meetingTypeVal?.meetingTypeId || meetingTypeVal),
+  );
+  const selectedStatus = meetingStatusOptions.find(
+    (s) => s.value === meetingStatusVal,
+  );
 
   const shouldHideStatus =
     !companyMeetingId && selectedType?.parentType === "DETAIL";
 
   useEffect(() => {
-    if (shouldHideStatus && meetingStatusOptions.length > 0) {
-      const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
-      if (defaultStatus) {
-        setValue("meetingStatusId", defaultStatus.value, {
-          shouldValidate: true,
-          shouldDirty: true,
-        });
+    if (meetingStatusOptions.length > 0) {
+      if (shouldHideStatus) {
+        const defaultStatus = meetingStatusOptions.find((s) => s.order === 1);
+        if (defaultStatus && meetingStatusVal !== defaultStatus.value) {
+          setValue("meetingStatusId", defaultStatus.value, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          setValue("meetingStatus", defaultStatus.label);
+        }
+      } else if (!companyMeetingId && !meetingStatusVal) {
+        const defaultStatus = [...meetingStatusOptions].sort(
+          (a, b) => (a.order || 0) - (b.order || 0)
+        )[0];
+        if (defaultStatus) {
+          setValue("meetingStatusId", defaultStatus.value, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          setValue("meetingStatus", defaultStatus.label);
+        }
       }
     }
-  }, [shouldHideStatus, meetingStatusOptions, setValue]);
+  }, [
+    shouldHideStatus,
+    companyMeetingId,
+    meetingStatusOptions,
+    setValue,
+    meetingStatusVal,
+  ]);
 
   // Fetch employees
   const [employeeSearch, setEmployeeSearch] = useState("");
@@ -243,11 +296,13 @@ export default function AddMeeting() {
   });
 
   const employeeOptions = useMemo(() => {
-    return employeeData?.data?.map((e) => ({
-      label: e.employeeName || "",
-      value: e.employeeId || "",
-      raw: e,
-    })) || [];
+    return (
+      employeeData?.data?.map((e) => ({
+        label: e.employeeName || "",
+        value: e.employeeId || "",
+        raw: e,
+      })) || []
+    );
   }, [employeeData]);
 
   // File uploading logic
@@ -278,7 +333,9 @@ export default function AddMeeting() {
     }
     setValue("removedFileIdsArray", updatedRemovedIds);
 
-    const newFiles = meetingDocsVal.filter((_: unknown, idx: number) => idx !== indexToRemove);
+    const newFiles = meetingDocsVal.filter(
+      (_: unknown, idx: number) => idx !== indexToRemove,
+    );
     setValue("meetingDocuments", newFiles);
   };
 
@@ -296,6 +353,39 @@ export default function AddMeeting() {
 
   const handleFormSubmit = async () => {
     setModalOpen(true);
+  };
+
+  // Time filter for Start Time (should be before selected End Time)
+  const filterStartTime = (time: Date) => {
+    if (!endDateVal) return true;
+    const end = new Date(endDateVal);
+    
+    // We only filter time if the dates are the same
+    const isSameDate = 
+      time.getFullYear() === end.getFullYear() &&
+      time.getMonth() === end.getMonth() &&
+      time.getDate() === end.getDate();
+
+    if (isSameDate) {
+      return time.getTime() < end.getTime();
+    }
+    return true;
+  };
+
+  // Time filter for End Time (should be after selected Start Time)
+  const filterEndTime = (time: Date) => {
+    if (!meetingDateTimeVal) return true;
+    const start = new Date(meetingDateTimeVal);
+
+    const isSameDate = 
+      time.getFullYear() === start.getFullYear() &&
+      time.getMonth() === start.getMonth() &&
+      time.getDate() === start.getDate();
+
+    if (isSameDate) {
+      return time.getTime() > start.getTime();
+    }
+    return true;
   };
 
   return (
@@ -335,7 +425,9 @@ export default function AddMeeting() {
                             : "border-gray-200 focus:border-primary"
                         }`}
                         placeholder="Enter meeting name..."
-                        {...register("meetingName", { required: "Meeting Name is required" })}
+                        {...register("meetingName", {
+                          required: "Meeting Name is required",
+                        })}
                         onFocus={() => {
                           if (
                             shouldSearch &&
@@ -358,14 +450,18 @@ export default function AddMeeting() {
                         <div className="px-3 py-2 text-[12px] text-gray-500 bg-gray-50 border-b border-gray-200 sticky top-0 font-medium">
                           Similar Meetings Found
                         </div>
-                        {meetingSearchData?.data?.map((item: MeetingSearchResponse) => (
-                          <div
-                            key={item.meetingId}
-                            className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50 transition-colors"
-                          >
-                            <span className="font-medium">{item.meetingName}</span>
-                          </div>
-                        ))}
+                        {meetingSearchData?.data?.map(
+                          (item: MeetingSearchResponse) => (
+                            <div
+                              key={item.meetingId}
+                              className="px-3 py-2 text-sm text-gray-700 border-b last:border-b-0 cursor-default hover:bg-gray-50 transition-colors"
+                            >
+                              <span className="font-medium">
+                                {item.meetingName}
+                              </span>
+                            </div>
+                          ),
+                        )}
                       </div>
                     )}
                   </div>
@@ -373,7 +469,8 @@ export default function AddMeeting() {
                   {/* Meeting Description */}
                   <div>
                     <label className="block text-md font-semibold text-gray-900 mb-1">
-                      Meeting Description <span className="text-red-500">*</span>
+                      Meeting Description{" "}
+                      <span className="text-red-500">*</span>
                     </label>
                     <input
                       type="text"
@@ -407,14 +504,17 @@ export default function AddMeeting() {
                       name="meetingTypeId"
                       rules={{ required: "Please select Meeting Type" }}
                       render={({ field }) => {
-                        const rawVal = field.value?.meetingTypeId || field.value;
+                        const rawVal =
+                          field.value?.meetingTypeId || field.value;
                         return (
                           <SearchDropdown
                             className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
                             options={meetingTypeOptions}
                             selectedValues={rawVal ? [rawVal] : []}
                             onSelect={(value) => {
-                              const matched = meetingTypeData?.data?.find((o) => o.meetingTypeId === value.value);
+                              const matched = meetingTypeData?.data?.find(
+                                (o) => o.meetingTypeId === value.value,
+                              );
                               field.onChange(matched || value.value);
                             }}
                             placeholder="Select Meeting Type..."
@@ -469,18 +569,55 @@ export default function AddMeeting() {
                       name="meetingDateTime"
                       rules={{ required: "Meeting Start Date is required" }}
                       render={({ field }) => {
-                        const localDate = field.value ? new Date(field.value) : null;
+                        const localDate = field.value
+                          ? new Date(field.value)
+                          : null;
                         return (
                           <div className="[&_input]:text-base [&_input]:py-2.5 [&_input]:px-3.5 [&_input]:border-gray-200 [&_input]:h-auto [&_svg]:hidden">
                             <FormDateTimePicker
                               label=""
                               value={localDate}
                               onChange={(date) => {
-                                field.onChange(date?.toISOString());
+                                if (date) {
+                                  field.onChange(date.toISOString());
+                                  
+                                  // Sync same date for End Date ONLY if it is already selected
+                                  const currentEndVal = endDateVal ? new Date(endDateVal) : null;
+                                  if (currentEndVal) {
+                                    let targetEndDate = new Date(currentEndVal);
+                                    targetEndDate.setFullYear(date.getFullYear(), date.getMonth(), date.getDate());
+                                    
+                                    // If end time is before or equal to start time, default to start time + 30 minutes
+                                    if (targetEndDate.getTime() <= date.getTime()) {
+                                      targetEndDate = new Date(date.getTime() + 30 * 60 * 1000);
+                                    }
+                                    
+                                    setValue("endDate", targetEndDate.toISOString(), {
+                                      shouldValidate: true,
+                                      shouldDirty: true,
+                                    });
+                                  }
+                                } else {
+                                  field.onChange(null);
+                                  setValue("endDate", null, {
+                                    shouldValidate: true,
+                                    shouldDirty: true,
+                                  });
+                                }
                               }}
+                              filterTime={filterStartTime}
+                              minDate={endDateVal ? new Date(endDateVal) : null}
+                              maxDate={endDateVal ? new Date(endDateVal) : null}
+                              isClearable={true}
                               error={errors.meetingDateTime}
-                              disablePastDates={true}
-                              disabled={meetingApiData?.data?.deadlineRequest === "PENDING"}
+                              disablePastDays={
+                                Number(import.meta.env.VITE_DISABLEPASTDATES) ||
+                                3
+                              }
+                              disabled={
+                                meetingApiData?.data?.deadlineRequest ===
+                                "PENDING"
+                              }
                             />
                           </div>
                         );
@@ -491,24 +628,57 @@ export default function AddMeeting() {
                   {/* Meeting End Date */}
                   <div>
                     <label className="block text-md font-semibold text-gray-900 mb-1">
-                      Meeting End Date
+                      Meeting End Date  <span className="text-red-500">*</span>
                     </label>
                     <Controller
                       control={control}
                       name="endDate"
+                       rules={{ required: "Meeting End Date is required" }}
                       render={({ field }) => {
-                        const localDate = field.value ? new Date(field.value) : null;
+                        const localDate = field.value
+                          ? new Date(field.value)
+                          : null;
                         return (
                           <div className="[&_input]:text-base [&_input]:py-2.5 [&_input]:px-3.5 [&_input]:border-gray-200 [&_input]:h-auto [&_svg]:hidden">
                             <FormDateTimePicker
                               label=""
                               value={localDate}
                               onChange={(date) => {
-                                field.onChange(date?.toISOString());
+                                if (date) {
+                                  const startVal = meetingDateTimeVal ? new Date(meetingDateTimeVal) : null;
+                                  let targetEndDate = new Date(date);
+                                  
+                                  if (startVal) {
+                                    // Force end date to be the same date as start date
+                                    targetEndDate.setFullYear(startVal.getFullYear(), startVal.getMonth(), startVal.getDate());
+                                    
+                                    if (targetEndDate.getTime() <= startVal.getTime()) {
+                                      targetEndDate = new Date(startVal.getTime() + 30 * 60 * 1000);
+                                    }
+                                  }
+                                  
+                                  field.onChange(targetEndDate.toISOString());
+                                } else {
+                                  field.onChange(null);
+                                  setValue("meetingDateTime", null, {
+                                    shouldValidate: true,
+                                    shouldDirty: true,
+                                  });
+                                }
                               }}
+                              filterTime={filterEndTime}
+                              minDate={meetingDateTimeVal ? new Date(meetingDateTimeVal) : null}
+                              maxDate={meetingDateTimeVal ? new Date(meetingDateTimeVal) : null}
+                              isClearable={true}
                               error={errors.endDate}
-                              disablePastDates={true}
-                              disabled={meetingApiData?.data?.deadlineRequest === "PENDING"}
+                              disablePastDays={
+                                Number(import.meta.env.VITE_DISABLEPASTDATES) ||
+                                3
+                              }
+                              disabled={
+                                meetingApiData?.data?.deadlineRequest ===
+                                "PENDING"
+                              }
                             />
                           </div>
                         );
@@ -525,9 +695,14 @@ export default function AddMeeting() {
                   <Controller
                     control={control}
                     name="employeeId"
-                    rules={{ required: "Please assign this meeting to at least one attendee" }}
+                    rules={{
+                      required:
+                        "Please assign this meeting to at least one attendee",
+                    }}
                     render={({ field }) => {
-                      const selectedIds = (field.value || []).map((v: EmployeeDetails) => v.employeeId);
+                      const selectedIds = (field.value || []).map(
+                        (v: EmployeeDetails) => v.employeeId,
+                      );
                       return (
                         <SearchDropdown
                           className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
@@ -536,21 +711,32 @@ export default function AddMeeting() {
                           selectedValues={selectedIds}
                           multiSelect={true}
                           onSelect={(item) => {
-                            const currentVals: EmployeeDetails[] = Array.isArray(field.value) ? field.value : [];
-                            const isAlreadySelected = currentVals.some((v) => v.employeeId === item.value);
+                            const currentVals: EmployeeDetails[] =
+                              Array.isArray(field.value) ? field.value : [];
+                            const isAlreadySelected = currentVals.some(
+                              (v) => v.employeeId === item.value,
+                            );
                             if (isAlreadySelected) {
-                              field.onChange(currentVals.filter((v) => v.employeeId !== item.value));
+                              field.onChange(
+                                currentVals.filter(
+                                  (v) => v.employeeId !== item.value,
+                                ),
+                              );
                             } else {
-                              const rawEmp = employeeOptions.find((o) => o.value === item.value)?.raw;
+                              const rawEmp = employeeOptions.find(
+                                (o) => o.value === item.value,
+                              )?.raw;
                               if (rawEmp) {
                                 field.onChange([
                                   ...currentVals,
                                   {
                                     employeeId: rawEmp.employeeId,
                                     employeeName: rawEmp.employeeName,
-                                    employeeMobile: rawEmp.employeeMobile || null,
+                                    employeeMobile:
+                                      rawEmp.employeeMobile || null,
                                     employeeType: rawEmp.employeeType || null,
-                                    designationName: rawEmp.designationName || null,
+                                    designationName:
+                                      rawEmp.designationName || null,
                                     isTeamLeader: false,
                                   },
                                 ]);
@@ -565,42 +751,27 @@ export default function AddMeeting() {
                     }}
                   />
 
-                  {/* Selected Employees Pills with Team Leader Crown selection */}
+                  {/* Selected Employees Pills without Team Leader Crown selection */}
                   {employeeVal.length > 0 && (
                     <div className="flex flex-wrap gap-2 mt-2.5 items-center">
                       {employeeVal.slice(0, 8).map((emp) => (
                         <div
                           key={emp.employeeId}
-                          className={cn(
-                            "flex items-center space-x-1.5 border hover:bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-                            emp.isTeamLeader 
-                              ? "bg-primary/10 border-primary/20 text-primary" 
-                              : "bg-gray-50 border-gray-150 text-gray-700"
-                          )}
+                          className="flex items-center space-x-1.5 border hover:bg-gray-100 px-2.5 py-1 rounded-full text-xs font-medium transition-colors bg-gray-50 border-gray-150 text-gray-700"
                         >
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const updated = employeeVal.map((e) =>
-                                e.employeeId === emp.employeeId
-                                  ? { ...e, isTeamLeader: !e.isTeamLeader }
-                                  : e
-                              );
-                              setValue("employeeId", updated, { shouldValidate: true });
-                            }}
-                            className="w-5 h-5 rounded-full bg-white border flex items-center justify-center text-[10px] font-bold shadow-sm cursor-pointer"
-                            title={emp.isTeamLeader ? "Remove Team Leader" : "Set Team Leader"}
-                          >
-                            {emp.isTeamLeader ? "👑" : getInitials(emp.employeeName)}
-                          </button>
+                          <div className="w-5 h-5 rounded-full bg-white border flex items-center justify-center text-[10px] font-bold shadow-sm select-none">
+                            {getInitials(emp.employeeName)}
+                          </div>
                           <span>{emp.employeeName}</span>
                           <button
                             type="button"
                             onClick={() => {
                               setValue(
                                 "employeeId",
-                                employeeVal.filter((v) => v.employeeId !== emp.employeeId),
-                                { shouldValidate: true }
+                                employeeVal.filter(
+                                  (v) => v.employeeId !== emp.employeeId,
+                                ),
+                                { shouldValidate: true },
                               );
                             }}
                             className="text-gray-400 hover:text-red-500 rounded-full focus:outline-none"
@@ -648,66 +819,74 @@ export default function AddMeeting() {
                       <p className="text-xs text-gray-500 font-medium">
                         {meetingDocsVal.length} file(s) selected
                       </p>
-                      {meetingDocsVal.map((file: File | { fileId: string; fileName: string }, idx: number) => {
-                        const isUploaded = !("name" in file) && "fileName" in file;
-                        const fileName = isUploaded
-                          ? (file as { fileName: string }).fileName
-                          : (file as File).name;
+                      {meetingDocsVal.map(
+                        (
+                          file: File | { fileId: string; fileName: string },
+                          idx: number,
+                        ) => {
+                          const isUploaded =
+                            !("name" in file) && "fileName" in file;
+                          const fileName = isUploaded
+                            ? (file as { fileName: string }).fileName
+                            : (file as File).name;
 
-                        return (
-                          <div
-                            key={idx}
-                            className="flex items-center justify-between p-2.5 bg-gray-50 border border-gray-100 rounded-lg"
-                          >
-                            <div className="flex items-center gap-2 min-w-0">
-                              <FileText className="w-4 h-4 text-gray-400 shrink-0" />
-                              <span className="text-sm font-medium text-gray-700 truncate">
-                                {fileName}
-                              </span>
+                          return (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between p-2.5 bg-gray-50 border border-gray-100 rounded-lg"
+                            >
+                              <div className="flex items-center gap-2 min-w-0">
+                                <FileText className="w-4 h-4 text-gray-400 shrink-0" />
+                                <span className="text-sm font-medium text-gray-700 truncate">
+                                  {fileName}
+                                </span>
+                              </div>
+                              <div className="flex items-center gap-1">
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-gray-500 hover:text-primary"
+                                  onClick={() => {
+                                    if (file instanceof File) {
+                                      const fileUrl = URL.createObjectURL(file);
+                                      const link = document.createElement("a");
+                                      link.href = fileUrl;
+                                      link.download = file.name;
+                                      document.body.appendChild(link);
+                                      link.click();
+                                      document.body.removeChild(link);
+                                      URL.revokeObjectURL(fileUrl);
+                                    } else if (isUploaded) {
+                                      window.open(
+                                        `${ImageBaseURL}/share/mDocs/${(file as { fileName: string }).fileName}`,
+                                        "_blank",
+                                      );
+                                    }
+                                  }}
+                                >
+                                  <Download className="w-4 h-4" />
+                                </Button>
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0 text-gray-500 hover:text-red-500"
+                                  onClick={() => handleRemoveFile(idx)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-1">
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-gray-500 hover:text-primary"
-                                onClick={() => {
-                                  if (file instanceof File) {
-                                    const fileUrl = URL.createObjectURL(file);
-                                    const link = document.createElement("a");
-                                    link.href = fileUrl;
-                                    link.download = file.name;
-                                    document.body.appendChild(link);
-                                    link.click();
-                                    document.body.removeChild(link);
-                                    URL.revokeObjectURL(fileUrl);
-                                  } else if (isUploaded) {
-                                    window.open(
-                                      `${ImageBaseURL}/share/mDocs/${(file as { fileName: string }).fileName}`,
-                                      "_blank"
-                                    );
-                                  }
-                                }}
-                              >
-                                <Download className="w-4 h-4" />
-                              </Button>
-                              <Button
-                                type="button"
-                                variant="ghost"
-                                size="sm"
-                                className="h-8 w-8 p-0 text-gray-500 hover:text-red-500"
-                                onClick={() => handleRemoveFile(idx)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        },
+                      )}
                     </div>
                   )}
                   {meetingDocsVal.length === 0 && (
-                    <p className="text-sm text-gray-400 italic">No files selected</p>
+                    <p className="text-sm text-gray-400 italic">
+                      No files selected
+                    </p>
                   )}
                 </div>
               </Card>
@@ -736,7 +915,9 @@ export default function AddMeeting() {
                   ) : (
                     <>
                       <Send className="w-3.5 h-3.5" />
-                      <span>{companyMeetingId ? "Update Meeting" : "Create Meeting"}</span>
+                      <span>
+                        {companyMeetingId ? "Update Meeting" : "Create Meeting"}
+                      </span>
                     </>
                   )}
                 </Button>
@@ -801,7 +982,9 @@ export default function AddMeeting() {
                           className="text-sm font-semibold text-gray-700 mt-0.5"
                           style={{ color: selectedStatus?.color }}
                         >
-                          {selectedStatus ? selectedStatus.label : "Draft / Scheduled"}
+                          {selectedStatus
+                            ? selectedStatus.label
+                            : "Draft / Scheduled"}
                         </p>
                       </div>
                     </div>
@@ -820,19 +1003,18 @@ export default function AddMeeting() {
                         {employeeVal.map((emp) => (
                           <div
                             key={emp.employeeId}
-                            className={cn(
-                              "relative inline-block h-7 w-7 rounded-full ring-2 ring-white bg-primary/10 overflow-hidden shadow-sm flex items-center justify-center",
-                              emp.isTeamLeader && "ring-amber-400 ring-2"
-                            )}
-                            title={emp.isTeamLeader ? `${emp.employeeName} (Team Leader)` : emp.employeeName}
+                            className="relative inline-block h-7 w-7 rounded-full ring-2 ring-white bg-primary/10 overflow-hidden shadow-sm flex items-center justify-center"
+                            title={emp.employeeName}
                           >
                             <div className="w-full h-full flex items-center justify-center text-[10px] font-bold text-primary">
-                              {emp.isTeamLeader ? "👑" : getInitials(emp.employeeName)}
+                              {getInitials(emp.employeeName)}
                             </div>
                           </div>
                         ))}
                         {employeeVal.length === 0 && (
-                          <span className="text-sm text-gray-400 font-medium">No attendees</span>
+                          <span className="text-sm text-gray-400 font-medium">
+                            No attendees
+                          </span>
                         )}
                       </div>
                     </div>
@@ -848,7 +1030,8 @@ export default function AddMeeting() {
                         Start Date & Time
                       </p>
                       <p className="text-sm font-semibold text-gray-700 mt-0.5">
-                        {formatDateTime(meetingDateTimeVal) || "Set start date..."}
+                        {formatDateTime(meetingDateTimeVal) ||
+                          "Set start date..."}
                       </p>
                     </div>
                   </div>
@@ -901,6 +1084,55 @@ export default function AddMeeting() {
             isLoading={isPending}
           />
         )}
+
+        {/* Deadline change reason dialog */}
+        <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>
+          <DialogContent className="sm:max-w-[425px] bg-white rounded-lg">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-gray-800">
+                Confirmation Required
+              </DialogTitle>
+              <DialogDescription className="text-sm text-gray-500 mt-1">
+                The deadline has been changed. Please provide a reason to
+                proceed with the update.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-3">
+              <div className="grid gap-2">
+                <label
+                  htmlFor="reason"
+                  className="text-sm font-semibold text-gray-700"
+                >
+                  Reason
+                </label>
+                <Textarea
+                  id="reason"
+                  placeholder="Enter reasons for deadline change..."
+                  value={reasons}
+                  onChange={(e) => setReasons(e.target.value)}
+                  className="col-span-3 border-gray-200 focus:border-primary"
+                />
+              </div>
+            </div>
+            <DialogFooter className="gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setIsConfModalOpen(false)}
+                disabled={isPending}
+                className="border-gray-300 text-gray-700"
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={onConfirmSubmit}
+                disabled={isPending || !reasons.trim()}
+                className="bg-primary hover:bg-primary-dark text-white font-medium"
+              >
+                {isPending ? "Confirming..." : "Confirm"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </FormProvider>
     </CompanyAccessGuard>
   );
