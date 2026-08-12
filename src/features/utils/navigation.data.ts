@@ -2,7 +2,7 @@ export const companyNavigationData = [
   {
     id: 1,
     icon: "CalendarRange",
-    label: "My Day",
+    label: "Routine Task",
     link: "/dashboard/repeat-task-list",
     permission: "View",
     moduleKey: "ROUTINE_TASK",
