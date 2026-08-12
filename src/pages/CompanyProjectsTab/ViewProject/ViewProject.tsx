@@ -1021,7 +1021,7 @@ const ProjectView = () => {
               )}
 
               <Tabs defaultValue="all" className="flex-1 flex flex-col min-h-0 overflow-hidden mt-1">
-                <TabsList className="flex flex-wrap justify-end gap-2 bg-transparent h-auto shrink-0 mb-4">
+                <TabsList className="w-full flex flex-wrap justify-end gap-2 bg-transparent h-auto shrink-0 mb-4">
                   <TabsTrigger
                     value="all"
                     className="  md:text-sm font-semibold transition-all px-4 h-9 rounded-lg border border-primary/30 bg-white text-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary focus:outline-none focus-visible:ring-0 focus-visible:outline-none hover:bg-slate-50 data-[state=active]:hover:bg-primary/95"
