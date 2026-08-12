@@ -16,9 +16,11 @@ import { getUserPermission } from "@/features/selectors/auth.selector";
 export default function ProjectTaskList({
   activeProjectId,
   className,
+  statusFilter = "all",
 }: {
   activeProjectId: string;
   className?: string;
+  statusFilter?: "all" | "pending" | "completed";
 }) {
   const navigate = useNavigate();
   const taskPermission = useSelector(getUserPermission).TASK;
@@ -33,6 +35,15 @@ export default function ProjectTaskList({
   });
 
   const taskTableData = (tasks?.data ?? [])
+    .filter((task) => {
+      if (statusFilter === "pending") {
+        return task.taskStatus?.toLowerCase() !== "completed";
+      }
+      if (statusFilter === "completed") {
+        return task.taskStatus?.toLowerCase() === "completed";
+      }
+      return true;
+    })
     .filter((task) => {
       if (!taskSearch) return true;
       const search = taskSearch.toLowerCase();

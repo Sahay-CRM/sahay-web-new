@@ -8,6 +8,7 @@ import {
   ChevronDown,
   Folder,
   Plus,
+  CornerDownLeft,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Badge } from "@/components/ui/badge";
@@ -25,9 +26,9 @@ import {
   formatToLocalDateTime,
   formatUTCDateToLocal,
 } from "@/features/utils/app.utils";
-import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-
 import ProjectTaskList from "./projectTaskList";
+import ProjectTaskDrawer from "./projectTaskDrawer";
+import { queryClient } from "@/queryClient";
 import useViewProject from "./useViewProject";
 
 import { useEffect, useRef, useState } from "react";
@@ -178,8 +179,6 @@ const ProjectView = () => {
     setShowAll,
     newComment,
     setNewComment,
-    showCommentInput,
-    setShowCommentInput,
     commentsData,
     filteredComments,
     filterUserId,
@@ -200,6 +199,9 @@ const ProjectView = () => {
     effectiveProjectId,
     selectedProjectData,
     selectedProjectLoading,
+    isAddTaskOpen,
+    setIsAddTaskOpen,
+    taskPermission,
   } = useViewProject();
 
   const [expandedIds, setExpandedIds] = useState<Record<string, boolean>>({});
@@ -265,6 +267,199 @@ const ProjectView = () => {
 
   const project = projectApiData?.data;
   const otherEmployees = project?.otherEmployee || [];
+
+  const renderUpdatesSection = () => {
+    return (
+      <div className="bg-white p-3 rounded-xl shadow-md flex flex-col flex-1 min-h-0">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-slate-800">Updates</h2>
+          <div className="flex items-center gap-2">
+            <SearchDropdown
+              placeholder="Filter Tagged"
+              options={[
+                { label: "All", value: "all" },
+                ...(otherEmployees.map((emp: any) => ({
+                  label: emp.employeeName,
+                  value: emp.employeeId,
+                })) || []),
+              ]}
+              selectedValues={[filterUserId]}
+              onSelect={(item) => setFilterUserId(item.value)}
+              onSearchChange={() => {}}
+              className="w-48"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 overflow-y-auto mt-3 max-h-[400px] pr-1">
+          <div className="space-y-2 pr-2">
+            {commentsData.isLoading ? (
+              <p className="text-muted-foreground text-sm">
+                Loading Updates...
+              </p>
+            ) : filteredComments?.length ? (
+              [...filteredComments]
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime(),
+                )
+                .map((comment: any) => (
+                  <div
+                    key={comment.projectCommentId}
+                    className="group relative rounded-md border bg-muted/40 px-3 py-2 text-sm shadow-sm"
+                  >
+                    {/* Header: Name + Date + Actions */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="font-medium text-gray-700">
+                          {comment.employeeName || "Unknown User"}
+                        </span>
+                      </div>
+
+                      {/* Edit/Delete buttons */}
+                      <div className="flex gap-1 ">
+                        <span className="text-xs text-muted-foreground">
+                          {format(new Date(comment.createdAt), "Pp")}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Comment Body */}
+                    <div className="mt-1">
+                      {editingCommentId === comment.projectCommentId ? (
+                        <div className="flex gap-2 items-center">
+                          <Popover
+                            open={
+                              showMentions &&
+                              mentionTarget === "edit" &&
+                              filteredEmployees.length > 0
+                            }
+                          >
+                            <PopoverAnchor asChild>
+                              <div className="flex-1">
+                                <input
+                                  type="text"
+                                  autoFocus
+                                  value={editingText}
+                                  onChange={(e) =>
+                                    handleInputChange(e, "edit")
+                                  }
+                                  onKeyDown={(e) => handleKeyDown(e)}
+                                  className="w-full border rounded px-2 py-1 text-sm focus:outline-primary"
+                                />
+                              </div>
+                            </PopoverAnchor>
+                            <PopoverContent
+                              className="p-1 w-64 max-h-60 overflow-y-auto"
+                              side="bottom"
+                              align="start"
+                              onOpenAutoFocus={(e) =>
+                                e.preventDefault()
+                              }
+                            >
+                              <div className="flex flex-col">
+                                {filteredEmployees.map(
+                                  (emp: any, index: number) => (
+                                    <button
+                                      key={emp.employeeId}
+                                      className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
+                                        index === selectedIndex
+                                          ? "bg-muted"
+                                          : "hover:bg-muted"
+                                      }`}
+                                      onClick={() =>
+                                        handleMentionSelect(emp)
+                                      }
+                                      onMouseEnter={() =>
+                                        setSelectedIndex(index)
+                                      }
+                                    >
+                                      <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+                                        {getInitials(emp.employeeName)}
+                                      </div>
+                                      <span>{emp.employeeName}</span>
+                                    </button>
+                                  ),
+                                )}
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                          <Button
+                            size="sm"
+                            onClick={() => {
+                              const tagPerson = otherEmployees
+                                .filter((emp: any) =>
+                                  editingText.includes(
+                                    `@${emp.employeeName}`,
+                                  ),
+                                )
+                                .map((emp: any) => emp.employeeId);
+                              handleSaveComment(
+                                comment.projectCommentId,
+                                tagPerson,
+                              );
+                            }}
+                          >
+                            Save
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={handleCancelEdit}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-between  ">
+                          <p className="text-sm text-gray-700">
+                            {comment.comment}
+                          </p>
+                          <div className="gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {comment.employeeId === currentUserId && (
+                              <>
+                                <button
+                                  type="button"
+                                  className="p-1 rounded hover:bg-gray-200"
+                                  onClick={() =>
+                                    handleEditComment(
+                                      comment.projectCommentId,
+                                      comment.comment,
+                                    )
+                                  }
+                                >
+                                  <EditIcon className="w-4 h-4 text-gray-600" />
+                                </button>
+                                <button
+                                  type="button"
+                                  className="p-1 rounded hover:bg-gray-200"
+                                  onClick={() =>
+                                    handleDeleteComment(
+                                      comment.projectCommentId,
+                                    )
+                                  }
+                                >
+                                  <TrashIcon className="h-4 w-4 text-red-500" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))
+            ) : (
+              <span className="font-medium text-center text-muted-foreground block">
+                No Updates Found
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const getSubProjectsList = (): TreeNode[] => {
     let list: TreeNode[] = [];
@@ -699,7 +894,7 @@ const ProjectView = () => {
             </div>
 
             {/* Right Column */}
-            <div className="space-y-5 h-full overflow-y-auto px-1.5 py-2 flex flex-col">
+            <div className="space-y-5 h-full px-1.5 py-2 flex flex-col overflow-hidden">
               {/* Selected Project Info Card */}
               {activeProjectId && (
                 <div className="bg-white h-fit max-h-70 p-3 rounded-2xl shadow-md flex flex-col flex-shrink-0">
@@ -825,287 +1020,188 @@ const ProjectView = () => {
                 </div>
               )}
 
-              <Tabs defaultValue="tasks" className="w-full mt-1">
-                <TabsList className="grid w-full grid-cols-2 bg-slate-100 p-1 rounded-xl mb-4 border border-slate-200 h-10">
-                  <TabsTrigger value="tasks" className="text-sm font-semibold transition-all data-[state=active]:bg-white data-[state=active]:shadow-xs focus:outline-none focus-visible:ring-0 focus-visible:outline-none">
+              <Tabs defaultValue="all" className="flex-1 flex flex-col min-h-0 overflow-hidden mt-1">
+                <TabsList className="flex flex-wrap justify-end gap-2 bg-transparent h-auto shrink-0 mb-4">
+                  <TabsTrigger
+                    value="all"
+                    className="  md:text-sm font-semibold transition-all px-4 h-9 rounded-lg border border-primary/30 bg-white text-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary focus:outline-none focus-visible:ring-0 focus-visible:outline-none hover:bg-slate-50 data-[state=active]:hover:bg-primary/95"
+                  >
+                    All
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="tasks"
+                    className="  md:text-sm font-semibold transition-all px-4 h-9 rounded-lg border border-primary/30 bg-white text-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary focus:outline-none focus-visible:ring-0 focus-visible:outline-none hover:bg-slate-50 data-[state=active]:hover:bg-primary/95"
+                  >
                     Tasks
                   </TabsTrigger>
-                  <TabsTrigger value="updates" className="text-sm font-semibold transition-all data-[state=active]:bg-white data-[state=active]:shadow-xs focus:outline-none focus-visible:ring-0 focus-visible:outline-none">
+                  <TabsTrigger
+                    value="updates"
+                    className=" md:text-sm font-semibold transition-all px-4 h-9 rounded-lg border border-primary/30 bg-white text-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary focus:outline-none focus-visible:ring-0 focus-visible:outline-none hover:bg-slate-50 data-[state=active]:hover:bg-primary/95"
+                  >
                     Updates
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="pending"
+                    className="  md:text-sm font-semibold transition-all px-4 h-9 rounded-lg border border-primary/30 bg-white text-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary focus:outline-none focus-visible:ring-0 focus-visible:outline-none hover:bg-slate-50 data-[state=active]:hover:bg-primary/95"
+                  >
+                    Pending
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="completed"
+                    className=" md:text-sm font-semibold transition-all px-4 h-9 rounded-lg border border-primary/30 bg-white text-primary data-[state=active]:bg-primary data-[state=active]:text-white data-[state=active]:border-primary focus:outline-none focus-visible:ring-0 focus-visible:outline-none hover:bg-slate-50 data-[state=active]:hover:bg-primary/95"
+                  >
+                    Completed
                   </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="tasks" className="mt-0 outline-none">
-                  {/* Tasks Card */}
-                  <ProjectTaskList
-                    activeProjectId={effectiveProjectId}
-                    className="h-auto"
-                  />
-                </TabsContent>
+                {/* Tabs Content Container */}
+                <div className="flex-1 min-h-0 overflow-y-auto pb-4 pr-1 space-y-4">
+                  <TabsContent value="all" className="mt-0 outline-none space-y-5">
+                    <ProjectTaskList
+                      activeProjectId={effectiveProjectId}
+                      className="h-auto"
+                      statusFilter="all"
+                    />
+                    {renderUpdatesSection()}
+                  </TabsContent>
 
-                <TabsContent value="updates" className="mt-0 outline-none">
-                  {/* Updates Card */}
-                  <div className="bg-white p-3 rounded-xl shadow-md flex flex-col">
-                    <div className="flex justify-between items-center mb-4">
-                      <h2 className="text-xl font-semibold">Updates</h2>
-                      <div className="flex items-center gap-2">
-                        <SearchDropdown
-                          placeholder="Filter Tagged"
-                          options={[
-                            { label: "All", value: "all" },
-                            ...(otherEmployees.map((emp: Employee) => ({
-                              label: emp.employeeName,
-                              value: emp.employeeId,
-                            })) || []),
-                          ]}
-                          selectedValues={[filterUserId]}
-                          onSelect={(item) => setFilterUserId(item.value)}
-                          onSearchChange={() => {}}
-                          className="w-48"
-                        />
-                        {permission.Edit && (
-                          <Button onClick={() => setShowCommentInput((v) => !v)}>
-                            {showCommentInput ? "Cancel" : "Add Updates"}
-                          </Button>
-                        )}
-                      </div>
-                    </div>
+                  <TabsContent value="tasks" className="mt-0 outline-none">
+                    <ProjectTaskList
+                      activeProjectId={effectiveProjectId}
+                      className="h-auto"
+                      statusFilter="all"
+                    />
+                  </TabsContent>
 
-                    {showCommentInput && (
-                      <div className="mb-4 relative flex-shrink-0">
-                        <Popover
-                          open={showMentions && filteredEmployees.length > 0}
-                        >
-                          <PopoverAnchor asChild>
-                            <div className="w-full">
-                              <FormInputField
-                                ref={inputRef}
-                                value={newComment}
-                                onChange={(e) => handleInputChange(e, "new")}
-                                onKeyDown={(e) => handleKeyDown(e)}
-                                placeholder="Enter Update .. (Use @ to tag)"
-                              />
-                            </div>
-                          </PopoverAnchor>
-                          <PopoverContent
-                            className="p-1 w-64 max-h-60 overflow-y-auto"
-                            side="bottom"
-                            align="start"
-                            onOpenAutoFocus={(e) => e.preventDefault()}
+                  <TabsContent value="updates" className="mt-0 outline-none">
+                    {renderUpdatesSection()}
+                  </TabsContent>
+
+                  <TabsContent value="pending" className="mt-0 outline-none">
+                    <ProjectTaskList
+                      activeProjectId={effectiveProjectId}
+                      className="h-auto"
+                      statusFilter="pending"
+                    />
+                  </TabsContent>
+
+                  <TabsContent value="completed" className="mt-0 outline-none">
+                    <ProjectTaskList
+                      activeProjectId={effectiveProjectId}
+                      className="h-auto"
+                      statusFilter="completed"
+                    />
+                  </TabsContent>
+                </div>
+
+                {/* Sticky Bottom Bar */}
+                <div className="border-t border-slate-200 pt-3 pb-2 px-1 bg-white flex items-center gap-3 mt-auto shrink-0 z-10">
+                  <div className="flex-1 relative">
+                    <Popover open={showMentions && mentionTarget === "new" && filteredEmployees.length > 0}>
+                      <PopoverAnchor asChild>
+                        <div className="relative flex items-center w-full">
+                          <input
+                            ref={inputRef}
+                            value={newComment}
+                            onChange={(e) => handleInputChange(e, "new")}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" && !showMentions) {
+                                const tagPerson = otherEmployees
+                                  .filter((emp: any) =>
+                                    newComment.includes(`@${emp.employeeName}`),
+                                  )
+                                  .map((emp: any) => emp.employeeId);
+                                onSubmitComment(tagPerson);
+                              } else {
+                                handleKeyDown(e);
+                              }
+                            }}
+                            placeholder="Enter Update .. (Use @ to tag)"
+                            className="w-full pl-3 pr-10 py-2 border border-slate-350 focus:border-primary text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white rounded-lg focus:outline-none transition-colors text-sm placeholder-slate-400"
+                          />
+                          <button
+                            type="button"
+                            disabled={isPending || !newComment.trim()}
+                            onClick={() => {
+                              const tagPerson = otherEmployees
+                                .filter((emp: any) =>
+                                  newComment.includes(`@${emp.employeeName}`),
+                                )
+                                .map((emp: any) => emp.employeeId);
+                              onSubmitComment(tagPerson);
+                            }}
+                            className="absolute right-2.5 p-1 rounded-md text-slate-400 hover:text-primary enabled:hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                            title="Submit update"
                           >
-                            <div className="flex flex-col">
-                              {filteredEmployees.map(
-                                (emp: Employee, index: number) => (
-                                  <button
-                                    key={emp.employeeId}
-                                    className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
-                                      index === selectedIndex
-                                        ? "bg-muted"
-                                        : "hover:bg-muted"
-                                    }`}
-                                    onClick={() => handleMentionSelect(emp)}
-                                    onMouseEnter={() => setSelectedIndex(index)}
-                                  >
-                                    <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
-                                      {getInitials(emp.employeeName)}
-                                    </div>
-                                    <span>{emp.employeeName}</span>
-                                  </button>
-                                ),
-                              )}
-                            </div>
-                          </PopoverContent>
-                        </Popover>
-
-                        <Button
-                          className="mt-2"
-                          disabled={isPending}
-                          onClick={() => {
-                            const tagPerson = otherEmployees
-                              .filter((emp: Employee) =>
-                                newComment.includes(`@${emp.employeeName}`),
-                              )
-                              .map((emp: Employee) => emp.employeeId);
-                            onSubmitComment(tagPerson);
-                          }}
-                        >
-                          {isPending ? "Submitting..." : "Submit"}
-                        </Button>
-                      </div>
-                    )}
-
-                    <div className="flex-shrink-0 mt-3">
-                      <div className="space-y-2 pr-2">
-                        {commentsData.isLoading ? (
-                          <p className="text-muted-foreground text-sm">
-                            Loading Updates...
-                          </p>
-                        ) : filteredComments?.length ? (
-                          [...filteredComments]
-                            .sort(
-                              (a, b) =>
-                                new Date(b.createdAt).getTime() -
-                                new Date(a.createdAt).getTime(),
-                            )
-                            .map((comment) => (
-                              <div
-                                key={comment.projectCommentId}
-                                className="group relative rounded-md border bg-muted/40 px-3 py-2 text-sm shadow-sm"
-                              >
-                                {/* Header: Name + Date + Actions */}
-                                <div className="flex items-center justify-between">
-                                  <div className="flex items-center gap-2">
-                                    <span className="font-medium text-gray-700">
-                                      {comment.employeeName || "Unknown User"}
-                                    </span>
-                                  </div>
-
-                                  {/* Edit/Delete buttons */}
-                                  <div className="flex gap-1 ">
-                                    <span className="text-xs text-muted-foreground">
-                                      {format(new Date(comment.createdAt), "Pp")}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Comment Body */}
-                                <div className="mt-1">
-                                  {editingCommentId === comment.projectCommentId ? (
-                                    <div className="flex gap-2 items-center">
-                                      <Popover
-                                        open={
-                                          showMentions &&
-                                          mentionTarget === "edit" &&
-                                          filteredEmployees.length > 0
-                                        }
-                                      >
-                                        <PopoverAnchor asChild>
-                                          <div className="flex-1">
-                                            <input
-                                              type="text"
-                                              autoFocus
-                                              value={editingText}
-                                              onChange={(e) =>
-                                                handleInputChange(e, "edit")
-                                              }
-                                              onKeyDown={(e) => handleKeyDown(e)}
-                                              className="w-full border rounded px-2 py-1 text-sm focus:outline-primary"
-                                            />
-                                          </div>
-                                        </PopoverAnchor>
-                                        <PopoverContent
-                                          className="p-1 w-64 max-h-60 overflow-y-auto"
-                                          side="bottom"
-                                          align="start"
-                                          onOpenAutoFocus={(e) =>
-                                            e.preventDefault()
-                                          }
-                                        >
-                                          <div className="flex flex-col">
-                                            {filteredEmployees.map(
-                                              (emp: Employee, index: number) => (
-                                                <button
-                                                  key={emp.employeeId}
-                                                  className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
-                                                    index === selectedIndex
-                                                      ? "bg-muted"
-                                                      : "hover:bg-muted"
-                                                  }`}
-                                                  onClick={() =>
-                                                    handleMentionSelect(emp)
-                                                  }
-                                                  onMouseEnter={() =>
-                                                    setSelectedIndex(index)
-                                                  }
-                                                >
-                                                  <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
-                                                    {getInitials(emp.employeeName)}
-                                                  </div>
-                                                  <span>{emp.employeeName}</span>
-                                                </button>
-                                              ),
-                                            )}
-                                          </div>
-                                        </PopoverContent>
-                                      </Popover>
-                                      <Button
-                                        size="sm"
-                                        onClick={() => {
-                                          const tagPerson = otherEmployees
-                                            .filter((emp: Employee) =>
-                                              editingText.includes(
-                                                `@${emp.employeeName}`,
-                                              ),
-                                            )
-                                            .map((emp: Employee) => emp.employeeId);
-                                          handleSaveComment(
-                                            comment.projectCommentId,
-                                            tagPerson,
-                                          );
-                                        }}
-                                      >
-                                        Save
-                                      </Button>
-                                      <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={handleCancelEdit}
-                                      >
-                                        Cancel
-                                      </Button>
-                                    </div>
-                                  ) : (
-                                    <div className="flex items-center justify-between  ">
-                                      <p className="text-sm text-gray-700">
-                                        {comment.comment}
-                                      </p>
-                                      <div className="gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                        {comment.employeeId === currentUserId && (
-                                          <>
-                                            <button
-                                              type="button"
-                                              className="p-1 rounded hover:bg-gray-200"
-                                              onClick={() =>
-                                                handleEditComment(
-                                                  comment.projectCommentId,
-                                                  comment.comment,
-                                                )
-                                              }
-                                            >
-                                              <EditIcon className="w-4 h-4 text-gray-600" />
-                                            </button>
-                                            <button
-                                              type="button"
-                                              className="p-1 rounded hover:bg-gray-200"
-                                              onClick={() =>
-                                                handleDeleteComment(
-                                                  comment.projectCommentId,
-                                                )
-                                              }
-                                            >
-                                              <TrashIcon className="h-4 w-4 text-red-500" />
-                                            </button>
-                                          </>
-                                        )}
-                                      </div>
-                                    </div>
-                                  )}
-                                </div>
+                            <CornerDownLeft className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </PopoverAnchor>
+                      <PopoverContent
+                        className="p-1 w-64 max-h-60 overflow-y-auto"
+                        side="top"
+                        align="start"
+                        onOpenAutoFocus={(e) => e.preventDefault()}
+                      >
+                        <div className="flex flex-col">
+                          {filteredEmployees.map((emp: any, index: number) => (
+                            <button
+                              key={emp.employeeId}
+                              className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
+                                index === selectedIndex ? "bg-muted" : "hover:bg-muted"
+                              }`}
+                              onClick={() => handleMentionSelect(emp)}
+                              onMouseEnter={() => setSelectedIndex(index)}
+                            >
+                              <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+                                {getInitials(emp.employeeName)}
                               </div>
-                            ))
-                        ) : (
-                          <span className="font-medium text-center text-muted-foreground block">
-                            No Updates Found
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                              <span>{emp.employeeName}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   </div>
-                </TabsContent>
+
+                  {taskPermission.Add && (
+                    <button
+                      type="button"
+                      onClick={() => setIsAddTaskOpen(true)}
+                      className="flex items-center justify-center w-9 h-9 rounded-full bg-primary hover:bg-primary/95 text-white hover:scale-105 transition-all shadow-sm shrink-0"
+                      title="Add Task"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
               </Tabs>
             </div>
           </div>
         </div>
+
+        {isAddTaskOpen && (
+          <ProjectTaskDrawer
+            open={isAddTaskOpen}
+            onClose={() => {
+              setIsAddTaskOpen(false);
+            }}
+            taskData={null}
+            projectId={effectiveProjectId}
+            onSuccess={() => {
+              setIsAddTaskOpen(false);
+              queryClient.invalidateQueries({
+                queryKey: ["get-all-task-dropdown", { projectId: effectiveProjectId }],
+              });
+              queryClient.resetQueries({
+                queryKey: ["get-project-by-id", effectiveProjectId],
+              });
+              queryClient.resetQueries({
+                queryKey: ["get-company-sub-projects", effectiveProjectId],
+              });
+            }}
+          />
+        )}
       </FormProvider>
     </CompanyAccessGuard>
   );
