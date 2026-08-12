@@ -341,7 +341,7 @@ export default function GanttChart({
           </div>
 
           {/* Scrollable list container */}
-          <div ref={leftScrollRef} className="flex-1 overflow-y-hidden">
+          <div ref={leftScrollRef} className="flex-1 overflow-hidden">
             <GanttLeftPanel
               rows={rows}
               headerHeight={0}

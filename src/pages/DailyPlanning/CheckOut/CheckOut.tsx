@@ -515,12 +515,17 @@ export default function CheckOut() {
             actualH = existingItem.actualHours;
             actualM = existingItem.actualMinutes;
           } else {
-            // Otherwise, initialize from backend values
-            const actualMinutes = item.actualTime ? Math.round(item.actualTime / 60) : 0;
+            let actualMinutes = 0;
+            if (item.actualTime) {
+              if (derivedType === "MEETING" && isDetailM) {
+                actualMinutes = item.actualTime;
+              } else {
+                actualMinutes = Math.round(item.actualTime / 60);
+              }
+            }
             actualH = actualMinutes > 0 ? (Math.floor(actualMinutes / 60) || "") : "";
             actualM = actualMinutes > 0 ? ((actualMinutes % 60) || "") : "";
           }
-
           return {
             id: item.planItemId,
             title: item.title || item.task?.taskName || item.meeting?.meetingName || item.ganttItem?.itemName || item.gantItem?.itemName || "Plan Item",

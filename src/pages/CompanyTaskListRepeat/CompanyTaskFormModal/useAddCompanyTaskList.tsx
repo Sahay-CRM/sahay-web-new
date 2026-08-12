@@ -638,7 +638,7 @@ interface GroupedCompanyMeetings {
             {/* Duration Option */}
             <div className="flex items-center gap-3 mt-4 pt-2 border-t border-slate-100 flex-wrap">
               <div className="flex items-center gap-2">
-                <Label className="text-sm font-semibold text-slate-700 select-none">Set Task Duration</Label>
+                <Label className="text-sm font-semibold text-slate-700 select-none">CheckIn-out Task</Label>
                 <Switch
                   checked={watch("hasDuration") || false}
                   onCheckedChange={(checked) => {
