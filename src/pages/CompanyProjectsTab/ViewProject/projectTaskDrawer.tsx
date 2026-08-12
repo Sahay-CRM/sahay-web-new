@@ -47,6 +47,7 @@ interface ProjectTaskDrawerProps {
   taskData?: TaskGetPaging | null;
   projectId: string;
   onSuccess?: () => void;
+  initialTaskName?: string;
 }
 
 export default function ProjectTaskDrawer({
@@ -55,6 +56,7 @@ export default function ProjectTaskDrawer({
   taskData,
   projectId,
   onSuccess,
+  initialTaskName,
 }: ProjectTaskDrawerProps) {
   const drawerRef = useRef<HTMLDivElement>(null);
 
@@ -156,8 +158,8 @@ export default function ProjectTaskDrawer({
       }
     : {
         meetingId: "",
-        taskName: "",
-        taskDescription: "",
+        taskName: initialTaskName || "",
+        taskDescription: initialTaskName || "",
         taskStatusId: defaultTaskStatus?.taskStatusId || "",
         taskTypeId: "",
         assignUsers: [],
@@ -202,7 +204,7 @@ export default function ProjectTaskDrawer({
     if (open) {
       reset(defaultValues);
     }
-  }, [open, taskData, taskStatus]);
+  }, [open, taskData, taskStatus, initialTaskName]);
 
   const onSubmit = (data: TaskFormData) => {
     const payload = {

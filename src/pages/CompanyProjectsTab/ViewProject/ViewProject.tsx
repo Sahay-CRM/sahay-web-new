@@ -266,7 +266,93 @@ const ProjectView = () => {
   const [mentionTarget, setMentionTarget] = useState<"new" | "edit">("new");
 
   const project = projectApiData?.data;
-  const otherEmployees = project?.otherEmployee || [];
+  const activeProject = activeProjectId ? selectedProjectData?.data : project;
+  const otherEmployees = activeProject?.otherEmployee || [];
+
+  const renderCommentInputBar = () => {
+    return (
+      <div className="p-2 flex items-center gap-3 shrink-0 z-10 ">
+        <div className="flex-1 relative">
+          <Popover open={showMentions && mentionTarget === "new" && filteredEmployees.length > 0}>
+            <PopoverAnchor asChild>
+              <div className="relative flex items-center w-full">
+                <input
+                  ref={inputRef}
+                  value={newComment}
+                  onChange={(e) => handleInputChange(e, "new")}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !showMentions) {
+                      const tagPerson = otherEmployees
+                        .filter((emp: Employee) =>
+                          newComment.includes(`@${emp.employeeName}`),
+                        )
+                        .map((emp: Employee) => emp.employeeId);
+                      onSubmitComment(tagPerson);
+                    } else {
+                      handleKeyDown(e);
+                    }
+                  }}
+                  placeholder="Enter Update .. (Use @ to tag)"
+                  className="w-full pl-3 pr-10 py-2 border border-slate-350 focus:border-primary text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white rounded-lg focus:outline-none transition-colors text-sm placeholder-slate-400"
+                />
+                <button
+                  type="button"
+                  disabled={isPending || !newComment.trim()}
+                  onClick={() => {
+                    const tagPerson = otherEmployees
+                      .filter((emp: Employee) =>
+                        newComment.includes(`@${emp.employeeName}`),
+                      )
+                      .map((emp: Employee) => emp.employeeId);
+                    onSubmitComment(tagPerson);
+                  }}
+                  className="absolute right-2.5 p-1 rounded-md text-slate-400 hover:text-primary enabled:hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
+                  title="Submit update"
+                >
+                  <CornerDownLeft className="h-4 w-4" />
+                </button>
+              </div>
+            </PopoverAnchor>
+            <PopoverContent
+              className="p-1 w-64 max-h-60 overflow-y-auto"
+              side="bottom"
+              align="start"
+              onOpenAutoFocus={(e) => e.preventDefault()}
+            >
+              <div className="flex flex-col">
+                {filteredEmployees.map((emp: Employee, index: number) => (
+                  <button
+                    key={emp.employeeId}
+                    className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
+                      index === selectedIndex ? "bg-muted" : "hover:bg-muted"
+                    }`}
+                    onClick={() => handleMentionSelect(emp)}
+                    onMouseEnter={() => setSelectedIndex(index)}
+                  >
+                    <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
+                      {getInitials(emp.employeeName)}
+                    </div>
+                    <span>{emp.employeeName}</span>
+                  </button>
+                ))}
+              </div>
+            </PopoverContent>
+          </Popover>
+        </div>
+
+        {taskPermission.Add && (
+          <button
+            type="button"
+            onClick={() => setIsAddTaskOpen(true)}
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-primary hover:bg-primary/95 text-white hover:scale-105 transition-all shadow-sm shrink-0"
+            title="Add Task"
+          >
+            <Plus className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+    );
+  };
 
   const renderUpdatesSection = () => {
     return (
@@ -278,7 +364,7 @@ const ProjectView = () => {
               placeholder="Filter Tagged"
               options={[
                 { label: "All", value: "all" },
-                ...(otherEmployees.map((emp: any) => ({
+                ...(otherEmployees.map((emp: Employee) => ({
                   label: emp.employeeName,
                   value: emp.employeeId,
                 })) || []),
@@ -304,7 +390,7 @@ const ProjectView = () => {
                     new Date(b.createdAt).getTime() -
                     new Date(a.createdAt).getTime(),
                 )
-                .map((comment: any) => (
+                .map((comment: ProjectComment) => (
                   <div
                     key={comment.projectCommentId}
                     className="group relative rounded-md border bg-muted/40 px-3 py-2 text-sm shadow-sm"
@@ -360,7 +446,7 @@ const ProjectView = () => {
                             >
                               <div className="flex flex-col">
                                 {filteredEmployees.map(
-                                  (emp: any, index: number) => (
+                                  (emp: Employee, index: number) => (
                                     <button
                                       key={emp.employeeId}
                                       className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
@@ -389,12 +475,12 @@ const ProjectView = () => {
                             size="sm"
                             onClick={() => {
                               const tagPerson = otherEmployees
-                                .filter((emp: any) =>
+                                .filter((emp: Employee) =>
                                   editingText.includes(
                                     `@${emp.employeeName}`,
                                   ),
                                 )
-                                .map((emp: any) => emp.employeeId);
+                                .map((emp: Employee) => emp.employeeId);
                               handleSaveComment(
                                 comment.projectCommentId,
                                 tagPerson,
@@ -498,7 +584,7 @@ const ProjectView = () => {
     allExpandableIds.every((id) => expandedIds[id]);
   const isAllCollapsed = Object.values(expandedIds).every((v) => !v);
 
-  const activeProject = activeProjectId ? selectedProjectData?.data : project;
+
 
   const filteredEmployees = mentionQuery
     ? otherEmployees.filter((emp: Employee) =>
@@ -1057,10 +1143,12 @@ const ProjectView = () => {
                 {/* Tabs Content Container */}
                 <div className="flex-1 min-h-0 overflow-y-auto pb-4 pr-1 space-y-4">
                   <TabsContent value="all" className="mt-0 outline-none space-y-5">
+                    {renderCommentInputBar()}
                     <ProjectTaskList
                       activeProjectId={effectiveProjectId}
                       className="h-auto"
                       statusFilter="all"
+                      hideAddButton={true}
                     />
                     {renderUpdatesSection()}
                   </TabsContent>
@@ -1073,7 +1161,8 @@ const ProjectView = () => {
                     />
                   </TabsContent>
 
-                  <TabsContent value="updates" className="mt-0 outline-none">
+                  <TabsContent value="updates" className="mt-0 outline-none space-y-5">
+                    {renderCommentInputBar()}
                     {renderUpdatesSection()}
                   </TabsContent>
 
@@ -1093,88 +1182,6 @@ const ProjectView = () => {
                     />
                   </TabsContent>
                 </div>
-
-                {/* Sticky Bottom Bar */}
-                <div className="border-t border-slate-200 pt-3 pb-2 px-1 bg-white flex items-center gap-3 mt-auto shrink-0 z-10">
-                  <div className="flex-1 relative">
-                    <Popover open={showMentions && mentionTarget === "new" && filteredEmployees.length > 0}>
-                      <PopoverAnchor asChild>
-                        <div className="relative flex items-center w-full">
-                          <input
-                            ref={inputRef}
-                            value={newComment}
-                            onChange={(e) => handleInputChange(e, "new")}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && !showMentions) {
-                                const tagPerson = otherEmployees
-                                  .filter((emp: any) =>
-                                    newComment.includes(`@${emp.employeeName}`),
-                                  )
-                                  .map((emp: any) => emp.employeeId);
-                                onSubmitComment(tagPerson);
-                              } else {
-                                handleKeyDown(e);
-                              }
-                            }}
-                            placeholder="Enter Update .. (Use @ to tag)"
-                            className="w-full pl-3 pr-10 py-2 border border-slate-350 focus:border-primary text-slate-700 bg-slate-50/50 hover:bg-slate-50 focus:bg-white rounded-lg focus:outline-none transition-colors text-sm placeholder-slate-400"
-                          />
-                          <button
-                            type="button"
-                            disabled={isPending || !newComment.trim()}
-                            onClick={() => {
-                              const tagPerson = otherEmployees
-                                .filter((emp: any) =>
-                                  newComment.includes(`@${emp.employeeName}`),
-                                )
-                                .map((emp: any) => emp.employeeId);
-                              onSubmitComment(tagPerson);
-                            }}
-                            className="absolute right-2.5 p-1 rounded-md text-slate-400 hover:text-primary enabled:hover:bg-slate-100 disabled:opacity-30 disabled:cursor-not-allowed transition"
-                            title="Submit update"
-                          >
-                            <CornerDownLeft className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </PopoverAnchor>
-                      <PopoverContent
-                        className="p-1 w-64 max-h-60 overflow-y-auto"
-                        side="top"
-                        align="start"
-                        onOpenAutoFocus={(e) => e.preventDefault()}
-                      >
-                        <div className="flex flex-col">
-                          {filteredEmployees.map((emp: any, index: number) => (
-                            <button
-                              key={emp.employeeId}
-                              className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
-                                index === selectedIndex ? "bg-muted" : "hover:bg-muted"
-                              }`}
-                              onClick={() => handleMentionSelect(emp)}
-                              onMouseEnter={() => setSelectedIndex(index)}
-                            >
-                              <div className="h-6 w-6 rounded-full bg-primary/10 text-primary flex items-center justify-center text-[10px] font-bold">
-                                {getInitials(emp.employeeName)}
-                              </div>
-                              <span>{emp.employeeName}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </PopoverContent>
-                    </Popover>
-                  </div>
-
-                  {taskPermission.Add && (
-                    <button
-                      type="button"
-                      onClick={() => setIsAddTaskOpen(true)}
-                      className="flex items-center justify-center w-9 h-9 rounded-full bg-primary hover:bg-primary/95 text-white hover:scale-105 transition-all shadow-sm shrink-0"
-                      title="Add Task"
-                    >
-                      <Plus className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
               </Tabs>
             </div>
           </div>
@@ -1188,8 +1195,10 @@ const ProjectView = () => {
             }}
             taskData={null}
             projectId={effectiveProjectId}
+            initialTaskName={newComment}
             onSuccess={() => {
               setIsAddTaskOpen(false);
+              setNewComment("");
               queryClient.invalidateQueries({
                 queryKey: ["get-all-task-dropdown", { projectId: effectiveProjectId }],
               });

@@ -310,7 +310,7 @@ export default function CheckOut() {
         const isMeeting = Boolean(item.meetingId);
 
         let estDuration = "—";
-        if (!item.isExtra || isMeeting) {
+        if (!item.isExtra || isMeeting || item.plannedTimeMinutes > 0) {
           estDuration = item.plannedTimeMinutes > 0 ? formatMinutesToHours(item.plannedTimeMinutes) : "—";
         }
 
@@ -1150,7 +1150,7 @@ export default function CheckOut() {
 
                             {/* Est. Time (Planned) */}
                             <TableCell className={`py-2.5 text-sm px-2 text-center border-none w-[90px] ${timeBgClass}`}>
-                              {item.isExtra && !item.meetingId ? (
+                              {item.isExtra && !item.meetingId && item.plannedTimeMinutes <= 0 ? (
                                 <span className="text-slate-350 font-medium">-</span>
                               ) : (
                                 <span className="inline-block rounded px-2 py-0.5">

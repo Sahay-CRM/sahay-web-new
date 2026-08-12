@@ -3,24 +3,33 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import SearchInput from "@/components/shared/SearchInput";
 import TableData from "@/components/shared/DataTable/DataTable";
 
 import ProjectTaskDrawer from "./projectTaskDrawer";
 
 import { useAllCompanyTask } from "@/features/api/companyTask";
-import { formatToLocalDateTime } from "@/features/utils/app.utils";
+import { formatToLocalDateTime, getInitials } from "@/features/utils/app.utils";
 import { queryClient } from "@/queryClient";
 import { getUserPermission } from "@/features/selectors/auth.selector";
+import { isColorDark } from "@/features/utils/color.utils";
 
 export default function ProjectTaskList({
   activeProjectId,
   className,
   statusFilter = "all",
+  hideAddButton = false,
 }: {
   activeProjectId: string;
   className?: string;
   statusFilter?: "all" | "pending" | "completed";
+  hideAddButton?: boolean;
 }) {
   const navigate = useNavigate();
   const taskPermission = useSelector(getUserPermission).TASK;
@@ -82,7 +91,7 @@ export default function ProjectTaskList({
               setPaginationFilter={setTaskSearch}
               className="w-80 h-9"
             />
-            {taskPermission.Add && (
+            {taskPermission.Add && !hideAddButton && (
               <Button
                 className="py-2 w-fit h-9"
                 onClick={() => {
@@ -100,10 +109,86 @@ export default function ProjectTaskList({
           <TableData
             tableData={taskTableData}
             columns={{
-              taskName: "Task Name",
-              taskDescription: "Task Description",
-              taskDeadline: "Task Deadline",
-              assigneeNames: "Assignees",
+              taskName: {
+                label: "Task Name",
+                width: "w-[45%]",
+                render: (_, item) => {
+                  const row = item as TaskGetPaging;
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="truncate max-w-[350px] cursor-pointer">
+                            {row.taskName}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[300px] p-2 bg-slate-900 border border-slate-800 text-white rounded-md shadow-md space-y-1">
+                          <p className=" text-xs border-b border-slate-700 pb-1 break-words">
+                            {row.taskName}
+                          </p>
+                          <p className="text-[11px] text-white break-words whitespace-pre-wrap">
+                            {row.taskDescription || "No description"}
+                          </p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+              // taskDescription: "Task Description",
+              taskDeadline: {
+                label: "Task Deadline",
+                width: "w-[35%]",
+              },
+              assigneeNames: {
+                label: "Assignees",
+                width: "w-[20%]",
+                render: (_, item) => {
+                  const row = item as TaskGetPaging;
+                  const assignees = row.TaskEmployeeJunction || [];
+                  if (assignees.length === 0) {
+                    return <span className="text-xs text-slate-400">Unassigned</span>;
+                  }
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex -space-x-2 overflow-hidden cursor-pointer">
+                            {assignees.slice(0, 3).map((junction, idx) => {
+                              const name = junction.Employee?.employeeName || "";
+                              if (!name) return null;
+                              return (
+                                <div
+                                  key={idx}
+                                  className="rounded-full h-6 w-6 bg-slate-100 text-sm flex items-center justify-center  text-black border border-slate-200/50 ring-2 ring-white hover:bg-slate-200 hover:z-10 transition-all"
+                                >
+                                  {getInitials(name)}
+                                </div>
+                              );
+                            })}
+                            {assignees.length > 3 && (
+                              <div className="rounded-full h-6 w-6 bg-slate-200 text-[10px] flex items-center justify-center  text-black border border-slate-350 ring-2 ring-white hover:bg-slate-300 hover:z-10 transition-all">
+                                +{assignees.length - 3}
+                              </div>
+                            )}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="max-w-[250px] p-2.5 bg-slate-900 border border-slate-800 text-white rounded-md shadow-md">
+                          <div className="space-y-1">
+                            <ul className="text-[10px] text-white list-disc list-inside space-y-0.5">
+                              {assignees.map((junction, idx) => {
+                                const name = junction.Employee?.employeeName || "";
+                                if (!name) return null;
+                                return <li key={idx}>{name}</li>;
+                              })}
+                            </ul>
+                          </div>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
             }}
             primaryKey="taskId"
             onEdit={
@@ -114,10 +199,7 @@ export default function ProjectTaskList({
                   }
                 : undefined
             }
-            onViewButton={(row) => {
-              navigate(`/dashboard/tasks/view/${row.taskId}`);
-            }}
-            viewButton={true}
+            viewButton={false}
             isActionButton={() => true}
             canDelete={() => false}
             moduleKey="TASK"
@@ -127,21 +209,44 @@ export default function ProjectTaskList({
               }
             }}
             sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
-            actionColumnWidth="w-[100px]"
+            actionColumnWidth="w-[70px]"
             extraColumns={[
               {
                 label: "Status",
-                width: "w-[140px]",
-                render: (row) => (
-                  <span
-                    className="px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide whitespace-nowrap"
-                    style={{
-                      backgroundColor: (row.color as string) || "#e5e7eb",
-                    }}
-                  >
-                    {row.taskStatus as string}
-                  </span>
-                ),
+                width: "w-[80px]",
+                render: (row) => {
+                  const getStatusInitial = (status: string) => {
+                    const s = status?.toLowerCase() || "";
+                    if (s.includes("progress")) return "P";
+                    if (s.includes("yet")) return "Y";
+                    if (s.includes("complete")) return "C";
+                    if (s.includes("delay")) return "D";
+                    return s.charAt(0).toUpperCase();
+                  };
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`rounded-full h-6 w-6 flex items-center justify-center text-[10px] font-bold border border-slate-350 shadow-sm cursor-default select-none ${
+                              row.color && isColorDark(row.color as string)
+                                ? "text-white"
+                                : "text-slate-800"
+                            }`}
+                            style={{
+                              backgroundColor: (row.color as string) || "#e5e7eb",
+                            }}
+                          >
+                            {getStatusInitial(row.taskStatus as string)}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {row.taskStatus as string}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
               },
             ]}
           />
