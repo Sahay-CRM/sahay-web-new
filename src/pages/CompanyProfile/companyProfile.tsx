@@ -82,6 +82,60 @@ export default function CompanyProfile() {
 
   const watchedStartTime = watch("companyStartTime");
   const watchedEndTime = watch("companyEndTime");
+  const watchedBreakStartTime = watch("breakStartTime");
+  const watchedBreakEndTime = watch("breakEndTime");
+
+  const companyStartTimeOptions = timeOptions.filter((option) => {
+    if (!watchedEndTime) return true;
+    const endMin = toMinutes(watchedEndTime);
+    const optionMin = toMinutes(option.value);
+    return endMin !== null && optionMin !== null && optionMin < endMin;
+  });
+
+  const companyEndTimeOptions = timeOptions.filter((option) => {
+    if (!watchedStartTime) return true;
+    const startMin = toMinutes(watchedStartTime);
+    const optionMin = toMinutes(option.value);
+    return startMin !== null && optionMin !== null && optionMin > startMin;
+  });
+
+  const breakStartTimeOptions = timeOptions.filter((option) => {
+    const optionMin = toMinutes(option.value);
+    if (optionMin === null) return true;
+
+    if (watchedStartTime) {
+      const shiftStartMin = toMinutes(watchedStartTime);
+      if (shiftStartMin !== null && optionMin < shiftStartMin) return false;
+    }
+    if (watchedEndTime) {
+      const shiftEndMin = toMinutes(watchedEndTime);
+      if (shiftEndMin !== null && optionMin > shiftEndMin) return false;
+    }
+    if (watchedBreakEndTime) {
+      const endMin = toMinutes(watchedBreakEndTime);
+      if (endMin !== null && optionMin >= endMin) return false;
+    }
+    return true;
+  });
+
+  const breakEndTimeOptions = timeOptions.filter((option) => {
+    const optionMin = toMinutes(option.value);
+    if (optionMin === null) return true;
+
+    if (watchedStartTime) {
+      const shiftStartMin = toMinutes(watchedStartTime);
+      if (shiftStartMin !== null && optionMin < shiftStartMin) return false;
+    }
+    if (watchedEndTime) {
+      const shiftEndMin = toMinutes(watchedEndTime);
+      if (shiftEndMin !== null && optionMin > shiftEndMin) return false;
+    }
+    if (watchedBreakStartTime) {
+      const startMin = toMinutes(watchedBreakStartTime);
+      if (startMin !== null && optionMin <= startMin) return false;
+    }
+    return true;
+  });
 
   if (!companyData) {
     return (
@@ -558,7 +612,7 @@ export default function CompanyProfile() {
                         }}
                         render={({ field }) => (
                           <SearchDropdown
-                            options={timeOptions}
+                            options={companyStartTimeOptions}
                             selectedValues={field.value ? [field.value] : []}
                             onSelect={(val) => {
                               field.onChange(val.value);
@@ -608,7 +662,7 @@ export default function CompanyProfile() {
                         }}
                         render={({ field }) => (
                           <SearchDropdown
-                            options={timeOptions}
+                            options={companyEndTimeOptions}
                             selectedValues={field.value ? [field.value] : []}
                             onSelect={(val) => {
                               field.onChange(val.value);
@@ -630,6 +684,130 @@ export default function CompanyProfile() {
                         </label>
                         <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
                           {formatTo12HourLower(companyData.companyEndTime)}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <div className="w-full sm:w-1/2">
+                    {isEditing ? (
+                      <Controller
+                        name="breakStartTime"
+                        control={control}
+                        rules={{
+                          validate: (val) => {
+                            if (!val) return true;
+                            const startMin = toMinutes(val);
+                            const endMin = toMinutes(watchedBreakEndTime);
+                            const shiftStartMin = toMinutes(watchedStartTime);
+                            const shiftEndMin = toMinutes(watchedEndTime);
+
+                            if (startMin !== null && endMin !== null) {
+                              if (startMin === endMin) {
+                                return "Break start time cannot be equal to End time";
+                              }
+                              if (startMin > endMin) {
+                                return "Break start time must be before End time";
+                              }
+                            }
+
+                            if (startMin !== null) {
+                              if (shiftStartMin !== null && startMin < shiftStartMin) {
+                                return "Break start time must be after shift start time";
+                              }
+                              if (shiftEndMin !== null && startMin > shiftEndMin) {
+                                return "Break start time must be before shift end time";
+                              }
+                            }
+                            return true;
+                          },
+                        }}
+                        render={({ field }) => (
+                          <SearchDropdown
+                            options={breakStartTimeOptions}
+                            selectedValues={field.value ? [field.value] : []}
+                            onSelect={(val) => {
+                              field.onChange(val.value);
+                              setTimeout(() => {
+                                trigger(["breakStartTime", "breakEndTime"]);
+                              }, 0);
+                            }}
+                            label="Break Start Time"
+                            placeholder="Select Break Start Time"
+                            error={errors.breakStartTime}
+                            isSearchable={false}
+                          />
+                        )}
+                      />
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Break Start Time
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {formatTo12HourLower(companyData.breakStartTime ?? undefined)}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <div className="w-full sm:w-1/2">
+                    {isEditing ? (
+                      <Controller
+                        name="breakEndTime"
+                        control={control}
+                        rules={{
+                          validate: (val) => {
+                            if (!val) return true;
+                            const startMin = toMinutes(watchedBreakStartTime);
+                            const endMin = toMinutes(val);
+                            const shiftStartMin = toMinutes(watchedStartTime);
+                            const shiftEndMin = toMinutes(watchedEndTime);
+
+                            if (startMin !== null && endMin !== null) {
+                              if (startMin === endMin) {
+                                return "Break end time cannot be equal to Start time";
+                              }
+                              if (startMin > endMin) {
+                                return "Break end time must be after Start time";
+                              }
+                            }
+
+                            if (endMin !== null) {
+                              if (shiftStartMin !== null && endMin < shiftStartMin) {
+                                return "Break end time must be after shift start time";
+                              }
+                              if (shiftEndMin !== null && endMin > shiftEndMin) {
+                                return "Break end time must be before shift end time";
+                              }
+                            }
+                            return true;
+                          },
+                        }}
+                        render={({ field }) => (
+                          <SearchDropdown
+                            options={breakEndTimeOptions}
+                            selectedValues={field.value ? [field.value] : []}
+                            onSelect={(val) => {
+                              field.onChange(val.value);
+                              setTimeout(() => {
+                                trigger(["breakStartTime", "breakEndTime"]);
+                              }, 0);
+                            }}
+                            label="Break End Time"
+                            placeholder="Select Break End Time"
+                            error={errors.breakEndTime}
+                            isSearchable={false}
+                          />
+                        )}
+                      />
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Break End Time
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {formatTo12HourLower(companyData.breakEndTime ?? undefined)}
                         </p>
                       </>
                     )}

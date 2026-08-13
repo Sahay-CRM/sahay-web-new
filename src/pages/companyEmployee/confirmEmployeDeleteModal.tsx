@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { useSelector } from "react-redux";
-import { getUserDetail } from "@/features/selectors/auth.selector";
+// import { useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
+// import { getUserDetail } from "@/features/selectors/auth.selector";
 import ModalData from "@/components/shared/Modal/ModalData";
 
 interface DeleteModalProps {
@@ -22,11 +23,12 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
   modalClose,
   onSubmit,
   isChildData,
-  onForceSubmit,
+  // onForceSubmit,
   showDeleteOptions = false,
-  isForceDelete = false,
+  // isForceDelete = false,
 }) => {
-  const userData = useSelector(getUserDetail);
+  const navigate = useNavigate();
+  // const userData = useSelector(getUserDetail);
   const [deleteOption, setDeleteOption] = useState<"single" | "group">(
     "single",
   );
@@ -37,31 +39,38 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
         isModalOpen={isModalOpen}
         modalTitle={title}
         modalClose={modalClose}
-        buttons={[
-          {
-            btnText: "Cancel",
-            buttonCss: "py-1.5 px-5",
-            btnClick: modalClose,
-          },
-          {
-            btnText: "Submit",
-            buttonCss: "py-1.5 px-5",
-            btnClick: () => onSubmit(deleteOption === "group"),
-          },
-
-          ...(isChildData && !isForceDelete && userData.isSuperAdmin
+        buttons={
+          isChildData
             ? [
                 {
-                  btnText: "Force delete",
-                  buttonCss:
-                    "py-1.5 px-5 bg-red-600 text-white hover:bg-red-400",
-                  btnClick: onForceSubmit
-                    ? onForceSubmit
-                    : () => onSubmit(deleteOption === "group"),
+                  btnText: "Cancel",
+                  buttonCss: "py-1.5 px-5",
+                  btnClick: modalClose,
+                },
+                {
+                  btnText: "Handover",
+                  buttonCss: "py-1.5 px-5 bg-blue-600 text-white hover:bg-blue-500",
+                  btnClick: () => {
+                    modalClose();
+                    navigate("/dashboard/handover", {
+                      state: { oldUserId: modalData.employeeId },
+                    });
+                  },
                 },
               ]
-            : []),
-        ]}
+            : [
+                {
+                  btnText: "Cancel",
+                  buttonCss: "py-1.5 px-5",
+                  btnClick: modalClose,
+                },
+                {
+                  btnText: "Submit",
+                  buttonCss: "py-1.5 px-5",
+                  btnClick: () => onSubmit(deleteOption === "group"),
+                },
+              ]
+        }
       >
         <div className="space-y-4 text-sm">
           {/* Main KPI details */}

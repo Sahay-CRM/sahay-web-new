@@ -30,6 +30,7 @@ interface FormValues {
   projectDocuments: (File | { fileId: string; fileName: string })[];
   removedFileIdsArray: string[];
   parentProjectId?: string;
+  isAutoComplete: boolean;
 }
 
 export default function useAddProjectSingle() {
@@ -125,6 +126,7 @@ export default function useAddProjectSingle() {
       projectDocuments: [],
       removedFileIdsArray: [],
       parentProjectId: searchParams.get("parentProjectId") || "",
+      isAutoComplete: false,
     },
   });
 
@@ -180,6 +182,7 @@ export default function useAddProjectSingle() {
           : [],
         removedFileIdsArray: [],
         parentProjectId: projectApiData.data.parentProjectId || "",
+        isAutoComplete: projectApiData.data.isAutoComplete || false,
       });
 
       setTimeout(() => {
@@ -203,6 +206,7 @@ export default function useAddProjectSingle() {
           projectDocuments: [],
           removedFileIdsArray: [],
           parentProjectId: searchParams.get("parentProjectId") || "",
+          isAutoComplete: false,
         });
       }
     }
@@ -314,6 +318,7 @@ export default function useAddProjectSingle() {
           subParameterIds: data.subParameterId,
           otherProjectEmployees: data.employeeId,
           parentProjectId: data.parentProjectId || null,
+          isAutoComplete: data.isAutoComplete,
         }
       : {
           projectName: data.projectName,
@@ -323,6 +328,7 @@ export default function useAddProjectSingle() {
           subParameterIds: data.subParameterId,
           otherProjectEmployees: data.employeeId,
           parentProjectId: data.parentProjectId || null,
+          isAutoComplete: data.isAutoComplete,
         };
 
     addProject(payload, {

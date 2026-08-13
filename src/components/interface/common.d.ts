@@ -360,6 +360,7 @@ interface CompanyProjectDataProps {
   companyId?: string;
   parentProjectId?: string | null;
   companyProjectMasters?: CompanyProjectDataProps[];
+  isAutoComplete?: boolean;
 }
 
 // interface CompanyMeetingDataProps {
@@ -564,6 +565,8 @@ interface EmployeeCompany {
   companyName: string;
   companyStartTime?: string | null;
   companyEndTime?: string | null;
+  breakStartTime?: string | null;
+  breakEndTime?: string | null;
 }
 
 interface EmployeeDetailsById {
@@ -1679,6 +1682,8 @@ interface SimpleCompanyDetails {
   imagePancard?: imageGst;
   companyStartTime?: string;
   companyEndTime?: string;
+  breakStartTime?: string | null;
+  breakEndTime?: string | null;
 }
 
 interface imageGst {

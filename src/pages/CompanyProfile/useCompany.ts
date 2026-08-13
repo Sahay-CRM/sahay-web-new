@@ -154,6 +154,8 @@ export default function useCompany() {
         kpiSkipDays: skipDaysValue,
         companyStartTime: companyData.companyStartTime,
         companyEndTime: companyData.companyEndTime,
+        breakStartTime: companyData.breakStartTime,
+        breakEndTime: companyData.breakEndTime,
       });
     }
   }, [companyData, reset]);
@@ -273,6 +275,8 @@ export default function useCompany() {
       validationKey: data.validationKey,
       companyStartTime: data.companyStartTime,
       companyEndTime: data.companyEndTime,
+      breakStartTime: data.breakStartTime,
+      breakEndTime: data.breakEndTime,
     };
 
     addCompany(payload, {

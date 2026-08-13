@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { useSelector } from "react-redux";
 
 import { Button } from "@/components/ui/button";
@@ -15,10 +15,6 @@ import TableData from "@/components/shared/DataTable/DataTable";
 import ProjectTaskDrawer from "./projectTaskDrawer";
 
 import { useAllCompanyTask } from "@/features/api/companyTask";
-import {
-  useGetCompanyProjectById,
-  useGetAllProjectStatus,
-} from "@/features/api/companyProject";
 import { formatToLocalDateTime, getInitials } from "@/features/utils/app.utils";
 import { queryClient } from "@/queryClient";
 import { getUserPermission } from "@/features/selectors/auth.selector";
@@ -47,24 +43,7 @@ export default function ProjectTaskList({
     },
   });
 
-  const { data: projectData } = useGetCompanyProjectById(activeProjectId);
-  const { data: projectStatusList } = useGetAllProjectStatus({
-    filter: {},
-    enable: true,
-  });
 
-  const isProjectClosed = useMemo(() => {
-    const projectStatusId = projectData?.data?.projectStatusId;
-    if (!projectStatusId || !projectStatusList?.data) return false;
-
-    const currentStatus = projectStatusList.data.find(
-      (status) => status.projectStatusId === projectStatusId
-    );
-
-    return (
-      currentStatus?.winLostProject === 1 || currentStatus?.winLostProject === 0
-    );
-  }, [projectData?.data?.projectStatusId, projectStatusList?.data]);
 
   const taskTableData = (tasks?.data ?? [])
     .filter((task) => {
@@ -115,7 +94,7 @@ export default function ProjectTaskList({
               setPaginationFilter={setTaskSearch}
               className="w-80 h-9"
             />
-            {taskPermission.Add && !hideAddButton && !isProjectClosed && (
+            {taskPermission.Add && !hideAddButton && (
               <Button
                 className="py-2 w-fit h-9"
                 onClick={() => {
@@ -213,7 +192,7 @@ export default function ProjectTaskList({
             }}
             primaryKey="taskId"
             onEdit={
-              taskPermission.Edit && !isProjectClosed
+              taskPermission.Edit
                 ? (row) => {
                     setSelectedTaskForEdit(row);
                     setIsDrawerOpen(true);
@@ -221,7 +200,7 @@ export default function ProjectTaskList({
                 : undefined
             }
             viewButton={false}
-            isActionButton={() => !isProjectClosed}
+            isActionButton={() => true}
             canDelete={() => false}
             moduleKey="TASK"
             onRowClick={(row) => {

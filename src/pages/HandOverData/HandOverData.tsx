@@ -98,6 +98,7 @@ export default function HandOverData() {
     return (
       employeeRes?.data
         ?.filter((emp) => {
+          if (emp.isDeactivated) return false;
           if (emp.employeeId === oldUserId) return false;
           if (!selectedOldUser) return true;
 
