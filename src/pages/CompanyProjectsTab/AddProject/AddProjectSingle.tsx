@@ -700,6 +700,22 @@ export default function AddProjectSingle() {
                       )}
                     />
                   </div>
+
+                  {/* Auto Complete Option */}
+                <div className="flex items-center space-x-2.5 py-1">
+                  <input
+                    type="checkbox"
+                    id="isAutoComplete"
+                    className="h-4.5 w-4.5 rounded border-gray-305 text-primary focus:ring-primary/20 accent-primary cursor-pointer"
+                    {...register("isAutoComplete")}
+                  />
+                  <label
+                    htmlFor="isAutoComplete"
+                    className="text-md font-semibold text-gray-905 cursor-pointer select-none"
+                  >
+                    Auto Complete
+                  </label>
+                </div>
                 </div>
 
                 {/* Upload Documents */}

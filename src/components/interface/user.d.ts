@@ -23,6 +23,8 @@ interface User extends Partial<EmployeeDetailsById> {
   companyLogo?: string;
   companyStartTime?: string | null;
   companyEndTime?: string | null;
+  breakStartTime?: string | null;
+  breakEndTime?: string | null;
 }
 
 interface UserDetails {

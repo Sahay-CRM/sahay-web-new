@@ -223,8 +223,10 @@ const DashboardLayout = () => {
       const empData = userData.data;
       const updatedEmpData = {
         ...empData,
-        companyStartTime: empData?.company?.companyStartTime || null,
-        companyEndTime: empData?.company?.companyEndTime || null,
+        companyStartTime: companyData?.companyStartTime || empData?.company?.companyStartTime || null,
+        companyEndTime: companyData?.companyEndTime || empData?.company?.companyEndTime || null,
+        breakStartTime: companyData?.breakStartTime || empData?.company?.breakStartTime || null,
+        breakEndTime: companyData?.breakEndTime || empData?.company?.breakEndTime || null,
         ...(empData?.companyLogo && {
           companyLogo: `${ImageBaseURL}/share/company/logo/${empData.companyLogo}`,
         }),
@@ -234,7 +236,7 @@ const DashboardLayout = () => {
       };
       dispatch(setUser(updatedEmpData));
     }
-  }, [dispatch, userData]);
+  }, [dispatch, userData, companyData]);
 
   useEffect(() => {
     if (isNotificationOpen) {

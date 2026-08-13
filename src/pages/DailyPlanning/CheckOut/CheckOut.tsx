@@ -208,8 +208,20 @@ export default function CheckOut() {
     if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return 0;
     let diff = (endH * 60 + endM) - (startH * 60 + startM);
     if (diff < 0) diff += 24 * 60;
+
+    // Subtract break time if defined
+    if (user?.breakStartTime && user?.breakEndTime) {
+      const [breakStartH, breakStartM] = user.breakStartTime.split(":").map(Number);
+      const [breakEndH, breakEndM] = user.breakEndTime.split(":").map(Number);
+      if (!isNaN(breakStartH) && !isNaN(breakStartM) && !isNaN(breakEndH) && !isNaN(breakEndM)) {
+        let breakDiff = (breakEndH * 60 + breakEndM) - (breakStartH * 60 + breakStartM);
+        if (breakDiff < 0) breakDiff += 24 * 60;
+        diff -= breakDiff;
+      }
+    }
+
     return diff;
-  }, [user?.companyStartTime, user?.companyEndTime]);
+  }, [user?.companyStartTime, user?.companyEndTime, user?.breakStartTime, user?.breakEndTime]);
 
   // Sync rating state with fetched backend rating
   useEffect(() => {
