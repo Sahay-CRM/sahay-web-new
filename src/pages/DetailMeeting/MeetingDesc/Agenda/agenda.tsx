@@ -276,6 +276,8 @@ export default function Agenda({
     handleDragEnd,
     unFollowByUser,
     createIssueLoading,
+    layoutMode,
+    handleLayoutModeChange,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -301,7 +303,6 @@ export default function Agenda({
   ).length;
 
   const [showMaxAgendaModal, setShowMaxAgendaModal] = useState(false);
-  const [layoutMode, setLayoutMode] = useState<"stacked" | "tab">("tab");
 
   const defaultAgendaOrder = ["tasks", "kpis", "projects"];
   const configuredAgendaOrder = (
@@ -1132,12 +1133,16 @@ export default function Agenda({
                         type="button"
                         role="switch"
                         aria-checked={layoutMode === "stacked"}
+                        disabled={!(follow || unFollowByUser)}
                         onClick={() =>
-                          setLayoutMode((prev) =>
-                            prev === "tab" ? "stacked" : "tab",
+                          handleLayoutModeChange(
+                            layoutMode === "tab" ? "stacked" : "tab",
                           )
                         }
-                        className="relative inline-flex h-9 w-18 shrink-0 cursor-pointer items-center rounded-full bg-primary p-1 transition-colors duration-200 focus:outline-none select-none shadow-xs"
+                        className={cn(
+                          "relative inline-flex h-9 w-18 shrink-0 cursor-pointer items-center rounded-full bg-primary p-1 transition-colors duration-200 focus:outline-none select-none shadow-xs",
+                          !(follow || unFollowByUser) && "opacity-50 cursor-not-allowed",
+                        )}
                       >
                         <span
                           className={cn(
@@ -1255,17 +1260,21 @@ export default function Agenda({
     flex justify-center w-full h-[calc(var(--vh,100vh)-140px)] relative border-primary
 
     ${
-      meetingStatus === "DISCUSSION" &&
+      (meetingStatus === "DISCUSSION" ||
+        meetingStatus === "CONCLUSION" ||
+        meetingStatus === "ENDED") &&
       (layoutMode === "tab"
         ? " border-t-1 border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
         : " border-1 rounded-[10px]")
     }
 
-    ${meetingStatus === "CONCLUSION" && "h-[calc(var(--vh,100vh)-220px)]"}
-
-    ${meetingStatus !== "DISCUSSION" && "p-4"}
-
-    ${(meetingStatus === "CONCLUSION" || meetingStatus === "ENDED") && "border"}
+    ${
+      meetingStatus !== "DISCUSSION" &&
+      meetingStatus !== "CONCLUSION" &&
+      meetingStatus !== "ENDED"
+        ? "p-4"
+        : ""
+    }
   `}
           >
             {meetingStatus === "NOT_STARTED" ? (
@@ -1372,7 +1381,9 @@ export default function Agenda({
                     })}
                 </div>
               </div>
-            ) : meetingStatus === "DISCUSSION" ? (
+            ) : (meetingStatus === "DISCUSSION" ||
+              meetingStatus === "CONCLUSION" ||
+              meetingStatus === "ENDED") ? (
               detailAgendaData &&
               (() => {
                 const selectedIoId =
@@ -1402,6 +1413,15 @@ export default function Agenda({
                   </div>
                 );
 
+                const isStacked =
+                  layoutMode === "stacked" ||
+                  meetingStatus === "CONCLUSION" ||
+                  meetingStatus === "ENDED";
+
+                 const isExtra =
+                  meetingStatus === "CONCLUSION" ||
+                  meetingStatus === "ENDED";
+
                 const agendaSections: Record<string, React.ReactNode> = {
                   tasks: (
                     <Tasks
@@ -1411,8 +1431,9 @@ export default function Agenda({
                       ioType={ioType}
                       selectedIssueId={isSelectedAgenda}
                       isTeamLeader={isTeamLeader || isSuperAdmin}
+                      isExtra={isExtra}
                       headerLeft={
-                        layoutMode === "stacked"
+                        isStacked
                           ? sectionLabel("Tasks", detailAgendaData?.noOfTasks)
                           : undefined
                       }
@@ -1429,8 +1450,9 @@ export default function Agenda({
                       isTeamLeader={isTeamLeader || isSuperAdmin}
                       follow={follow}
                       meetingRes={meetingResponse!}
+                      meetingStatus={meetingStatus}
                       headerLeft={
-                        layoutMode === "stacked"
+                        isStacked
                           ? sectionLabel("KPIs", detailAgendaData?.noOfKPIs)
                           : undefined
                       }
@@ -1444,8 +1466,9 @@ export default function Agenda({
                       ioType={ioType}
                       selectedIssueId={isSelectedAgenda}
                       isTeamLeader={isTeamLeader || isSuperAdmin}
+                      isExtra={isExtra}
                       headerLeft={
-                        layoutMode === "stacked"
+                        isStacked
                           ? sectionLabel(
                               "Projects",
                               detailAgendaData?.noOfProjects,
@@ -1459,7 +1482,7 @@ export default function Agenda({
                 return (
                   <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-y-auto overflow-x-hidden mt-5 px-2 w-full">
                     <Suspense fallback={<div>Loading...</div>}>
-                      {layoutMode === "tab" ? (
+                      {!isStacked ? (
                         <div className="w-full">
                           {activeTab === "kpis" && agendaSections["kpis"]}
                           {activeTab === "projects" &&

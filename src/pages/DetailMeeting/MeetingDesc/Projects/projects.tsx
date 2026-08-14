@@ -42,6 +42,7 @@ interface ProjectProps {
   selectedIssueId?: string;
   isTeamLeader?: boolean | undefined;
   headerLeft?: React.ReactNode;
+  isExtra?: boolean;
 }
 
 export default function Projects({
@@ -51,6 +52,7 @@ export default function Projects({
   selectedIssueId,
   isTeamLeader,
   headerLeft,
+  isExtra,
 }: ProjectProps) {
   const { id: meetingId } = useParams();
   const { mutate: addMeetingProject } = addMeetingProjectDataMutation();
@@ -88,6 +90,7 @@ export default function Projects({
           ? { issueId: issueId }
           : { objectiveId: issueId }),
         ioType: ioType,
+        ...(isExtra ? { isExtra: true } : {}),
       };
       addMeetingProject(payload, {
         onSuccess: () => {
@@ -289,6 +292,10 @@ export default function Projects({
         }
         columns={tableColumns}
         primaryKey="projectId"
+        rowClassName={(item) => {
+          const project = item as CompanyProjectDataProps;
+          return project.isExtra ? "bg-amber-50 hover:bg-amber-100/80 font-medium" : "";
+        }}
         showIndexColumn={false}
         isActionButton={() => true}
         isEditDelete={() => false}
@@ -348,6 +355,7 @@ export default function Projects({
           issueId={issueId}
           projectsFireBase={projectsFireBase}
           ioType={ioType}
+          isExtra={isExtra}
         />
       )}
     </div>

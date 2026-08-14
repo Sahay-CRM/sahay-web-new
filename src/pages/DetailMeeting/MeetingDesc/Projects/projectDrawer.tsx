@@ -52,6 +52,7 @@ interface ProjectDrawerProps {
   ioType?: string;
   onProjectCreated?: (project: CompanyProjectDataProps) => void;
   defaultProjectName?: string;
+  isExtra?: boolean;
 }
 
 export default function ProjectDrawer({
@@ -63,6 +64,7 @@ export default function ProjectDrawer({
   ioType,
   onProjectCreated,
   defaultProjectName,
+  isExtra,
 }: ProjectDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -333,6 +335,7 @@ export default function ProjectDrawer({
             : {}),
 
         ioType: data.ioType,
+        ...(isExtra ? { isExtra: true } : {}),
       };
       addProject(payload, {
         onSuccess: (res) => {

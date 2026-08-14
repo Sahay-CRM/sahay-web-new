@@ -100,6 +100,7 @@ interface KpisProps {
   follow?: boolean;
   meetingRes: MeetingResFire | null;
   headerLeft?: React.ReactNode;
+  meetingStatus?: string;
 }
 
 interface SortConfig {
@@ -117,6 +118,7 @@ export default function KPITable({
   follow,
   meetingRes,
   headerLeft,
+  meetingStatus,
 }: KpisProps) {
   const userId = useSelector(getUserId);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -629,16 +631,18 @@ export default function KPITable({
       <div className="flex gap-5 justify-between mb-3 shrink-0 items-center w-full">
         <div className="flex items-center">{headerLeft}</div>
         <div className="flex gap-5 items-center ml-auto">
-          {isTeamLeader && (
-            <Suspense fallback={<KpisSearchDropdownFallback />}>
-              <KpisSearchDropdown
-                onAdd={handleAddKpis}
-                minSearchLength={2}
-                filterProps={{ pageSize: 20 }}
-                placeholder="Add kpis in meeting"
-              />
-            </Suspense>
-          )}
+          {isTeamLeader &&
+            meetingStatus !== "CONCLUSION" &&
+            meetingStatus !== "ENDED" && (
+              <Suspense fallback={<KpisSearchDropdownFallback />}>
+                <KpisSearchDropdown
+                  onAdd={handleAddKpis}
+                  minSearchLength={2}
+                  filterProps={{ pageSize: 20 }}
+                  placeholder="Add kpis in meeting"
+                />
+              </Suspense>
+            )}
         </div>
       </div>
 

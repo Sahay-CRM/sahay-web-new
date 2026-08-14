@@ -191,13 +191,13 @@ function PermissionTableInner({
         // User can both add and edit - allow all changes
       } else if (canAddPermission && !canEditPermission) {
         // User can only add permissions, not remove them
-        if (wasOriginallyChecked && !isCurrentlyChecked) {
+        if (wasOriginallyChecked) {
           // Prevent unchecking originally checked permissions
           return prev;
         }
       } else if (canEditPermission && !canAddPermission) {
         // User can only edit (uncheck) permissions, not add new ones
-        if (!wasOriginallyChecked && isCurrentlyChecked) {
+        if (!wasOriginallyChecked) {
           // Prevent checking originally unchecked permissions
           return prev;
         }
@@ -275,7 +275,11 @@ function PermissionTableInner({
   const toggleRow = (moduleName: string) => {
     if (isReadOnly) return; // Prevent changes in read-only mode
 
-    const allChecked = visiblePermTypes(permissions[moduleName]).every(
+    const targetPerms = visiblePermTypes(permissions[moduleName]).filter(
+      ([permType]) => permType !== "Delete",
+    );
+
+    const allChecked = targetPerms.every(
       ([, perm]) => perm.checked,
     );
 
@@ -286,7 +290,7 @@ function PermissionTableInner({
       };
       let hasValidChange = false;
 
-      visiblePermTypes(updated[moduleName]).forEach(([permType]) => {
+      targetPerms.forEach(([permType]) => {
         const currentPermission = updated[moduleName][permType];
         const wasOriginallyChecked = currentPermission.originalChecked;
         const newCheckedState = !allChecked;
@@ -350,10 +354,12 @@ function PermissionTableInner({
     return Object.values(permissions).every((perm) => perm[permType]?.checked);
   };
 
-  const isRowChecked = (moduleName: string) =>
-    visiblePermTypes(permissions[moduleName]).every(
-      ([, perm]) => perm.checked,
+  const isRowChecked = (moduleName: string) => {
+    const targetPerms = visiblePermTypes(permissions[moduleName]).filter(
+      ([permType]) => permType !== "Delete",
     );
+    return targetPerms.length > 0 && targetPerms.every(([, perm]) => perm.checked);
+  };
 
   // Check if a checkbox should be disabled
   const isCheckboxDisabled = (moduleName: string, permType: string) => {
@@ -362,15 +368,14 @@ function PermissionTableInner({
     const currentPermission = permissions[moduleName]?.[permType];
     if (!currentPermission) return true;
 
-    const isCurrentlyChecked = currentPermission.checked;
     const wasOriginallyChecked = currentPermission.originalChecked;
 
     if (canAddPermission && canEditPermission) {
       return false; // All changes allowed
     } else if (canAddPermission && !canEditPermission) {
-      return wasOriginallyChecked && !isCurrentlyChecked;
+      return wasOriginallyChecked;
     } else if (canEditPermission && !canAddPermission) {
-      return !wasOriginallyChecked && isCurrentlyChecked;
+      return !wasOriginallyChecked;
     } else {
       return true; // No changes allowed
     }
@@ -385,9 +390,9 @@ function PermissionTableInner({
 
     const isRowToggleDisabled =
       isReadOnly ||
-      visiblePermTypes(permissions[module.moduleName]).some(([permType]) =>
-        isCheckboxDisabled(module.moduleName, permType),
-      );
+      visiblePermTypes(permissions[module.moduleName])
+        .filter(([permType]) => permType !== "Delete")
+        .some(([permType]) => isCheckboxDisabled(module.moduleName, permType));
 
     return (
       <React.Fragment key={module.moduleId}>

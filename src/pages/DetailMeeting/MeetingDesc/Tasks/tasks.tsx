@@ -40,6 +40,7 @@ interface TasksProps {
   selectedIssueId?: string;
   isTeamLeader?: boolean | undefined;
   headerLeft?: React.ReactNode;
+  isExtra?: boolean;
 }
 
 export default function Tasks({
@@ -49,6 +50,7 @@ export default function Tasks({
   selectedIssueId,
   isTeamLeader,
   headerLeft,
+  isExtra,
 }: TasksProps) {
   const { id: meetingId } = useParams();
   const { data: taskStatus } = useGetAllTaskStatus({
@@ -79,6 +81,7 @@ export default function Tasks({
           ? { issueId: issueId }
           : { objectiveId: issueId }),
         ioType: ioType,
+        ...(isExtra ? { isExtra: true } : {}),
       };
       addMeetingTask(payload, {
         onSuccess: () => {
@@ -264,6 +267,10 @@ export default function Tasks({
         }))}
         columns={tableColumns}
         primaryKey="taskId"
+        rowClassName={(item) => {
+          const task = item as TaskGetPaging;
+          return task.isExtra ? "bg-amber-50 hover:bg-amber-100/80 font-medium" : "";
+        }}
         // onEdit={navigate(`/dashboard/tasks/edit/${row.taskId}`)}
         // onViewButton={(row) => {
         //   navigate(`/dashboard/tasks/view/${row.taskId}`);
@@ -329,6 +336,7 @@ export default function Tasks({
           issueId={issueId}
           tasksFireBase={tasksFireBase}
           ioType={ioType}
+          isExtra={isExtra}
         />
       )}
     </div>

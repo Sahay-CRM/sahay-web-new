@@ -61,6 +61,14 @@ export const companyNavigationData = [
         permission: "View",
         moduleKey: "SAHAY_EMP",
       },
+      {
+        id: 5,
+        icon: "LaptopMinimal",
+        label: "Company Profile",
+        link: "/dashboard/company-profile",
+        permission: "View",
+        moduleKey: "COMPANY_PROFILE",
+      },
     ],
   },
   {

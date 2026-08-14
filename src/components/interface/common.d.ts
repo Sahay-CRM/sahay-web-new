@@ -328,6 +328,7 @@ interface CompanyProjectDataProps {
   projectId?: string;
   projectName?: string;
   projectDescription?: string;
+  isExtra?: boolean;
   projectActualEndDate?: string | null;
   projectDeadline?: Date | string | null;
   employeeId?: string;
@@ -692,6 +693,7 @@ interface TaskGetPaging {
   srNo?: number;
   employeeId: string;
   taskId: string;
+  isExtra?: boolean;
   assigneeNames?: string;
   taskName: string;
   taskStatusId: string;
@@ -1267,6 +1269,7 @@ interface MeetingResFire {
     isRecording?: boolean;
     recordingUserId: string;
     recordingTimestamp?: number;
+    layoutMode?:string;
   };
   timers: {
     agenda?: TimerEntry;
