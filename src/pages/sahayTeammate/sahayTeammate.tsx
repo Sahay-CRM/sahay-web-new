@@ -36,7 +36,7 @@ export default function SahayTeammate() {
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "Sahay Teammate / Consultant", href: "" }]);
+    setBreadcrumbs([{ label: "Support", href: "" }]);
   }, [setBreadcrumbs]);
 
   const userData = useSelector(getUserDetail);

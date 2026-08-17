@@ -83,6 +83,7 @@ import CommentModal from "./KpiCommentModal";
 // import KpiDetailsSheet from "./KpiDetailsSheet";
 import GraphModal from "./GraphModal/graphModal";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
+import EditDatapointAddFormModal from "../datapointList/EditDatapointFormModal/editDatapointAddFormModal";
 
 function formatToThreeDecimals(value: string | number | null | undefined) {
   if (value === null || value === undefined || value === "") return "";
@@ -162,7 +163,7 @@ function SortableKpiRow({
   showDragHandle = true,
   getFormattedValue,
   selectedPeriod,
-  // onRowClick,
+  onRowClick,
   graphClick,
   isMurgeKpi,
 }: SortableKpiRowProps) {
@@ -194,10 +195,12 @@ function SortableKpiRow({
         isMurgeKpi ? "bg-gray-100/80" : "",
       )}
       {...attributes}
-      // onClick={() => {
-      //   if (kpi.validationType === "YES_NO") return;
-      //   onRowClick?.(kpi);
-      // }}
+      onClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest(".cursor-grab") || target.closest("button")) return;
+        if (kpi?.isMurgeKpi) return;
+        onRowClick?.(kpi);
+      }}
     >
       <td className="py-3 w-[60px] h-[55px]">
         <div className="flex items-center gap-2 w-full h-full">
@@ -425,6 +428,8 @@ export default function UpdatedKpiTable() {
   const [isDataFilter, setIsDataFilter] = useState("default");
   const [commentModalOpen, setCommentModalOpen] = useState(false);
   const searchContainerRef = useRef<HTMLDivElement>(null);
+  const [editKpiId, setEditKpiId] = useState<string | null>(null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
 
   const urlSelectedPeriod = searchParams.get("selectedType");
   const [selectedPeriod, setSelectedPeriod] = useState(urlSelectedPeriod || "");
@@ -2294,7 +2299,10 @@ export default function UpdatedKpiTable() {
                                 showDragHandle={!!canDrag && !kpi.isFocus}
                                 getFormattedValue={getFormattedValue}
                                 selectedPeriod={selectedPeriod}
-                                // onRowClick={handleRowClick}
+                                onRowClick={(selectedKpi) => {
+                                  setEditKpiId(selectedKpi.kpiId);
+                                  setIsEditModalOpen(true);
+                                }}
                                 graphClick={(id: string) =>
                                   handleGraphClick(id)
                                 }
@@ -3200,6 +3208,17 @@ export default function UpdatedKpiTable() {
         kpiData={kpiD!}
         selectedPeriod={selectedPeriod}
       />
+      {isEditModalOpen && editKpiId && (
+        <EditDatapointAddFormModal
+          isModalOpen={isEditModalOpen}
+          modalClose={() => {
+            setIsEditModalOpen(false);
+            setEditKpiId(null);
+          }}
+          kpiId={editKpiId}
+          assignUserOnly={true}
+        />
+      )}
     </FormProvider>
   );
 }

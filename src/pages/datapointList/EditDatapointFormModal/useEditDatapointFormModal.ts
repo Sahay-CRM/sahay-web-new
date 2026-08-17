@@ -8,6 +8,7 @@ import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import { useDdNonSelectAllKpiList } from "@/features/api/KpiList";
 import { AxiosError } from "axios";
 import { toast } from "sonner";
+import { queryClient } from "@/queryClient";
 
 interface UseEditDatapointFormModalProps {
   modalClose: () => void;
@@ -152,6 +153,9 @@ export default function useEditDatapointFormModal({
       };
       addDatapoint(payload, {
         onSuccess: () => {
+          queryClient.invalidateQueries({
+            queryKey: ["get-kpi-dashboard-structure"],
+          });
           handleClose();
           setIsForceDelete(false);
         },
