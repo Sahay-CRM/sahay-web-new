@@ -519,6 +519,7 @@ const Urls = {
     `${baseUrl}/company/gantt/dependency/delete/${id}`,
   ganttDependencyListByWorkspace: (workspaceId: string) =>
     `${baseUrl}/company/gantt/dependency/get-by-workspace/${workspaceId}`,
+  ganttDependencyValidate: () => `${baseUrl}/company/gantt/dependency/validate`,
 
   // Admin Meeting Template Clone
   adminMeetingTemplateGetAll: () => `${baseUrl}/admin-meeting-template/get`,

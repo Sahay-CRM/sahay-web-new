@@ -12,7 +12,7 @@ import GanttPhaseManageModal from "./components/GanttPhaseManageModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SpinnerIcon } from "@/components/shared/Icons";
-import { ChevronLeft, Plus, Calendar, AlertCircle } from "lucide-react";
+import { ChevronLeft, Plus, Calendar, AlertCircle, TableProperties } from "lucide-react";
 import { fmtDate, WORKSPACE_STATUS_BG } from "./utils/gantt.utils";
 import type { CompanyGanttItem, CompanyGanttPhase } from "@/types/gantt";
 import { differenceInCalendarDays, startOfDay } from "date-fns";
@@ -204,6 +204,14 @@ export default function GanttWorkspaceDetailPage() {
 
           {/* Actions */}
           <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => navigate(`/dashboard/gantt/workspaces/${id}/table`)}
+              className="h-9 px-4 text-sm font-semibold flex items-center gap-1.5"
+            >
+              <TableProperties className="h-4 w-4" /> Alternate View
+            </Button>
             <Button
               variant="outline"
               size="sm"

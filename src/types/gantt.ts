@@ -140,6 +140,10 @@ export interface CompanyGanttItem {
   sourceTemplateItemId?: string | null;
   createdBy: string;
   isDelete: boolean;
+  lagDays?: number;
+  bufferDays?: number;
+  cascadeDelay?: boolean;
+  cascadeDelayDays?: number;
   children?: CompanyGanttItem[];
 }
 
@@ -150,6 +154,7 @@ export interface CompanyGanttDependency {
   successorItemId: string;
   dependencyType: GanttDependencyType;
   lagDays: number;
+  bufferDays?: number;
   createdBy: string;
   isDelete: boolean;
 }
@@ -250,6 +255,10 @@ export interface CreateGanttItemRequest {
   itemOrder?: number;
   color?: string;
   assignedToEmployeeId?: string[] | string | null;
+  lagDays?: number;
+  bufferDays?: number;
+  cascadeDelay?: boolean;
+  cascadeDelayDays?: number;
 }
 
 export interface UpdateGanttItemRequest {
@@ -262,6 +271,10 @@ export interface UpdateGanttItemRequest {
   assignedToEmployeeId?: string[] | string | null;
   actualStartDate?: string | null;
   actualEndDate?: string | null;
+  lagDays?: number;
+  bufferDays?: number;
+  cascadeDelay?: boolean;
+  cascadeDelayDays?: number;
 }
 
 export interface UpdateGanttProgressRequest {

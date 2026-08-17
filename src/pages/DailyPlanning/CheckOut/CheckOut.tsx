@@ -21,7 +21,7 @@ import { Label } from "@/components/ui/label";
 import ModalData from "@/components/shared/Modal/ModalData";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { format, subDays, addDays } from "date-fns";
-import { formatMinutesToHours } from "@/features/utils/formatting.utils";
+import { formatMinutesToHours, calculatePlannedMinutes } from "@/features/utils/formatting.utils";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getUserId, getUserDetail } from "@/features/selectors/auth.selector";
 import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
@@ -497,24 +497,7 @@ export default function CheckOut() {
             )
           );
 
-          let estTimeSec = (item.planTime !== undefined && item.planTime !== null) ? item.planTime : item.estimatedTime;
-          if (!estTimeSec && derivedType === "MEETING" && item.meeting?.meetingDateTime && item.meeting?.endDate) {
-            const start = new Date(item.meeting.meetingDateTime).getTime();
-            const end = new Date(item.meeting.endDate).getTime();
-            if (end > start) {
-              estTimeSec = Math.round((end - start) / 1000);
-            }
-          }
-
-          const isRepeatTask = item.isRepeat || !!item.task?.repetitiveTaskId;
-          let plannedMinutes = 0;
-          if (estTimeSec) {
-            if (derivedType === "MEETING" && !isDetailM) {
-              plannedMinutes = estTimeSec;
-            } else {
-              plannedMinutes = isRepeatTask ? estTimeSec : Math.round(estTimeSec / 60);
-            }
-          }
+          const plannedMinutes = calculatePlannedMinutes(item);
           
           // Check if this item already exists in the previous local items state
           const existingItem = prevItems.find((prev) => prev.id === item.planItemId);

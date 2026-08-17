@@ -185,6 +185,7 @@ interface GroupedCompanyMeetings {
       setValue("taskDeadline", validTaskDeadline);
       setValue("repeatType", t.repeatType || "");
       setValue("isActive", t.isActive ? "active" : "inactive");
+      setValue("isIndividual", t.isIndividual ? "individual" : "group");
       setValue("taskTypeId", t.taskTypeId || "");
       setValue("customObj", t.customObj || null);
       setValue(
@@ -211,6 +212,7 @@ interface GroupedCompanyMeetings {
       }
     } else {
       setValue("isActive", "active");
+      setValue("isIndividual", "individual");
       setSelectedRepeat("");
       setValue("hasDuration", false);
       setValue("durationHours", "");
@@ -233,6 +235,10 @@ interface GroupedCompanyMeetings {
       typeof data?.isActive === "string"
         ? data.isActive === "active"
         : !!data.isActive;
+    const isIndividualValue =
+      typeof data?.isIndividual === "string"
+        ? data.isIndividual === "individual"
+        : !!data.isIndividual;
     const assigneeIds =
       (data.assignUser as unknown as { employeeId: string }[])?.map(
         (user) => user.employeeId,
@@ -264,7 +270,7 @@ interface GroupedCompanyMeetings {
           taskDeadline: data.taskDeadline ? new Date(data.taskDeadline) : null,
           taskStatusId: data?.taskStatusId,
           isActive: isActiveValue,
-
+          isIndividual: isIndividualValue,
           taskTypeId: data?.taskTypeId,
           comment: data.comment,
           employeeIds: assigneeIds,
@@ -292,7 +298,7 @@ interface GroupedCompanyMeetings {
             : defaultDeadline,
           taskStatusId: data?.taskStatusId,
           isActive: isActiveValue,
-
+          isIndividual: isIndividualValue,
           taskTypeId: data?.taskTypeId,
           comment: data.comment,
           employeeIds: assigneeIds,
@@ -720,119 +726,125 @@ interface GroupedCompanyMeetings {
               )}
             </div>
 
-            <Controller
-              control={control}
-              name="repeatTime"
-              rules={{ required: "Time is required" }}
-              render={({ field, fieldState }) => (
-                <FormTimePicker
-                  label="Task Time"
-                  value={field.value}
-                  onChange={field.onChange}
-                  error={fieldState.error}
-                  isMandatory
-                />
-              )}
-            />
-
-            <Controller
-              control={control}
-              name="repeatType"
-              rules={{ required: "Please select Repetition Type" }}
-              render={({ field }) => {
-                const selectedRepeatLabel =
-                  repeatOptions.find((item) => item.value === selectedRepeat)
-                    ?.label ||
-                  (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
-
-                return (
-                  <>
-                    <Label>Repeat Type</Label>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <div className="flex items-center gap-2 px-3 py-2 cursor-pointer border rounded-md hover:bg-accent">
-                          <Repeat className="w-4 h-4" />
-                          <span>{selectedRepeatLabel}</span>
-                        </div>
-                      </DropdownMenuTrigger>
-
-                      <DropdownMenuContent align="start" className="w-fit">
-                        {repeatOptions.map((item) => {
-                          const isSelected = item.value === selectedRepeat;
-                          return (
-                            <DropdownMenuItem
-                              key={item.value}
-                              onClick={() => {
-                                if (item.value === "CUSTOMTYPE") {
-                                  setOpenCustomModal(true);
-                                } else {
-                                  field.onChange(item.value);
-                                  setSelectedRepeat(item.value);
-                                  setValue("customObj", undefined);
-                                  setCustomRepeatData(undefined);
-                                  setIsRepeatChange(true);
-                                }
-                              }}
-                              className={`flex items-center justify-between ${
-                                isSelected
-                                  ? "bg-accent text-accent-foreground"
-                                  : ""
-                              }`}
-                            >
-                              <span>{item.label}</span>
-                              {isSelected && <span className="ml-2">✔</span>}
-                            </DropdownMenuItem>
-                          );
-                        })}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-
-                    <CustomModalFile
-                      open={openCustomModal}
-                      multiSelectAllow={false}
-                      defaultValues={
-                        watch("customObj") ||
-                        CustomRepeatData ||
-                        taskDataById?.data?.customObj
-                      }
-                      onOpenChange={setOpenCustomModal}
-                      onSave={(data) => {
-                        field.onChange("CUSTOMTYPE");
-                        setSelectedRepeat("CUSTOMTYPE");
-                        setValue("customObj", data);
-                        handleSaveCustomRepeatData(data);
-                        setIsRepeatChange(true);
-                      }}
+            <div className="flex gap-4 items-start w-full">
+              <div className="w-[180px] shrink-0">
+                <Controller
+                  control={control}
+                  name="repeatTime"
+                  rules={{ required: "Time is required" }}
+                  render={({ field, fieldState }) => (
+                    <FormTimePicker
+                      label="Task Time"
+                      value={field.value}
+                      onChange={field.onChange}
+                      error={fieldState.error}
+                      isMandatory
                     />
+                  )}
+                />
+              </div>
 
-                    {errors.repeatType && (
-                      <p className="text-red-500 text-sm mt-1 before:content-['*']">
-                        {errors.repeatType.message as string}
-                      </p>
-                    )}
+              <div className="flex-1 min-w-0">
+                <Controller
+                  control={control}
+                  name="repeatType"
+                  rules={{ required: "Please select Repetition Type" }}
+                  render={({ field }) => {
+                    const selectedRepeatLabel =
+                      repeatOptions.find((item) => item.value === selectedRepeat)
+                        ?.label ||
+                      (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
 
-                    {hasUserChangedRepeat && repeatResult && isRepeatChange ? (
-                      <div className="flex gap-2 text-sm text-gray-700 col-span-2">
-                        <p>
-                          <strong>Create First Task:</strong>{" "}
-                          {formatToLocalDateTime(repeatResult.createDateUTC)}
-                        </p>
-                        <p>
-                          <strong>Next Task:</strong>{" "}
-                          {formatToLocalDateTime(repeatResult.nextDateUTC)}
-                        </p>
+                    return (
+                      <div className="flex flex-col gap-1 w-full">
+                        <Label className="mb-0.5">Repeat Type</Label>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <div className="flex items-center gap-2 px-3 h-9 cursor-pointer border rounded-md hover:bg-accent bg-white">
+                              <Repeat className="w-4 h-4 text-slate-500" />
+                              <span className="text-slate-800 text-sm font-medium">{selectedRepeatLabel}</span>
+                            </div>
+                          </DropdownMenuTrigger>
+
+                          <DropdownMenuContent align="start" className="w-fit">
+                            {repeatOptions.map((item) => {
+                              const isSelected = item.value === selectedRepeat;
+                              return (
+                                <DropdownMenuItem
+                                  key={item.value}
+                                  onClick={() => {
+                                    if (item.value === "CUSTOMTYPE") {
+                                      setOpenCustomModal(true);
+                                    } else {
+                                      field.onChange(item.value);
+                                      setSelectedRepeat(item.value);
+                                      setValue("customObj", undefined);
+                                      setCustomRepeatData(undefined);
+                                      setIsRepeatChange(true);
+                                    }
+                                  }}
+                                  className={`flex items-center justify-between ${
+                                    isSelected
+                                      ? "bg-accent text-accent-foreground"
+                                      : ""
+                                  }`}
+                                >
+                                  <span>{item.label}</span>
+                                  {isSelected && <span className="ml-2">✔</span>}
+                                </DropdownMenuItem>
+                              );
+                            })}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+
+                        <CustomModalFile
+                          open={openCustomModal}
+                          multiSelectAllow={false}
+                          defaultValues={
+                            watch("customObj") ||
+                            CustomRepeatData ||
+                            taskDataById?.data?.customObj
+                          }
+                          onOpenChange={setOpenCustomModal}
+                          onSave={(data) => {
+                            field.onChange("CUSTOMTYPE");
+                            setSelectedRepeat("CUSTOMTYPE");
+                            setValue("customObj", data);
+                            handleSaveCustomRepeatData(data);
+                            setIsRepeatChange(true);
+                          }}
+                        />
+
+                        {errors.repeatType && (
+                          <p className="text-red-500 text-sm mt-1 before:content-['*']">
+                            {errors.repeatType.message as string}
+                          </p>
+                        )}
                       </div>
-                    ) : taskdata?.nextDate ? (
-                      <div className="flex gap-2 text-sm text-gray-700 col-span-2">
-                        <p>
-                          <strong>Next Task:</strong> {oldDate}
-                        </p>
-                      </div>
-                    ) : null}
-                  </>
-                );
-              }}
-            />            
+                    );
+                  }}
+                />
+              </div>
+            </div>
+
+            {hasUserChangedRepeat && repeatResult && isRepeatChange ? (
+              <div className="flex gap-2 text-sm text-gray-700">
+                <p>
+                  <strong>Create First Task:</strong>{" "}
+                  {formatToLocalDateTime(repeatResult.createDateUTC)}
+                </p>
+                <p>
+                  <strong>Next Task:</strong>{" "}
+                  {formatToLocalDateTime(repeatResult.nextDateUTC)}
+                </p>
+              </div>
+            ) : taskdata?.nextDate ? (
+              <div className="flex gap-2 text-sm text-gray-700">
+                <p>
+                  <strong>Next Task:</strong> {oldDate}
+                </p>
+              </div>
+            ) : null}            
 
             <div className="flex gap-4">
               <div className="w-1/2">
@@ -879,6 +891,30 @@ interface GroupedCompanyMeetings {
                   )}
                 />
               </div>
+            </div>
+
+            <div className="flex gap-4">
+              <div className="w-1/2">
+                <Controller
+                  control={control}
+                  name="isIndividual"
+                  rules={{ required: "Please select Individual or Group task" }}
+                  render={({ field }) => (
+                    <FormSelect
+                      label="Individual / Group Task"
+                      options={[
+                        { label: "Individual Task", value: "individual" },
+                        { label: "Group Task", value: "group" },
+                      ]}
+                      error={errors.isIndividual}
+                      {...field}
+                      triggerClassName="py-3"
+                      isMandatory
+                    />
+                  )}
+                />
+              </div>
+              <div className="w-1/2" />
             </div>
           </div>
         </Card>

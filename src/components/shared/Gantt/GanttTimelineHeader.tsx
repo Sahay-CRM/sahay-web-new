@@ -28,10 +28,10 @@ export const GanttTimelineHeader = memo(function GanttTimelineHeader({
   );
 
   return (
-    <svg
+    <svg 
       width={totalWidth}
       height={HEADER_MONTH_H + HEADER_WEEK_H}
-      className="block bg-muted/20 max-w-none"
+      className="block bg-white max-w-none"
       style={{ minWidth: "100%" }}
     >
       {/* Top Header Row (e.g. Month Year or Year) */}

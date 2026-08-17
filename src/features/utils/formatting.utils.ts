@@ -367,3 +367,55 @@ export function formatMinutesToHours(minutes: number | null | undefined): string
   }
 }
 
+/**
+ * Calculates planned time in minutes for a DailyPlanItem,
+ * taking into account whether it's a task, meeting, repetitive task, or system-created.
+ */
+export function calculatePlannedMinutes(item: DailyPlanItem): number {
+  let derivedType = item.type;
+  if (!derivedType) {
+    if (item.meetingId || item.meeting) {
+      derivedType = "MEETING";
+    } else if (item.ganttItemId || item.gantItem) {
+      derivedType = "GANTT";
+    } else {
+      derivedType = "TASK";
+    }
+  }
+
+  const isRepeatTask = item.isRepeat || !!item.task?.repetitiveTaskId;
+  
+  const isDetailM = Boolean(
+    item.isDetailMeeting ||
+    (item.meetingId && 
+      (
+        item.meeting?.detailMeetingStatus || 
+        item.isJoinLiveMeeting === false || 
+        item.meeting?.isJoinLiveMeeting === false
+      )
+    )
+  );
+
+  let isTimeInMinutes = false;
+  if (item.createdBy === "SYSTEM") {
+    isTimeInMinutes = true;
+  } else if (isRepeatTask) {
+    isTimeInMinutes = true;
+  } else if (derivedType === "MEETING" && !isDetailM) {
+    isTimeInMinutes = true;
+  }
+
+  const rawTime = (item.planTime !== undefined && item.planTime !== null) ? item.planTime : (item.estimatedTime || 0);
+  let plannedMinutes = isTimeInMinutes ? rawTime : Math.round(rawTime / 60);
+
+  if (derivedType === "MEETING" && item.meeting?.meetingDateTime && item.meeting?.endDate) {
+    const start = new Date(item.meeting.meetingDateTime).getTime();
+    const end = new Date(item.meeting.endDate).getTime();
+    if (end > start) {
+      plannedMinutes = Math.round((end - start) / 60000);
+    }
+  }
+
+  return plannedMinutes;
+}
+

@@ -687,6 +687,7 @@ interface AddUpdateTask {
   ioType?: string;
   commentId?: string;
   duration?: number | null;
+  isIndividual?: boolean;
 }
 
 interface TaskGetPaging {
@@ -838,6 +839,7 @@ interface Task {
   deadlineRequest?: string;
   companyId?: string;
   duration?: number | null;
+  isIndividual?: boolean;
 }
 
 interface ProjectTask {
@@ -1739,6 +1741,7 @@ interface TaskPreviewData {
   taskDeadline: string;
   createDateUTC?: string;
   nextDateUTC?: string;
+  isIndividual?: string;
 }
 
 interface RequestMasterData {
@@ -2060,6 +2063,8 @@ interface DailyPlanItemMeetingRef {
   joiners?: (string | DailyPlanUserRef)[] | null;
   endDate?: string | null;
   detailMeetingStatus?: string | null;
+  isJoinLiveMeeting?: boolean;
+  
 }
 
 interface DailyPlanItemHistoryRecord {
@@ -2105,6 +2110,7 @@ interface DailyPlanItem {
   updatedDatetime?: string;
   forwardDate?: string | null;
   isDetailMeeting?:boolean | null;
+   isJoinLiveMeeting?: boolean;
 }
 
 interface DailyPlanTimeLog {
