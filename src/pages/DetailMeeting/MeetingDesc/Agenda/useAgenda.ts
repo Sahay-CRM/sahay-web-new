@@ -55,7 +55,6 @@ export const useAgenda = ({
   const meetStateRef = ref(db, `meetings/${meetingId}/state`);
   // const sidebarControl = useContext(SidebarControlContext);
   const userId = useSelector(getUserId);
-
   const [issueInput, setIssueInput] = useState("");
   const [editing, setEditing] = useState<EditingProps>({
     type: null,
@@ -73,7 +72,30 @@ export const useAgenda = ({
   // const [agendaList, setAgendaList] = useState<MeetingAgenda[]>([]);
   const [isSelectedAgenda, setIsSelectedAgenda] = useState<string>();
   const [isSideBar, setIsSideBar] = useState(false);
-  const [activeTab, setActiveTab] = useState<ActiveTab>("kpis");
+  const [activeTab, setActiveTab] = useState<ActiveTab>("tasks");
+  const [layoutMode, setLayoutMode] = useState<"stacked" | "tab">("tab");
+
+  const unFollowByUser = meetingResponse?.state.unfollow?.[userId] ?? false;
+
+  useEffect(() => {
+    if (meetingResponse && !unFollowByUser) {
+      const mode = (meetingResponse.state)?.layoutMode;
+      if (mode && (mode === "tab" || mode === "stacked")) {
+        setLayoutMode(mode);
+      }
+    }
+  }, [meetingResponse, unFollowByUser]);
+
+  const handleLayoutModeChange = async (mode: "stacked" | "tab") => {
+    setLayoutMode(mode);
+    if (!unFollowByUser) {
+      const stateRef = ref(db, `meetings/${meetingId}/state`);
+      await update(stateRef, {
+        layoutMode: mode,
+      });
+    }
+  };
+
   const [selectedItem, setSelectedItem] = useState<AgendaResConclusion | null>(
     null,
   );
@@ -83,9 +105,6 @@ export const useAgenda = ({
     useState<string>("UNRESOLVED");
   const [selectedIoType, setSelectedIoType] = useState("ISSUE");
   const [ioType, setIoType] = useState("");
-  // const unFollowId = meetingResponse?.state.unfollow;
-
-  const unFollowByUser = meetingResponse?.state.unfollow?.[userId] ?? false;
 
   const { data: agendaList } = useGetDetailMeetingAgenda({
     filter: {
@@ -164,10 +183,13 @@ export const useAgenda = ({
   const isSameIo =
     meetingResponse?.state.currentAgendaItemId === isSelectedAgenda;
 
+  const isConclusionOrEnded =
+    meetingStatus === "CONCLUSION" || meetingStatus === "ENDED";
+
   const { data: detailAgendaData } = useGetDetailMeetingAgendaIssue({
     filter: {
       issueObjectiveId:
-        meetingStatus !== "ENDED" && !unFollowByUser
+        !isConclusionOrEnded && !unFollowByUser
           ? meetingResponse?.state.currentAgendaItemId
           : isSelectedAgenda,
       ...(ioType === "ISSUE"
@@ -183,9 +205,10 @@ export const useAgenda = ({
           }),
       ioType: ioType,
     },
-    enable:
-      (isSameIo && !!meetingResponse?.state.currentAgendaItemId) ||
-      (unFollowByUser && !!ioType && !!isSelectedAgenda),
+    enable: isConclusionOrEnded
+      ? (!!ioType && !!isSelectedAgenda)
+      : (isSameIo && !!meetingResponse?.state.currentAgendaItemId) ||
+        (unFollowByUser && !!ioType && !!isSelectedAgenda),
   });
 
   useEffect(() => {
@@ -781,8 +804,28 @@ export const useAgenda = ({
     const meetingRef = ref(db, `meetings/${meetingId}`);
     const meetingSnapshot = await get(meetingRef);
 
+    if (meetingStatus === "ENDED" || meetingStatus === "CONCLUSION") {
+      const io =
+        agendaList?.find((item) => item.issueObjectiveId === issueObjectiveId)
+          ?.ioType || "";
+
+      setIsSelectedAgenda(issueObjectiveId);
+      setIoType(io);
+      queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
+      queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
+      queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
+
+      if (!isUnFollow) {
+        await update(ref(db), {
+          [`meetings/${meetingId}/state/currentAgendaItemId`]: issueObjectiveId,
+          [`meetings/${meetingId}/state/lastSwitchTimestamp`]: now,
+        }).catch(() => {});
+      }
+      return;
+    }
+
     if (
-      (meetingStatus === "DISCUSSION" || meetingStatus === "CONCLUSION") &&
+      meetingStatus === "DISCUSSION" &&
       meetingSnapshot.exists() &&
       !isUnFollow
     ) {
@@ -843,6 +886,7 @@ export const useAgenda = ({
     if (isUnFollow) {
       const io =
         (meetingStatus !== "ENDED" &&
+          meetingStatus !== "CONCLUSION" &&
           agendaList?.find((item) => item.issueObjectiveId === issueObjectiveId)
             ?.ioType) ||
         "";
@@ -852,20 +896,17 @@ export const useAgenda = ({
       queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
       queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
       queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
-    } else if (meetingStatus === "ENDED") {
-      const io =
-        agendaList?.find((item) => item.issueObjectiveId === issueObjectiveId)
-          ?.ioType || "";
-
-      setIsSelectedAgenda(issueObjectiveId);
-      setIoType(io);
-      queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
-      queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
-      queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
     }
   };
   const tasksFireBase = () => {
-    if (meetingResponse?.state.status === "DISCUSSION" && isSelectedAgenda) {
+    queryClient.invalidateQueries({ queryKey: ["get-meeting-tasks-res"] });
+    queryClient.invalidateQueries({ queryKey: ["get-detailMeetingAgendaIssue"] });
+
+    if (
+      (meetingResponse?.state.status === "DISCUSSION" ||
+        meetingResponse?.state.status === "CONCLUSION") &&
+      isSelectedAgenda
+    ) {
       const db = database;
       const meetTaskRef = ref(
         db,
@@ -873,12 +914,19 @@ export const useAgenda = ({
       );
       update(meetTaskRef, {
         updatedAt: Date.now(),
-      });
+      }).catch(() => {});
     }
   };
 
   const projectsFireBase = () => {
-    if (meetingResponse?.state.status === "DISCUSSION" && isSelectedAgenda) {
+    queryClient.invalidateQueries({ queryKey: ["get-meeting-Project-res"] });
+    queryClient.invalidateQueries({ queryKey: ["get-detailMeetingAgendaIssue"] });
+
+    if (
+      (meetingResponse?.state.status === "DISCUSSION" ||
+        meetingResponse?.state.status === "CONCLUSION") &&
+      isSelectedAgenda
+    ) {
       const db = database;
       const meetTaskRef = ref(
         db,
@@ -886,12 +934,19 @@ export const useAgenda = ({
       );
       update(meetTaskRef, {
         updatedAt: Date.now(),
-      });
+      }).catch(() => {});
     }
   };
 
   const kpisFireBase = () => {
-    if (meetingResponse?.state.status === "DISCUSSION" && isSelectedAgenda) {
+    queryClient.invalidateQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
+    queryClient.invalidateQueries({ queryKey: ["get-detailMeetingAgendaIssue"] });
+
+    if (
+      (meetingResponse?.state.status === "DISCUSSION" ||
+        meetingResponse?.state.status === "CONCLUSION") &&
+      isSelectedAgenda
+    ) {
       const db = database;
       const meetTaskRef = ref(
         db,
@@ -899,7 +954,7 @@ export const useAgenda = ({
       );
       update(meetTaskRef, {
         updatedAt: Date.now(),
-      });
+      }).catch(() => {});
     }
   };
 
@@ -1296,5 +1351,7 @@ export const useAgenda = ({
     handleDragEnd,
     unFollowByUser,
     createIssueLoading,
+    layoutMode,
+    handleLayoutModeChange,
   };
 };

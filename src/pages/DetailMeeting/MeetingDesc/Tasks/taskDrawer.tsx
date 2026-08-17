@@ -51,6 +51,7 @@ interface TaskDrawerProps {
   issueId?: string;
   tasksFireBase: () => void;
   ioType?: string;
+  isExtra?: boolean;
 }
 
 export default function TaskDrawer({
@@ -60,6 +61,7 @@ export default function TaskDrawer({
   issueId,
   tasksFireBase,
   ioType,
+  isExtra,
 }: TaskDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -326,6 +328,7 @@ export default function TaskDrawer({
             : {}),
 
         ioType: data.ioType,
+        ...(isExtra ? { isExtra: true } : {}),
       };
 
       addUpdateTask(payload, {

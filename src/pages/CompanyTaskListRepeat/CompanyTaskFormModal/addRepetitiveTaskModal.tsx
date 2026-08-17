@@ -84,6 +84,15 @@ const AddDatapointModal: React.FC<DatapointModalProps> = ({
           {modalData.project?.projectName || "-"}
         </div>
 
+        <div>
+          <span className="font-medium text-primary">Individual/Group Task:</span>{" "}
+          {modalData.isIndividual === "individual"
+            ? "Individual Task"
+            : modalData.isIndividual === "group"
+              ? "Group Task"
+              : "-"}
+        </div>
+
         {/* <div>
           <span className="font-medium text-gray-700">Start Date:</span>{" "}
           <span className="text-black font-bold">

@@ -463,6 +463,9 @@ function GanttBar({
   const x = dateToX(new Date(itemStart), timelineStart, dayWidth);
   const width = durationToWidth(durationDays, dayWidth);
   const progressWidth = (item.progressPercentage / 100) * width;
+  const lagWidth = item.lagDays ? durationToWidth(Number(item.lagDays), dayWidth) : 0;
+  const bufferWidth = item.bufferDays ? durationToWidth(Number(item.bufferDays), dayWidth) : 0;
+  const endX = x + width + bufferWidth;
 
   const taskTooltip = (
     <div className="text-xs space-y-1 text-slate-200">
@@ -487,6 +490,24 @@ function GanttBar({
         <span className="text-slate-500 font-medium mr-1">Status:</span>
         {item.itemStatus.replace("_", " ")} ({item.progressPercentage}%)
       </div>
+      {item.lagDays !== undefined && Number(item.lagDays) > 0 && (
+        <div className="text-[11px] text-amber-400 font-medium">
+          <span className="text-slate-500 font-medium mr-1">Lag Days:</span>
+          {item.lagDays}d
+        </div>
+      )}
+      {item.bufferDays !== undefined && Number(item.bufferDays) > 0 && (
+        <div className="text-[11px] text-emerald-450 font-medium">
+          <span className="text-slate-500 font-medium mr-1">Buffer Days:</span>
+          {item.bufferDays}d
+        </div>
+      )}
+      {item.cascadeDelayDays !== undefined && Number(item.cascadeDelayDays) > 0 && (
+        <div className="text-[11px] text-rose-400 font-medium">
+          <span className="text-slate-500 font-medium mr-1">Cascade Delay:</span>
+          +{item.cascadeDelayDays}d
+        </div>
+      )}
     </div>
   );
 
@@ -499,6 +520,20 @@ function GanttBar({
           onClick={() => onItemClick(item)}
           className="cursor-pointer group"
         >
+          {/* Lag segment (Amber) */}
+          {lagWidth > 0 && (
+            <rect
+              x={x - lagWidth}
+              y={barY}
+              width={lagWidth}
+              height={BAR_HEIGHT}
+              rx={4}
+              ry={4}
+              fill="#f59e0b"
+              opacity={0.8}
+            />
+          )}
+
           {/* Solid bar background */}
           <rect
             x={x}
@@ -524,6 +559,21 @@ function GanttBar({
               opacity={0.25}
             />
           )}
+
+          {/* Buffer segment (Emerald) */}
+          {bufferWidth > 0 && (
+            <rect
+              x={x + width}
+              y={barY}
+              width={bufferWidth}
+              height={BAR_HEIGHT}
+              rx={4}
+              ry={4}
+              fill="#10b981"
+              opacity={0.8}
+            />
+          )}
+
           {/* Progress text inside bar */}
           {width >= 50 && (
             <text
@@ -540,10 +590,10 @@ function GanttBar({
                 : `${durationDays}d`}
             </text>
           )}
-
+ 
           {/* Text label outside bar - task name */}
           <text
-            x={x + width + 6}
+            x={endX + 6}
             y={barY + BAR_HEIGHT / 2 + 4}
             fontSize={12}
             fontWeight={600}
@@ -553,10 +603,13 @@ function GanttBar({
             fill="none"
             className="select-none pointer-events-none opacity-90"
           >
-            {item.itemName} ({item.progressPercentage}%)
+            {`${item.itemName} (${item.progressPercentage}%)` +
+              (item.lagDays && Number(item.lagDays) > 0 ? ` [Lag: ${item.lagDays}d]` : "") +
+              (item.bufferDays && Number(item.bufferDays) > 0 ? ` [Buffer: ${item.bufferDays}d]` : "") +
+              (item.cascadeDelayDays && Number(item.cascadeDelayDays) > 0 ? ` [+${item.cascadeDelayDays}d Delay]` : "")}
           </text>
           <text
-            x={x + width + 6}
+            x={endX + 6}
             y={barY + BAR_HEIGHT / 2 + 4}
             fontSize={12}
             fontWeight={600}
@@ -566,6 +619,21 @@ function GanttBar({
             <tspan className="fill-slate-400 font-medium" fontSize={10}>
               ({item.progressPercentage}%)
             </tspan>
+            {item.lagDays !== undefined && Number(item.lagDays) > 0 && (
+              <tspan className="fill-amber-600 font-semibold" fontSize={10}>
+                {" "}[Lag: {item.lagDays}d]
+              </tspan>
+            )}
+            {item.bufferDays !== undefined && Number(item.bufferDays) > 0 && (
+              <tspan className="fill-emerald-600 font-semibold" fontSize={10}>
+                {" "}[Buffer: {item.bufferDays}d]
+              </tspan>
+            )}
+            {item.cascadeDelayDays !== undefined && Number(item.cascadeDelayDays) > 0 && (
+              <tspan className="fill-rose-500 font-bold" fontSize={10}>
+                {" "}[+{item.cascadeDelayDays}d Delay]
+              </tspan>
+            )}
           </text>
         </g>
       </TooltipTrigger>

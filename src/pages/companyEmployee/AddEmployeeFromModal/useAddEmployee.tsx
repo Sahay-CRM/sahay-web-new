@@ -510,8 +510,9 @@ export default function useAddEmployee() {
     });
 
     const { data: allEmpData, isLoading } = getEmployee({
-      filter: paginationFilter,
+      filter: { ...paginationFilter, isDeactivated: false },
     });
+
     const [columnToggleOptions, setColumnToggleOptions] = useState([
       { key: "srNo", label: "Sr No", visible: true },
       { key: "employeeName", label: "Reporting Manager", visible: true },

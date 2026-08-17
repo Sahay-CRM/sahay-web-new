@@ -1,6 +1,7 @@
 import { useMemo, useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { format, subDays, addDays } from "date-fns";
+import { calculatePlannedMinutes } from "@/features/utils/formatting.utils";
 
 import { getUserId, getUserDetail, getUserPermission } from "@/features/selectors/auth.selector";
 import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
@@ -101,27 +102,8 @@ export default function useCheckIn() {
         derivedType = "GANTT";
       }
 
-      // Calculate estimatedTime in seconds from meeting if meeting
-      let estTimeSec = (item.planTime !== undefined && item.planTime !== null) ? item.planTime : item.estimatedTime;
-      if (derivedType === "MEETING" && item.meeting?.meetingDateTime && item.meeting?.endDate) {
-        const start = new Date(item.meeting.meetingDateTime).getTime();
-        const end = new Date(item.meeting.endDate).getTime();
-        if (end > start) {
-          estTimeSec = Math.round((end - start) / 1000);
-        }
-      }
-
-      const isRepeatTask = item.isRepeat || !!item.task?.repetitiveTaskId;
       const isDetailMeeting = Boolean(item.isDetailMeeting || (item.meetingId && item.meeting?.detailMeetingStatus));
-
-      let estTimeMins = 0;
-      if (estTimeSec) {
-        if (derivedType === "MEETING" && !isDetailMeeting) {
-          estTimeMins = estTimeSec;
-        } else {
-          estTimeMins = isRepeatTask ? estTimeSec : Math.round(estTimeSec / 60);
-        }
-      }
+      const estTimeMins = calculatePlannedMinutes(item);
 
       return {
         ...item,

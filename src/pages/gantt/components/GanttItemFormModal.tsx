@@ -2,6 +2,13 @@ import { Controller, useForm } from "react-hook-form";
 import ModalData from "@/components/shared/Modal/ModalData";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import FormSelect from "@/components/shared/Form/FormSelect/FormSelect";
+import SearchDropdown from "@/components/shared/Form/SearchDropdown/searchDropdown";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
 import { useQuery } from "@tanstack/react-query";
 import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
@@ -65,6 +72,9 @@ interface FormValues {
   priority: string;
   color: string;
   assignedToEmployeeId: string[];
+  lagDays: number | string;
+  bufferDays: number | string;
+  cascadeDelayDays: number | string;
 }
 
 export default function GanttItemFormModal({
@@ -113,6 +123,9 @@ export default function GanttItemFormModal({
       assignedToEmployeeId: editItem?.assignedToEmployeeId
         ? parseAssignees(editItem.assignedToEmployeeId)
         : [],
+      lagDays: editItem ? (editItem.lagDays || "") : "",
+      bufferDays: editItem ? (editItem.bufferDays || "") : "",
+      cascadeDelayDays: editItem ? (editItem.cascadeDelayDays || "") : "",
     },
   });
 
@@ -153,6 +166,9 @@ export default function GanttItemFormModal({
           ganttPhaseId: values.ganttPhaseId || null,
           color: values.color,
           assignedToEmployeeId: values.assignedToEmployeeId.length > 0 ? values.assignedToEmployeeId : null,
+          lagDays: values.lagDays !== "" && values.lagDays !== undefined && values.lagDays !== null ? Number(values.lagDays) : undefined,
+          bufferDays: values.bufferDays !== "" && values.bufferDays !== undefined && values.bufferDays !== null ? Number(values.bufferDays) : undefined,
+          cascadeDelayDays: values.cascadeDelayDays !== "" && values.cascadeDelayDays !== undefined && values.cascadeDelayDays !== null ? Number(values.cascadeDelayDays) : undefined,
         }),
         updateDatesMutation.mutateAsync({
           itemId: editItem.ganttItemId,
@@ -175,6 +191,9 @@ export default function GanttItemFormModal({
         priority: values.priority as CompanyGanttItem["priority"],
         color: values.color,
         assignedToEmployeeId: values.assignedToEmployeeId.length > 0 ? values.assignedToEmployeeId : null,
+        lagDays: values.lagDays !== "" && values.lagDays !== undefined && values.lagDays !== null ? Number(values.lagDays) : undefined,
+        bufferDays: values.bufferDays !== "" && values.bufferDays !== undefined && values.bufferDays !== null ? Number(values.bufferDays) : undefined,
+        cascadeDelayDays: values.cascadeDelayDays !== "" && values.cascadeDelayDays !== undefined && values.cascadeDelayDays !== null ? Number(values.cascadeDelayDays) : undefined,
       });
     }
     reset();
@@ -185,6 +204,20 @@ export default function GanttItemFormModal({
     value: p.ganttPhaseId,
     label: p.phaseName,
   }));
+
+  const selectedAssigneeIds = watch("assignedToEmployeeId") || [];
+  const selectedAssignees = (employees ?? []).filter((emp) =>
+    selectedAssigneeIds.includes(emp.employeeId),
+  );
+
+  const getInitials = (name?: string) => {
+    if (!name) return "";
+    const parts = name.trim().split(/\s+/);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   const isPending =
     createMutation.isPending ||
@@ -199,7 +232,7 @@ export default function GanttItemFormModal({
         reset();
         onOpenChange(false);
       }}
-      containerClass="max-w-md"
+      containerClass="min-w-[40%] max-h-[85vh]"
       buttons={[
         {
           btnText: "Cancel",
@@ -218,98 +251,37 @@ export default function GanttItemFormModal({
       ]}
     >
       <div className="space-y-4 pt-1">
-        <Controller
-          name="itemName"
-          control={control}
-          rules={{ required: "Item name is required" }}
-          render={({ field }) => (
-            <FormInputField
-              {...field}
-              label="Item Name"
-              placeholder="e.g. Data Gathering"
-              isMandatory
-              error={errors.itemName}
-            />
-          )}
-        />
-
-        <Controller
-          name="itemDescription"
-          control={control}
-          render={({ field }) => (
-            <FormInputField
-              {...field}
-              label="Description"
-              placeholder="Optional"
-            />
-          )}
-        />
-
+        {/* Task Name & Description */}
         <div className="grid grid-cols-2 gap-4">
           <Controller
-            name="itemType"
+            name="itemName"
             control={control}
+            rules={{ required: "Item name is required" }}
             render={({ field }) => (
-              <FormSelect
-                label="Type"
-                value={field.value}
-                onChange={field.onChange}
-                options={[
-                  { value: "TASK", label: "Task" },
-                  { value: "MILESTONE", label: "Milestone" },
-                ]}
+              <FormInputField
+                {...field}
+                label="Item Name"
+                placeholder="e.g. Data Gathering"
+                isMandatory
+                error={errors.itemName}
               />
             )}
           />
 
           <Controller
-            name="priority"
+            name="itemDescription"
             control={control}
             render={({ field }) => (
-              <FormSelect
-                label="Priority"
-                value={field.value}
-                onChange={field.onChange}
-                options={PRIORITY_OPTIONS}
+              <FormInputField
+                {...field}
+                label="Description"
+                placeholder="Optional Description"
               />
             )}
           />
         </div>
 
-        {phases.length > 0 && (
-          <Controller
-            name="ganttPhaseId"
-            control={control}
-            render={({ field }) => (
-              <FormSelect
-                label="Phase"
-                value={field.value ?? ""}
-                onChange={field.onChange}
-                options={phaseOptions}
-                placeholder="Select phase (optional)"
-              />
-            )}
-          />
-        )}
-
-        <Controller
-          name="assignedToEmployeeId"
-          control={control}
-          render={({ field }) => (
-            <FormSelect
-              label="Assignees"
-              value={field.value}
-              onChange={field.onChange}
-              options={(employees ?? []).map((emp) => ({
-                value: emp.employeeId,
-                label: emp.employeeName,
-              }))}
-              isMulti={true}
-              placeholder={employeesLoading ? "Loading employees..." : "Select employees (optional)"}
-            />
-          )}
-        />
-
+        {/* Start & End Date */}
         <div className="grid grid-cols-2 gap-4">
           <Controller
             name="plannedStartDate"
@@ -344,28 +316,218 @@ export default function GanttItemFormModal({
           />
         </div>
 
-        <Controller
-          name="color"
-          control={control}
-          render={({ field }) => (
-            <div className="space-y-2">
-              <label className="text-xs font-semibold text-slate-700 uppercase tracking-wider block">
-                Item Color
-              </label>
-              <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={field.value}
-                  onChange={(e) => field.onChange(e.target.value)}
-                  className="w-10 h-10 p-0 border border-slate-300 rounded-lg cursor-pointer overflow-hidden [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:border-none"
+        {/* Type, Priority, Phase */}
+        <div className="grid grid-cols-3 gap-4">
+          <Controller
+            name="itemType"
+            control={control}
+            render={({ field }) => (
+              <FormSelect
+                label="Type"
+                value={field.value}
+                onChange={field.onChange}
+                options={[
+                  { value: "TASK", label: "Task" },
+                  { value: "MILESTONE", label: "Milestone" },
+                ]}
+              />
+            )}
+          />
+
+          <Controller
+            name="priority"
+            control={control}
+            render={({ field }) => (
+              <FormSelect
+                label="Priority"
+                value={field.value}
+                onChange={field.onChange}
+                options={PRIORITY_OPTIONS}
+              />
+            )}
+          />
+
+          {phases.length > 0 ? (
+            <Controller
+              name="ganttPhaseId"
+              control={control}
+              render={({ field }) => (
+                <FormSelect
+                  label="Phase"
+                  value={field.value ?? ""}
+                  onChange={field.onChange}
+                  options={phaseOptions}
+                  placeholder="Select phase"
                 />
-                <span className="text-sm font-mono uppercase text-slate-600">
-                  {field.value}
-                </span>
-              </div>
-            </div>
+              )}
+            />
+          ) : (
+            <div />
           )}
-        />
+        </div>
+
+        {/* Assignees and Avatar Initials Row */}
+        <div className="flex items-end gap-4 pt-1 w-full">
+          <div className="w-[45%] shrink-0">
+            <Controller
+              name="assignedToEmployeeId"
+              control={control}
+              render={({ field }) => (
+                <SearchDropdown
+                  label="Assignees"
+                  selectedValues={field.value || []}
+                  onSelect={(item) => {
+                    const employeeId = item.value;
+                    const prev = field.value || [];
+                    if (prev.includes(employeeId)) {
+                      field.onChange(prev.filter((id) => id !== employeeId));
+                    } else {
+                      field.onChange([...prev, employeeId]);
+                    }
+                  }}
+                  options={(employees ?? []).map((emp) => ({
+                    value: emp.employeeId,
+                    label: emp.employeeName,
+                  }))}
+                  multiSelect={true}
+                  placeholder={employeesLoading ? "Loading..." : "Select employees..."}
+                  isSearchable={true}
+                  isCrossShow={false}
+                />
+              )}
+            />
+          </div>
+          {selectedAssignees.length > 0 && (
+            <TooltipProvider delayDuration={100}>
+              <div className="flex-1 flex -space-x-2 overflow-hidden pb-1 items-center min-w-0">
+                {selectedAssignees.length <= 10 ? (
+                  selectedAssignees.map((emp) => (
+                    <Tooltip key={emp.employeeId}>
+                      <TooltipTrigger asChild>
+                        <div className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-primary/10 text-primary text-xs font-bold ring-offset-background cursor-help shrink-0">
+                          {getInitials(emp.employeeName)}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-slate-900 text-white border-slate-900 shadow-md">
+                        <p className="text-xs font-medium">{emp.employeeName}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  ))
+                ) : (
+                  <>
+                    {selectedAssignees.slice(0, 9).map((emp) => (
+                      <Tooltip key={emp.employeeId}>
+                        <TooltipTrigger asChild>
+                          <div className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-primary/10 text-primary text-xs font-bold ring-offset-background cursor-help shrink-0">
+                            {getInitials(emp.employeeName)}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent className="bg-slate-900 text-white border-slate-900 shadow-md">
+                          <p className="text-xs font-medium">{emp.employeeName}</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    ))}
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="inline-flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-slate-100 text-slate-700 text-xs font-bold ring-offset-background cursor-help shrink-0">
+                          +{selectedAssignees.length - 9}
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent className="bg-slate-900 text-white border-slate-900 shadow-md p-2.5 max-h-60 overflow-y-auto z-[99999]">
+                        <div className="space-y-1">
+                          <p className="text-xs font-bold border-b border-slate-700/60 pb-1 mb-1">Remaining Assignees:</p>
+                          {selectedAssignees.slice(9).map((emp) => (
+                            <p key={emp.employeeId} className="text-xs font-medium">
+                              • {emp.employeeName}
+                            </p>
+                          ))}
+                        </div>
+                      </TooltipContent>
+                    </Tooltip>
+                  </>
+                )}
+              </div>
+            </TooltipProvider>
+          )}
+        </div>
+
+        {/* Color and Lag, Buffer, Cascade Delay Days Row */}
+        <div className="grid grid-cols-4 gap-4 items-end">
+          <Controller
+            name="color"
+            control={control}
+            render={({ field }) => (
+              <div className="space-y-1.5">
+                <label className="text-[12px] font-semibold text-slate-700 uppercase tracking-wider block">
+                  Color
+                </label>
+                <div className="flex items-center gap-2">
+                  <div className="relative shrink-0">
+                    <input
+                      type="color"
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value)}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+                    <div
+                      className="w-10 h-10 rounded-lg border border-slate-200 shadow-sm"
+                      style={{ backgroundColor: field.value }}
+                    />
+                  </div>
+                  <input
+                    type="text"
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    className="w-full h-10 px-2 border border-slate-200 rounded-lg text-sm font-mono uppercase focus:outline-none bg-white text-slate-800"
+                    placeholder="#HEX"
+                  />
+                </div>
+              </div>
+            )}
+          />
+
+          <Controller
+            name="lagDays"
+            control={control}
+            render={({ field }) => (
+              <FormInputField
+                {...field}
+                type="number"
+                label="Lag (Days)"
+                placeholder="0"
+                onChange={(e) => field.onChange(e.target.value)}
+              />
+            )}
+          />
+
+          <Controller
+            name="bufferDays"
+            control={control}
+            render={({ field }) => (
+              <FormInputField
+                {...field}
+                type="number"
+                label="Buffer (Days)"
+                placeholder="0"
+                onChange={(e) => field.onChange(e.target.value)}
+              />
+            )}
+          />
+
+          <Controller
+            name="cascadeDelayDays"
+            control={control}
+            render={({ field }) => (
+              <FormInputField
+                {...field}
+                type="number"
+                label="Cascade Delay Days"
+                placeholder="0"
+                onChange={(e) => field.onChange(e.target.value)}
+              />
+            )}
+          />
+        </div>
       </div>
     </ModalData>
   );

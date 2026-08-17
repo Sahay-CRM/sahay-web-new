@@ -12,7 +12,6 @@ import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
   Info,
-  LaptopMinimal,
   LogOut,
   User2Icon,
   Smartphone,
@@ -626,7 +625,7 @@ const DashboardLayout = () => {
                     </DropdownMenuGroup>
                     <DropdownMenuSeparator />
                     {/* {isCompanyView && ( */}
-                    {permission && permission.COMPANY_PROFILE.View && (
+                    {/* {permission && permission.COMPANY_PROFILE.View && (
                       <>
                         <DropdownMenuGroup>
                           <DropdownMenuItem
@@ -639,7 +638,7 @@ const DashboardLayout = () => {
                         </DropdownMenuGroup>
                         <DropdownMenuSeparator />
                       </>
-                    )}
+                    )} */}
 
                     <DropdownMenuItem onClick={() => setLogoutModalOpen(true)}>
                       <LogOut /> Log out

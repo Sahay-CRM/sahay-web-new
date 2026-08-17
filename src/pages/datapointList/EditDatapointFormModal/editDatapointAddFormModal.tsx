@@ -14,12 +14,14 @@ interface UseEditDatapointFormModalProps {
   modalClose: () => void;
   isModalOpen: boolean;
   kpiId: string;
+  assignUserOnly?: boolean;
 }
 
 export default function EditDatapointAddFormModal({
   isModalOpen,
   modalClose,
   kpiId,
+  assignUserOnly = false,
 }: UseEditDatapointFormModalProps) {
   const enableEmpTags = false;
   const {
@@ -99,6 +101,7 @@ export default function EditDatapointAddFormModal({
             render={({ field }) => (
               <SearchDropdown
                 options={allKpi}
+                disabled={assignUserOnly}
                 selectedValues={field.value ? [field.value] : []}
                 onSelect={(value) => {
                   field.onChange(value.value);
@@ -137,6 +140,7 @@ export default function EditDatapointAddFormModal({
                 className={hasData ? "rounded-md" : ""}
                 isMandatory
                 triggerClassName="py-4"
+                disabled={assignUserOnly}
               />
             )}
           />
@@ -163,6 +167,7 @@ export default function EditDatapointAddFormModal({
                 className="rounded-md"
                 isMandatory
                 triggerClassName="py-4"
+                disabled={assignUserOnly}
               />
             )}
           />
@@ -189,7 +194,7 @@ export default function EditDatapointAddFormModal({
                     error={errors.visualFrequencyTypes}
                     isMulti={true}
                     placeholder="Select visual frequency types"
-                    disabled={false}
+                    disabled={assignUserOnly}
                     key={
                       selectedFrequency + "-" + (watch("coreParameterId") || "")
                     }
@@ -209,7 +214,7 @@ export default function EditDatapointAddFormModal({
                       options={sumAveOptions}
                       error={errors.visualFrequencyAggregate}
                       placeholder="Select visual frequency Aggregate"
-                      disabled={false}
+                      disabled={assignUserOnly}
                       triggerClassName="py-4"
                     />
                   )}
@@ -242,6 +247,7 @@ export default function EditDatapointAddFormModal({
             label="Tag"
             placeholder="Enter Tag"
             {...register(`tag`)}
+            disabled={assignUserOnly}
             error={errors?.tag}
           />
           {enableEmpTags && (
@@ -255,6 +261,7 @@ export default function EditDatapointAddFormModal({
                     value={field.value || []}
                     onChange={field.onChange}
                     placeholder="Type tag and press Enter or comma"
+                    disabled={assignUserOnly}
                     error={errors?.empTags as { message?: string }}
                   />
                 )}
@@ -278,12 +285,6 @@ export default function EditDatapointAddFormModal({
                         <FormInputField
                           label="Goal Value 1"
                           isMandatory
-                          // value={field.value || ""}
-                          // onChange={(e) => field.onChange(e.target.value)} // store raw input
-                          // onBlur={() => {
-                          //   const formatted = formatIndianNumber(field.value);
-                          //   field.onChange(formatted);
-                          // }}
                           placeholder="Enter Goal Value 1"
                           value={formatIndianNumberWithDecimal(field.value)}
                           onChange={(e) => {
@@ -292,6 +293,7 @@ export default function EditDatapointAddFormModal({
                               .replace(/[^0-9.]/g, "");
                             field.onChange(raw);
                           }}
+                          disabled={assignUserOnly}
                           error={fieldState.error}
                         />
                       )}
@@ -300,6 +302,7 @@ export default function EditDatapointAddFormModal({
                       label="Unit"
                       placeholder="Enter Unit"
                       {...register(`unit`)}
+                      disabled={assignUserOnly}
                     />
                   </div>
                 )}
@@ -323,6 +326,7 @@ export default function EditDatapointAddFormModal({
                                 .replace(/[^0-9.]/g, "");
                               field.onChange(raw);
                             }}
+                            disabled={assignUserOnly}
                             error={fieldState.error}
                           />
                         )}
@@ -344,6 +348,7 @@ export default function EditDatapointAddFormModal({
                                 .replace(/[^0-9.]/g, "");
                               field.onChange(raw);
                             }}
+                            disabled={assignUserOnly}
                             error={fieldState.error}
                           />
                         )}
@@ -353,6 +358,7 @@ export default function EditDatapointAddFormModal({
                       label="Unit"
                       placeholder="Enter Unit"
                       {...register(`unit`)}
+                      disabled={assignUserOnly}
                     />
                   </>
                 )}
@@ -372,6 +378,7 @@ export default function EditDatapointAddFormModal({
                           isMandatory
                           value={field.value?.value ?? field.value ?? ""}
                           onChange={field.onChange}
+                          disabled={assignUserOnly}
                         />
                       )}
                     />
