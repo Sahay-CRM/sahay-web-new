@@ -12,6 +12,7 @@ interface KpisSearchDropdownProps {
   dropdownClassName?: string;
   inputClassName?: string;
   placeholder?: string;
+  addedKpiIds?: Set<string>;
 }
 
 const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
@@ -22,6 +23,7 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
   dropdownClassName = "",
   inputClassName = "",
   placeholder = "Add kpis in meeting",
+  addedKpiIds,
 }) => {
   const [searchValue, setSearchValue] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -59,6 +61,7 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
 
   // On item click logic
   const handleSelect = (item: KpiAllList) => {
+    if (addedKpiIds?.has(item.kpiId)) return;
     onAdd(item);
     setShowDropdown(false);
     setSearchValue("");
@@ -95,21 +98,34 @@ const KpisSearchDropdown: React.FC<KpisSearchDropdownProps> = ({
             <div className="p-2 text-center text-gray-500">No Kpis found</div>
           ) : (
             <ul>
-              {kpisList.map((item) => (
-                <li
-                  key={item.kpiId}
-                  className="flex items-center px-2 py-1 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleSelect(item)}
-                >
-                  {renderData ? (
-                    renderData(item, false)
-                  ) : (
-                    <span>
-                      {item.KPIName} - {item.tag}
-                    </span>
-                  )}
-                </li>
-              ))}
+              {kpisList.map((item) => {
+                const isAdded = addedKpiIds?.has(item.kpiId) ?? false;
+                return (
+                  <li
+                    key={item.kpiId}
+                    className={`flex items-center justify-between gap-2 px-2 py-1 ${
+                      isAdded
+                        ? "cursor-not-allowed text-gray-400"
+                        : "hover:bg-gray-100 cursor-pointer"
+                    }`}
+                    onClick={() => handleSelect(item)}
+                  >
+                    {renderData ? (
+                      renderData(item, isAdded)
+                    ) : (
+                      <span>
+                        {item.KPIName}
+                        {item.tag ? ` - ${item.tag}` : ""}
+                      </span>
+                    )}
+                    {isAdded && (
+                      <span className="text-xs text-gray-400 shrink-0">
+                        Already added
+                      </span>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>

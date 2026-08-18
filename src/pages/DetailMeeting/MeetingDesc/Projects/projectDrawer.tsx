@@ -53,6 +53,7 @@ interface ProjectDrawerProps {
   onProjectCreated?: (project: CompanyProjectDataProps) => void;
   defaultProjectName?: string;
   isExtra?: boolean;
+  joiners?: Joiners[];
 }
 
 export default function ProjectDrawer({
@@ -65,6 +66,7 @@ export default function ProjectDrawer({
   onProjectCreated,
   defaultProjectName,
   isExtra,
+  joiners,
 }: ProjectDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -136,6 +138,8 @@ export default function ProjectDrawer({
 
   const deadlineVal = rawProjectDeadline || projectData?.projectDeadline;
 
+  const defaultAssignees = (joiners || []).map((j) => j.employeeId);
+
   const defaultValues = projectData
     ? {
         projectId: projectData.projectId || "",
@@ -161,7 +165,7 @@ export default function ProjectDrawer({
         projectStatusId: "",
         coreParameterId: "",
         subParameterId: [],
-        employeeId: [],
+        employeeId: defaultAssignees,
         ioId: issueId || "",
         ioType: ioType || "",
       };
@@ -215,11 +219,11 @@ export default function ProjectDrawer({
       }))
     : [];
   useEffect(() => {
-    if (open && projectData) {
+    if (open) {
       reset(defaultValues);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, projectData]);
+  }, [open, projectData, defaultProjectName, joiners]);
 
   // useEffect(() => {
   //   function handleClickOutside(event: MouseEvent) {
@@ -416,6 +420,7 @@ export default function ProjectDrawer({
               {...register("projectName", {
                 required: "Project Name is required",
               })}
+              placeholder="Project Name"
               error={errors.projectName}
             />
             <FormInputField
@@ -423,6 +428,7 @@ export default function ProjectDrawer({
               {...register("projectDescription", {
                 required: "Description is required",
               })}
+              placeholder="Project Description"
               error={errors.projectDescription}
             />
             <Controller
@@ -435,31 +441,46 @@ export default function ProjectDrawer({
                 },
               }}
               render={({ field }) => {
-                const localDate = field.value
+                const getValidDate = (val: string | Date | null | undefined) => {
+                  if (!val) return null;
+                  const date = new Date(val);
+                  return isNaN(date.getTime()) ? null : date;
+                };
+
+                const validDate = getValidDate(field.value);
+                const localDate = validDate
                   ? new Date(
-                      new Date(field.value).getTime() +
+                      validDate.getTime() +
                         new Date().getTimezoneOffset() * 60000,
                     )
                   : null;
 
                 return (
-                  <FormDateTimePicker
-                    label="Project Deadline"
-                    value={localDate}
-                    isMandatory
-                    onChange={(date) => {
-                      const utcDate = date
-                        ? new Date(
-                            date.getTime() - date.getTimezoneOffset() * 60000,
-                          )
-                        : null;
-                      field.onChange(utcDate);
-                    }}
-                    error={errors.projectDeadline}
-                    disablePastDays={
-                      Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
-                    }
-                  />
+                  <div>
+                    <FormDateTimePicker
+                      label="Project Deadline"
+                      value={localDate}
+                      isMandatory
+                      onChange={(date) => {
+                        const utcDate = date
+                          ? new Date(
+                              date.getTime() - date.getTimezoneOffset() * 60000,
+                            )
+                          : null;
+                        field.onChange(utcDate);
+                      }}
+                      error={errors.projectDeadline}
+                      disabled={projectData?.deadlineRequest === "PENDING"}
+                      disablePastDays={
+                        Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                      }
+                    />
+                    {projectData?.deadlineRequest === "PENDING" && (
+                      <p className="text-xs text-primary mt-1">
+                        Deadline change request is pending approval
+                      </p>
+                    )}
+                  </div>
                 );
               }}
             />
@@ -580,9 +601,9 @@ export default function ProjectDrawer({
             <Button
               type="button"
               onClick={onConfirmSubmit}
-              disabled={!reasons.trim()}
+              disabled={!reasons.trim() || isPending}
             >
-              Confirm
+              {isPending ? "Confirming..." : "Confirm"}
             </Button>
           </DialogFooter>
         </DialogContent>

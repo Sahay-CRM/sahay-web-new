@@ -13,6 +13,8 @@ interface MeetingAgendaIssue {
   detailMeetingAgendaIssueId?: string;
   actualTime?: string;
   plannedTime?: string;
+  isPriority?: boolean;
+  ioType?: string;
 }
 
 type DatePaging = CommonResponse<MeetingAgendaIssue>;

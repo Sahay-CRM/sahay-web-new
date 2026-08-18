@@ -41,6 +41,7 @@ interface TasksProps {
   isTeamLeader?: boolean | undefined;
   headerLeft?: React.ReactNode;
   isExtra?: boolean;
+  joiners?: Joiners[];
 }
 
 export default function Tasks({
@@ -51,6 +52,7 @@ export default function Tasks({
   isTeamLeader,
   headerLeft,
   isExtra,
+  joiners,
 }: TasksProps) {
   const { id: meetingId } = useParams();
   const { data: taskStatus } = useGetAllTaskStatus({
@@ -62,6 +64,7 @@ export default function Tasks({
 
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selected, setSelected] = useState<TaskGetPaging | null>(null);
+  const [initialTaskName, setInitialTaskName] = useState("");
 
   const { data: selectedTask, isLoading: isTaskLoading } = useGetMeetingTask({
     filter: {
@@ -203,6 +206,7 @@ export default function Tasks({
   );
 
   const handleAddTask = () => {
+    setInitialTaskName("");
     setDrawerOpen(true);
     setSelected(null);
   };
@@ -222,6 +226,11 @@ export default function Tasks({
                 onAdd={handleAddTasks}
                 minSearchLength={2}
                 filterProps={{ pageSize: 20 }}
+                onEnterPress={(value) => {
+                  setInitialTaskName(value);
+                  setSelected(null);
+                  setDrawerOpen(true);
+                }}
               />
               <Button className="py-2 w-fit" onClick={handleAddTask}>
                 Add Company Task
@@ -277,6 +286,7 @@ export default function Tasks({
         // }}
         onRowClick={(row) => {
           if (row) {
+            setInitialTaskName("");
             setSelected(row);
             setDrawerOpen(true);
           }
@@ -337,6 +347,8 @@ export default function Tasks({
           tasksFireBase={tasksFireBase}
           ioType={ioType}
           isExtra={isExtra}
+          initialTaskName={initialTaskName}
+          joiners={joiners}
         />
       )}
     </div>

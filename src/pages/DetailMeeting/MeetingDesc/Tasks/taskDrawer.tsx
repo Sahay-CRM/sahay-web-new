@@ -52,6 +52,8 @@ interface TaskDrawerProps {
   tasksFireBase: () => void;
   ioType?: string;
   isExtra?: boolean;
+  initialTaskName?: string;
+  joiners?: Joiners[];
 }
 
 export default function TaskDrawer({
@@ -62,6 +64,8 @@ export default function TaskDrawer({
   tasksFireBase,
   ioType,
   isExtra,
+  initialTaskName,
+  joiners,
 }: TaskDrawerProps) {
   const { id: meetingId } = useParams();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -74,7 +78,7 @@ export default function TaskDrawer({
   const [isConfModalOpen, setIsConfModalOpen] = useState(false);
   const [reasons, setReasons] = useState("");
   const { data: taskStatus } = useGetAllTaskStatus({ filter: {} });
-  const { mutate: addUpdateTask } = addUpdateCompanyTaskMutation();
+  const { mutate: addUpdateTask, isPending } = addUpdateCompanyTaskMutation();
   const [savedPayload, setSavedPayload] = useState<
     Parameters<typeof addUpdateTask>[0] | null
   >(null);
@@ -151,6 +155,8 @@ export default function TaskDrawer({
     .slice()
     .sort((a, b) => (a.taskStatusOrder || 0) - (b.taskStatusOrder || 0))[0];
 
+  const defaultAssignees = (joiners || []).map((j) => j.employeeId);
+
   const defaultValues = taskData
     ? {
         taskName: taskData.taskName || "",
@@ -166,12 +172,12 @@ export default function TaskDrawer({
         ioType: ioType || "",
       }
     : {
-        taskName: "",
-        taskDescription: "",
+        taskName: initialTaskName || "",
+        taskDescription: initialTaskName || "",
         taskStatusId: defaultTaskStatus?.taskStatusId || "",
         taskTypeId: "",
         projectId: "",
-        assignUsers: [],
+        assignUsers: defaultAssignees,
         taskStartDate: null,
         taskDeadline: null,
         ioId: issueId || "",
@@ -211,13 +217,13 @@ export default function TaskDrawer({
     }
   }, [setValue, taskData, defaultTaskStatus]);
 
-  // Reset form when taskData changes
+  // Reset form when taskData or initialTaskName changes
   useEffect(() => {
-    if (open && taskData) {
+    if (open) {
       reset(defaultValues);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, taskData]);
+  }, [open, taskData, initialTaskName, joiners]);
 
   // useEffect(() => {
   //   function handleClickOutside(event: MouseEvent) {
@@ -412,7 +418,7 @@ export default function TaskDrawer({
 
             <FormInputField
               label="Task Name"
-              placeholder="Task Name"
+              placeholder="Enter Task Name"
               {...register("taskName", {
                 required: "Task Name is required",
               })}
@@ -423,7 +429,9 @@ export default function TaskDrawer({
               control={control}
               name="taskDescription"
               render={({ field }) => (
-                <FormInputField label="Description" {...field} />
+                <FormInputField 
+                label="Description" 
+                placeholder="Enter Description" {...field} />
               )}
             />
             <Controller
@@ -507,6 +515,7 @@ export default function TaskDrawer({
             <Controller
               control={control}
               name="taskDeadline"
+              rules={{ required: "Task Dedline is required " }}
               render={({ field }) => (
                 <FormDateTimePicker
                   label="Task Deadline"
@@ -516,15 +525,17 @@ export default function TaskDrawer({
                   disablePastDays={
                     Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
                   }
+                  isMandatory
                 />
               )}
             />
 
             <button
               type="submit"
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80 cursor-pointer"
+              disabled={isPending}
+              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
-              Submit
+              {isPending ? "Submitting..." : "Submit"}
             </button>
           </form>
         </div>
@@ -564,9 +575,9 @@ export default function TaskDrawer({
             <Button
               type="button"
               onClick={onConfirmSubmit}
-              disabled={!reasons.trim()}
+              disabled={!reasons.trim() || isPending}
             >
-              Confirm
+              {isPending ? "Confirming..." : "Confirm"}
             </Button>
           </DialogFooter>
         </DialogContent>

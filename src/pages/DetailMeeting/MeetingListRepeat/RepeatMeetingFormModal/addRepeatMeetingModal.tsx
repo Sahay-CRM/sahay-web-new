@@ -19,6 +19,7 @@ export interface MeetingData {
   repetitiveMeetingId?: string;
   createDateUTC?: string;
   nextDateUTC?: string;
+  perAgendaTime?: number;
 }
 
 interface MeetingModalProps {
@@ -131,6 +132,22 @@ const AddRepeatMeetingModal: React.FC<MeetingModalProps> = ({
           <div>
             <span className="font-medium text-primary">Repeat Time: </span>
             {formatTo12Hour(modalData.repeatTime)}
+          </div>
+        )}
+
+        {/* Per Agenda Time */}
+        {modalData?.perAgendaTime && (
+          <div>
+            <span className="font-medium text-primary">Per Agenda Time: </span>
+            {(() => {
+              const totalMinutes = Number(modalData.perAgendaTime);
+              if (isNaN(totalMinutes)) return String(modalData.perAgendaTime);
+              const hr = Math.floor(totalMinutes / 60);
+              const min = totalMinutes % 60;
+              const hrText = hr > 0 ? `${hr} hr` : "";
+              const minText = min > 0 ? `${min} min` : "";
+              return [hrText, minText].filter(Boolean).join(" ") || "0 min";
+            })()}
           </div>
         )}
         {/* Employee List */}

@@ -436,32 +436,47 @@ export default function ProjectDrawer({
                 },
               }}
               render={({ field }) => {
-                const localDate = field.value
+                const getValidDate = (val: string | Date | null | undefined) => {
+                  if (!val) return null;
+                  const date = new Date(val);
+                  return isNaN(date.getTime()) ? null : date;
+                };
+
+                const validDate = getValidDate(field.value);
+                const localDate = validDate
                   ? new Date(
-                      new Date(field.value).getTime() +
+                      validDate.getTime() +
                         new Date().getTimezoneOffset() * 60000,
                     )
                   : null;
 
                 return (
-                  <FormDateTimePicker
-                    label="Project Deadline"
-                    value={localDate}
-                    isMandatory
-                    onChange={(date) => {
-                      const utcDate = date
-                        ? new Date(
-                            date.getTime() - date.getTimezoneOffset() * 60000,
-                          )
-                        : null;
-                      field.onChange(utcDate);
-                    }}
-                    error={errors.projectDeadline}
-                    disablePastDays={
-                      Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
-                    }
-                    portalId=""
-                  />
+                  <div>
+                    <FormDateTimePicker
+                      label="Project Deadline"
+                      value={localDate}
+                      isMandatory
+                      onChange={(date) => {
+                        const utcDate = date
+                          ? new Date(
+                              date.getTime() - date.getTimezoneOffset() * 60000,
+                            )
+                          : null;
+                        field.onChange(utcDate);
+                      }}
+                      error={errors.projectDeadline}
+                      disabled={projectData?.deadlineRequest === "PENDING"}
+                      disablePastDays={
+                        Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                      }
+                      portalId=""
+                    />
+                    {projectData?.deadlineRequest === "PENDING" && (
+                      <p className="text-xs text-primary mt-1">
+                        Deadline change request is pending approval
+                      </p>
+                    )}
+                  </div>
                 );
               }}
             />

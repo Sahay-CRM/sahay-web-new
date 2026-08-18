@@ -65,7 +65,7 @@ export default function useAddDetailMeeting() {
             ? [
                 {
                   ...userDetail,
-                  isTeamLeader: false,
+                  isTeamLeader: true,
                 },
               ]
             : [],

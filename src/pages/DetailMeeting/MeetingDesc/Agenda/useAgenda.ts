@@ -282,6 +282,31 @@ export const useAgenda = ({
     }
   };
 
+  const handleTogglePriority = (issueObjectiveId: string) => {
+    if (!meetingId) return;
+    const agendaItem = agendaList?.find((item) => item.issueObjectiveId === issueObjectiveId);
+    
+    if (!agendaItem) return;
+
+    const payload = {
+      detailMeetingAgendaIssueId: issueObjectiveId,
+      ioType: agendaItem.ioType,
+      isPriority: !agendaItem.isPriority,
+    };
+
+    addIssueAgenda(payload, {
+      onSuccess: async () => {
+        const meetingRef = ref(db, `meetings/${meetingId}`);
+        const meetingSnapshot = await get(meetingRef);
+        if (meetingSnapshot.exists()) {
+          update(meetStateRef, {
+            updatedAt: Date.now(),
+          });
+        }
+      },
+    });
+  };
+
   // const handleStartMeetingWithSidebar = () => {
   //   if (sidebarControl?.setOpen) {
   //     sidebarControl.setOpen(false);
@@ -720,11 +745,23 @@ export const useAgenda = ({
         },
         {
           onSuccess: () => {
+            const unresolvedAgendas = agendaList.filter(
+              (item) => item.type === "UNRESOLVED" || !item.type
+            );
+            const priorityAgendas = unresolvedAgendas.filter(
+              (item) => item.isPriority === true
+            );
+            const firstAgendaId = priorityAgendas.length > 0
+              ? priorityAgendas[0].issueObjectiveId
+              : unresolvedAgendas.length > 0
+                ? unresolvedAgendas[0].issueObjectiveId
+                : agendaList[0].issueObjectiveId;
+
             update(meetStateRef, {
               activeTab: "DISCUSSION",
               lastSwitchTimestamp: Date.now(),
               status: "DISCUSSION",
-              currentAgendaItemId: agendaList[0].issueObjectiveId,
+              currentAgendaItemId: firstAgendaId,
             });
             update(meetAgendaRef, {
               actualTime: String(totalAgendaTime),
@@ -1260,7 +1297,38 @@ export const useAgenda = ({
     const { active, over } = event;
     if (over && active.id !== over.id) {
       const draggedId = String(active.id);
-      const dropIndex = Number(over?.data?.current?.sortable?.index) + 1;
+
+      const draggedItem = agendaList?.find((item) => item.issueObjectiveId === draggedId);
+      const overItem = agendaList?.find((item) => item.issueObjectiveId === String(over.id));
+
+      if (draggedItem && overItem) {
+        const isDraggedPriority = draggedItem.isPriority === true;
+        const isOverPriority = overItem.isPriority === true;
+
+        if (isDraggedPriority !== isOverPriority) {
+          return;
+        }
+      }
+
+      const filteredList = (agendaList || [])
+        .filter((data) => resolutionFilter === data.type)
+        .sort((a, b) => {
+          const seqA = a.sequence;
+          const seqB = b.sequence;
+          if (seqA === null || seqA === undefined) {
+            if (seqB === null || seqB === undefined) return 0;
+            return 1;
+          }
+          if (seqB === null || seqB === undefined) {
+            return -1;
+          }
+          return seqA - seqB;
+        });
+
+      const overIndex = filteredList.findIndex(
+        (item) => item.issueObjectiveId === over.id,
+      );
+      const dropIndex = overIndex !== -1 ? overIndex + 1 : 1;
 
       const ioType = agendaList?.find(
         (item) => item.issueObjectiveId === draggedId,
@@ -1328,6 +1396,7 @@ export const useAgenda = ({
     projectsFireBase,
     tasksFireBase,
     handleStartMeeting,
+    handleTogglePriority,
     isPending,
     handleCloseMeetingWithLog,
     endMeetingLoading,

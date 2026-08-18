@@ -11,6 +11,7 @@ interface ProjectSearchDropdownProps {
   renderData?: (task: IProjectFormData, checked: boolean) => React.ReactNode;
   dropdownClassName?: string;
   inputClassName?: string;
+  onEnterPress?: (value: string) => void;
 }
 
 export default function ProjectSearchDropdown({
@@ -20,6 +21,7 @@ export default function ProjectSearchDropdown({
   renderData,
   dropdownClassName = "",
   inputClassName = "",
+  onEnterPress,
 }: ProjectSearchDropdownProps) {
   const [searchValue, setSearchValue] = useState("");
   const [showDropdown, setShowDropdown] = useState(false);
@@ -64,7 +66,7 @@ export default function ProjectSearchDropdown({
   };
 
   return (
-    <div className="relative w-80 z-50" ref={inputRef}>
+    <div className="relative w-80 z-30" ref={inputRef}>
       <div className="relative h-10 w-full max-w-sm">
         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground w-4 h-4">
           <SearchIcon />
@@ -76,6 +78,14 @@ export default function ProjectSearchDropdown({
           onChange={(e) => {
             setSearchValue(e.target.value);
             setShowDropdown(e.target.value.length >= minSearchLength);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && searchValue.trim() !== "") {
+              e.preventDefault();
+              onEnterPress?.(searchValue);
+              setShowDropdown(false);
+              setSearchValue("");
+            }
           }}
           className={`pl-8 pr-2 w-full h-10 py-2 text-sm ${inputClassName}`}
         />

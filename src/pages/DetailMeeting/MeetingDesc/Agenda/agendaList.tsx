@@ -9,6 +9,7 @@ import {
   SquarePen,
   Unlink,
 } from "lucide-react";
+import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 
 import Timer from "../Timer";
 
@@ -45,6 +46,10 @@ export default function AgendaList({
   isTeamLeader,
   isUnFollow,
   meetingTime,
+  perAgendaTime,
+  hasPriorityAgenda,
+  handleTogglePriority,
+  isSetPriorityMode,
 }: AgendaListProps) {
   const {
     attributes,
@@ -59,12 +64,32 @@ export default function AgendaList({
   const [showTimeAlert, setShowTimeAlert] = useState(false);
   const canEdit = true;
   const userData = useSelector(getUserDetail);
+  const isPriority = item?.isPriority === true;
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
   };
   const itemRef = useRef<HTMLLIElement | null>(null);
+
+  const textRef = useRef<HTMLDivElement>(null);
+  const [isTruncated, setIsTruncated] = useState(false);
+
+  const checkTruncation = () => {
+    const el = textRef.current;
+    if (el) {
+      setIsTruncated(el.scrollHeight > el.clientHeight);
+    }
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(checkTruncation, 100);
+    window.addEventListener("resize", checkTruncation);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("resize", checkTruncation);
+    };
+  }, [item?.name, meetingStatus]);
 
   const setRefs = (node: HTMLLIElement | null) => {
     setNodeRef(node);
@@ -83,7 +108,11 @@ export default function AgendaList({
   useEffect(() => {
     if (!meetingResponse?.timers?.objectives || !meetingTime || !item) return;
 
-    const totalTime = Number(meetingTime) || 0;
+    let totalTime = Number(meetingTime) || 0;
+    if (hasPriorityAgenda && perAgendaTime && perAgendaTime > 0) {
+      totalTime = perAgendaTime * 60;
+    }
+
     const redThreshold = totalTime * 0.33;
 
     const objectiveData =
@@ -95,7 +124,7 @@ export default function AgendaList({
       // 33% alert border
       setIsOverTime(currentTime >= redThreshold);
     }
-  }, [meetingResponse?.timers?.objectives, item, meetingTime]);
+  }, [meetingResponse?.timers?.objectives, item, meetingTime, hasPriorityAgenda, perAgendaTime]);
 
   const formatAgendaTime = (totalSeconds: number) => {
     if (!totalSeconds || isNaN(totalSeconds)) {
@@ -181,7 +210,11 @@ export default function AgendaList({
   };
 
   const handleAgendaTimeUpdate = (currentTime: number) => {
-    const totalTime = Number(meetingTime) || 0;
+    let totalTime = Number(meetingTime) || 0;
+    if (hasPriorityAgenda && perAgendaTime && perAgendaTime > 0) {
+      totalTime = perAgendaTime * 60;
+    }
+
     if (totalTime === 0) return;
 
     const redThreshold = totalTime * 0.33;
@@ -199,17 +232,27 @@ export default function AgendaList({
     <div className="py-1 px-1">
       <li
         key={item.issueObjectiveId}
+        id={item.issueObjectiveId}
         ref={setRefs}
+        data-priority={isPriority}
         className={`group px-2 flex border w-full 
-        ${item.departmentName && "pt-2"} 
-                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-16 bg-white text-black" : "h-20"}
-                ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : ""}
+                ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-16 text-black" : "h-20"}
+                ${
+                  isSelectedAgenda === item.issueObjectiveId
+                    ? "bg-primary text-white"
+                    : "bg-white text-black"
+                }
                 mb-2 rounded-md shadow
                 ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "cursor-default" : "cursor-pointer"}
               ${
                 isOverTime
                   ? "border-gray-200  outline-2 outline-red-600 outline-offset-2"
                   : "border-gray-200"
+              }
+              ${
+                isSelectedAgenda !== item.issueObjectiveId && isPriority
+                  ? "border-l-4 border-l-primary"
+                  : ""
               }
         `}
         onClick={() => {
@@ -230,6 +273,8 @@ export default function AgendaList({
           alignItems: "center",
           justifyContent: "space-between",
           position: "relative",
+          paddingTop: "20px",
+          paddingBottom: "8px",
           ...style,
         }}
       >
@@ -268,6 +313,27 @@ export default function AgendaList({
             {(idx || 0) + 1}
           </span>
 
+          {/* Priority Checkbox (only visible in Set Priority mode) */}
+          {isSetPriorityMode && (
+            <div onClick={(e) => e.stopPropagation()} className="mr-2 shrink-0 flex items-center">
+              <FormCheckbox
+                id={`${item.issueObjectiveId}-priority-checkbox`}
+                className="w-[18px] h-[18px]"
+                containerClass="p-0"
+                checked={isPriority}
+                onChange={() => {
+                  if (handleTogglePriority) {
+                    handleTogglePriority(item.issueObjectiveId);
+                  }
+                }}
+                disabled={
+                  !(meetingStatus === "NOT_STARTED" || meetingStatus === "STARTED") ||
+                  !(isTeamLeader || userData?.isSuperAdmin)
+                }
+              />
+            </div>
+          )}
+
           {editing?.issueObjectiveId === item.issueObjectiveId && canEdit ? (
             <div className="w-full flex items-center gap-1 relative">
               <div className="relative w-[92%] flex gap-2 items-center">
@@ -296,21 +362,41 @@ export default function AgendaList({
             </div>
           ) : (
             <div className="w-full flex items-center">
-              <div
-                className={`text-sm ${
-                  meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED"
-                    ? "w-full pr-2 h-14 flex items-center"
-                    : "w-full min-w-48"
-                } overflow-hidden line-clamp-3 ${
-                  meetingStatus !== "STARTED" &&
-                  meetingStatus !== "NOT_STARTED" &&
-                  isSelectedAgenda === item.issueObjectiveId
-                    ? "text-white"
-                    : "text-black"
-                }`}
-              >
-                {item.name}
-              </div>
+              {(() => {
+                const textContent = (
+                  <div
+                    ref={textRef}
+                    className={`text-sm ${
+                      meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED"
+                        ? "w-full pr-2 h-14 flex items-center"
+                        : "w-full min-w-48"
+                    } overflow-hidden line-clamp-3 ${
+                      meetingStatus !== "STARTED" &&
+                      meetingStatus !== "NOT_STARTED" &&
+                      isSelectedAgenda === item.issueObjectiveId
+                        ? "text-white"
+                        : "text-black"
+                    }`}
+                  >
+                    {item.name}
+                  </div>
+                );
+
+                return isTruncated ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        {textContent}
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs break-words  text-white border border-primary/20 shadow-md">
+                        <p>{item.name}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  textContent
+                );
+              })()}
             </div>
           )}
         </div>
@@ -382,7 +468,7 @@ export default function AgendaList({
             {(userData?.employeeType === "CONSULTANT" ||
               (isTeamLeader && meetingStatus !== "NOT_STARTED")) && (
               <div
-                className={`absolute -right-[2px] rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-0" : "h-[70px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
+                className={`absolute -right-[2px] top-1/2 -translate-y-1/2 rounded-md w-fit flex justify-center items-center opacity-0 group-hover:opacity-100 transition-opacity ${meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED" ? "h-[40px] px-0" : "h-[60px]"} content-center ${isSelectedAgenda === item.issueObjectiveId ? "bg-primary text-white" : "bg-white"}`}
               >
                 <div className="">
                   {editing?.issueObjectiveId !== item.issueObjectiveId &&

@@ -268,6 +268,7 @@ export default function MeetingDesc() {
             meetingResponse={meetingResponse}
             joiners={meetingTiming?.joiners as Joiners[]}
             meetingTime={meetingTiming?.meetingTimePlanned}
+            perAgendaTime={meetingTiming?.perAgendaTime}
             isTeamLeader={isTeamLeader}
             isSuperAdmin={!!isSuperAdmin}
             isBellRing={handleRing}

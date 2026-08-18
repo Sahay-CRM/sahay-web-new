@@ -56,6 +56,7 @@ export default function useAddRepeatMeetingForm() {
         customObj: data.customObj,
         isActive: data.isActive,
         nextDate: data.nextDate,
+        perAgendaTime: data.perAgendaTime ? Number(data.perAgendaTime) : 0,
       });
       if (data.customObj) {
         setCustomRepeatData(data.customObj);
@@ -96,6 +97,7 @@ export default function useAddRepeatMeetingForm() {
           customObj: data.customObj,
           isChildDataKey: data.additionalKey,
           isActive: data.isActive,
+          perAgendaTime: data.perAgendaTime ? Number(data.perAgendaTime) : 0,
         }
       : {
           meetingName: data?.meetingName,
@@ -114,6 +116,7 @@ export default function useAddRepeatMeetingForm() {
           repeatType: data.repeatType,
           customObj: data.customObj,
           isActive: true,
+          perAgendaTime: data.perAgendaTime ? Number(data.perAgendaTime) : 0,
         };
 
     addDetailMeeting(payload, {
@@ -169,6 +172,7 @@ export default function useAddRepeatMeetingForm() {
     watchedRepeatType,
     watchedCustomObj,
     watchedJoiners,
+    watchedPerAgendaTime,
   ] = watch([
     "meetingName",
     "meetingDescription",
@@ -177,6 +181,7 @@ export default function useAddRepeatMeetingForm() {
     "repeatType",
     "customObj",
     "employeeId",
+    "perAgendaTime",
   ]);
 
   const isFormDirty = (() => {
@@ -240,6 +245,9 @@ export default function useAddRepeatMeetingForm() {
     const teamLeadersChanged =
       originalTLIds.join(",") !== currentTLIds.join(",");
 
+    const perAgendaTimeChanged =
+      Number(watchedPerAgendaTime || 0) !== Number(meetingApiData.perAgendaTime || 0);
+
     return (
       nameChanged ||
       descChanged ||
@@ -248,7 +256,8 @@ export default function useAddRepeatMeetingForm() {
       repeatTypeChanged ||
       customObjChanged ||
       joinersListChanged ||
-      teamLeadersChanged
+      teamLeadersChanged ||
+      perAgendaTimeChanged
     );
   })();
 

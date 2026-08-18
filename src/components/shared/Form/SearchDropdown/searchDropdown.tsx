@@ -106,9 +106,20 @@ const SearchDropdown = ({
   return (
     <div className={twMerge("relative w-full", className)}>
       {label && (
-        <FormLabel className={twMerge("mb-4 block", labelClass)}>
-          {label} {isMandatory && <span className="text-red-500">*</span>}
-        </FormLabel>
+        <div className="flex items-center justify-between mb-4">
+          <FormLabel className={twMerge("mb-0", labelClass)}>
+            {label} {isMandatory && <span className="text-red-500">*</span>}
+          </FormLabel>
+          {onAddNew && (
+            <button
+              type="button"
+              className="text-[#2f328e] hover:text-[#1e205e] font-semibold text-xs transition-colors duration-200 cursor-pointer"
+              onClick={() => onAddNew("")}
+            >
+              + Add {label}
+            </button>
+          )}
+        </div>
       )}
 
       <Popover open={open} onOpenChange={setOpen}>
@@ -304,6 +315,7 @@ const SearchDropdown = ({
               </div>
             )}
           </div>
+
         </PopoverContent>
       </Popover>
 
