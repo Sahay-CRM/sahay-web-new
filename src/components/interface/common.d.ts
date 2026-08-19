@@ -32,6 +32,7 @@ interface DesignationData {
   companyName: string;
   isParentDesignation?: boolean;
   isOwner?: boolean;
+  isForceChange?: boolean;
 }
 // kk
 interface DesignationAddFormProps {
@@ -1392,6 +1393,7 @@ interface IssuesProps {
   isDelete?: boolean;
   type?: string | null;
   totalTime?: string;
+  isPriority?: boolean;
 }
 
 interface UseIssuesFormModalProps {
@@ -1418,6 +1420,7 @@ interface ObjectiveProps {
   isDelete?: boolean;
   type?: string | null;
   totalTime?: string;
+  isPriority?: boolean;
 }
 interface UpdateItem {
   srNo: number;

@@ -29,12 +29,15 @@ function DesignationAddFormModal({
     useDesignationDropdownOptions(departmentId);
 
   // Get handleSubmit and loading state
-  const { handleSubmit: submitHandler, isLoading } = useDesignationFormSubmit(
-    () => {
-      methods.reset();
-      modalClose();
-    },
-  );
+  const {
+    handleSubmit: submitHandler,
+    isLoading,
+    isChildData,
+    setIsChildData,
+  } = useDesignationFormSubmit(() => {
+    methods.reset();
+    modalClose();
+  });
 
   // Filter out the current designation from parent options if editing
   const filteredDesignationOptions = useMemo(() => {
@@ -53,6 +56,7 @@ function DesignationAddFormModal({
         }
         modalClose={() => {
           methods.reset();
+          setIsChildData("");
           modalClose();
         }}
         buttons={[
@@ -62,6 +66,16 @@ function DesignationAddFormModal({
             btnClick: methods.handleSubmit(submitHandler),
             isLoading, // Pass loading state here
           },
+          ...(isChildData
+            ? [
+                {
+                  btnText: "Force Change",
+                  buttonCss: "py-1.5 bg-red-700 hover:bg-red-700 text-white px-5",
+                  btnClick: methods.handleSubmit((data) => submitHandler(data, true)),
+                  isLoading,
+                },
+              ]
+            : []),
         ]}
       >
         <div className="space-y-4">
@@ -167,6 +181,11 @@ function DesignationAddFormModal({
                   />
                 )}
               />
+            </div>
+          )}
+          {isChildData && (
+            <div className="text-red-600 font-semibold text-sm mt-4">
+              {isChildData}
             </div>
           )}
         </div>

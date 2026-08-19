@@ -852,7 +852,7 @@ export const useAgenda = ({
       queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
       queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
 
-      if (!isUnFollow) {
+      if (meetingStatus !== "ENDED" && !isUnFollow) {
         await update(ref(db), {
           [`meetings/${meetingId}/state/currentAgendaItemId`]: issueObjectiveId,
           [`meetings/${meetingId}/state/lastSwitchTimestamp`]: now,
@@ -1123,6 +1123,7 @@ export const useAgenda = ({
           isResolved: !data.isResolved,
           meetingId: meetingId,
           type: newType,
+          isPriority: data.isPriority,
         },
         {
           onSuccess: () => {
@@ -1147,6 +1148,7 @@ export const useAgenda = ({
           isResolved: !data.isResolved,
           meetingId: meetingId,
           type: newType,
+          isPriority: data.isPriority
         },
         {
           onSuccess: () => {
@@ -1178,6 +1180,7 @@ export const useAgenda = ({
           type: "PARKED",
           meetingId: meetingId,
           isResolved: false,
+          isPriority: data.isPriority,
         },
         {
           onSuccess: () => {
@@ -1202,6 +1205,7 @@ export const useAgenda = ({
           type: "PARKED",
           meetingId: meetingId,
           isResolved: false,
+          isPriority: data.isPriority,
         },
         {
           onSuccess: () => {

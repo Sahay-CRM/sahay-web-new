@@ -1,4 +1,5 @@
 import ModalData from "@/components/shared/Modal/ModalData";
+import { formatEmployeeType } from "@/features/utils/app.utils";
 
 interface TaskModalProps {
   modalData: EmployeeData;
@@ -66,7 +67,7 @@ const AddEmployeeModal: React.FC<TaskModalProps> = ({
         {modalData?.employeeType && (
           <div>
             <span className="font-medium text-primary">Employee Type: </span>
-            {modalData.employeeType}
+            {formatEmployeeType(modalData.employeeType)}
           </div>
         )}
         {department && (

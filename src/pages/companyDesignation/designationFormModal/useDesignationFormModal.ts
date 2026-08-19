@@ -5,6 +5,7 @@ import {
   addUpdateDesignation,
   getDesignationDropdown,
 } from "@/features/api/designation";
+import { AxiosError } from "axios";
 
 interface UseDesignationFormModalProps {
   modalClose: () => void;
@@ -101,20 +102,41 @@ export function useDesignationDropdownOptions(departmentId?: string) {
 }
 
 export function useDesignationFormSubmit(modalClose: () => void) {
+  const [isChildData, setIsChildData] = useState<string | undefined>("");
+
   const { mutate: addDesignation, isPending: isLoading } =
     addUpdateDesignation();
+
   const handleSubmit = (
     data: DesignationData & { isParentDesignation?: boolean },
+    isForceChange?: boolean | unknown
   ) => {
     const submitData = {
       ...data,
       parentId: data.isParentDesignation ? data.parentId : null,
+      isForceChange: typeof isForceChange === "boolean" ? isForceChange : false,
     };
     addDesignation(submitData, {
       onSuccess: () => {
+        setIsChildData("");
         modalClose();
+      },
+      onError: (error: Error) => {
+        const axiosError = error as AxiosError<{
+          message?: string;
+          status: number;
+        }>;
+
+        if (axiosError.response?.data?.status === 417 || axiosError.response?.status === 417) {
+          setIsChildData(axiosError.response?.data?.message || "This change requires force confirmation.");
+        }
       },
     });
   };
-  return { handleSubmit, isLoading };
+  return {
+    handleSubmit,
+    isLoading,
+    isChildData,
+    setIsChildData,
+  };
 }
