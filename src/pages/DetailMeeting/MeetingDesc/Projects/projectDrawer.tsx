@@ -151,9 +151,9 @@ export default function ProjectDrawer({
         subParameterId: Array.isArray(projectData.subParameters)
           ? projectData.subParameters.map((item) => item.subParameterId)
           : [],
-        employeeId: Array.isArray(projectData.ProjectEmployees)
+        employeeId: Array.isArray(projectData.ProjectEmployees) && projectData.ProjectEmployees.length > 0
           ? projectData.ProjectEmployees.map((item) => item.employeeId)
-          : [],
+          : defaultAssignees,
         ioId: issueId || "",
         ioType: ioType || "",
       }

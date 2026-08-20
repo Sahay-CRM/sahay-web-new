@@ -1015,11 +1015,11 @@ export default function Agenda({
 
               {(meetingStatus === "NOT_STARTED" || meetingStatus === "STARTED") && agendaList && agendaList.length > 0 && (
                 <div className="flex items-center gap-2 pr-2 shrink-0">
-                  <span className="text-sm font-semibold text-gray-700">Set Priority</span>
+                  <span className="text-md font-semibold text-primary">Set Priority</span>
                   <Switch
                     checked={isSetPriorityMode}
                     onCheckedChange={setIsSetPriorityMode}
-                    className="data-[state=checked]:bg-[#2f328e]"
+                    className="data-[state=checked]:bg-primary"
                   />
                 </div>
               )}

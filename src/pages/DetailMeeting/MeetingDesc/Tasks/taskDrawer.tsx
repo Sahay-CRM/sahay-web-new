@@ -164,9 +164,9 @@ export default function TaskDrawer({
         taskStatusId: taskData.taskStatusId || defaultTaskStatus?.taskStatusId || "",
         taskTypeId: taskData.taskTypeId || "",
         projectId: taskData.projectId || "",
-        assignUsers: Array.isArray(taskData.assignUsers)
+        assignUsers: Array.isArray(taskData.assignUsers) && taskData.assignUsers.length > 0
           ? taskData.assignUsers.map((u) => u.employeeId)
-          : [],
+          : defaultAssignees,
         taskDeadline: rawTaskDeadline || taskData.taskDeadline || null,
         ioId: issueId || "",
         ioType: ioType || "",
@@ -592,6 +592,7 @@ export default function TaskDrawer({
           projectsFireBase={() => {}}
           ioType={ioType}
           defaultProjectName={defaultProjectName}
+          joiners={joiners}
           onProjectCreated={(newProject) => {
             setValue("projectId", newProject.projectId!);
             setIsProjectSearch(""); // Refresh options

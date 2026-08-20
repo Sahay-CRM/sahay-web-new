@@ -956,6 +956,19 @@ export default function KPITable({
     <FormProvider {...methods}>
       <div className="flex gap-5 justify-between mb-3 shrink-0 items-center w-full flex-wrap">
         <div className="flex items-center">{headerLeft}</div>
+          {isTeamLeader &&
+            meetingStatus !== "CONCLUSION" &&
+            meetingStatus !== "ENDED" && (
+              <Suspense fallback={<KpisSearchDropdownFallback />}>
+                <KpisSearchDropdown
+                  onAdd={handleAddKpis}
+                  minSearchLength={2}
+                  filterProps={{ pageSize: 20 }}
+                  placeholder="Add kpis in meeting"
+                  addedKpiIds={addedKpiIds}
+                />
+              </Suspense>
+            )}
         <div className="flex gap-3 items-center ml-auto flex-wrap">
           {selectedKpisTyped && selectedKpisTyped.length > 0 && (
             <>
@@ -1033,19 +1046,6 @@ export default function KPITable({
               </div>
             </>
           )}
-          {isTeamLeader &&
-            meetingStatus !== "CONCLUSION" &&
-            meetingStatus !== "ENDED" && (
-              <Suspense fallback={<KpisSearchDropdownFallback />}>
-                <KpisSearchDropdown
-                  onAdd={handleAddKpis}
-                  minSearchLength={2}
-                  filterProps={{ pageSize: 20 }}
-                  placeholder="Add kpis in meeting"
-                  addedKpiIds={addedKpiIds}
-                />
-              </Suspense>
-            )}
         </div>
       </div>
 
