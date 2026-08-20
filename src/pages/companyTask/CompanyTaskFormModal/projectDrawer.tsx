@@ -156,7 +156,7 @@ export default function ProjectDrawer({
         projectName: defaultProjectName || "",
         projectDescription: "",
         projectDeadline: "",
-        projectStatusId: "",
+        projectStatusId: projectStatusData?.data?.[0]?.projectStatusId || "",
         coreParameterId: "",
         subParameterId: [],
         employeeId: [],
@@ -213,11 +213,11 @@ export default function ProjectDrawer({
       }))
     : [];
   useEffect(() => {
-    if (open && projectData) {
+    if (open) {
       reset(defaultValues);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, projectData]);
+  }, [open, projectData, defaultProjectName, projectStatusData?.data]);
 
   // useEffect(() => {
   //   function handleClickOutside(event: MouseEvent) {

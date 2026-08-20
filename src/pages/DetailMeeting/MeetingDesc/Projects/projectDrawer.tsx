@@ -162,7 +162,7 @@ export default function ProjectDrawer({
         projectName: defaultProjectName || "",
         projectDescription: "",
         projectDeadline: "",
-        projectStatusId: "",
+        projectStatusId: projectStatusData?.data?.[0]?.projectStatusId || "",
         coreParameterId: "",
         subParameterId: [],
         employeeId: defaultAssignees,
@@ -223,7 +223,7 @@ export default function ProjectDrawer({
       reset(defaultValues);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, projectData, defaultProjectName, joiners]);
+  }, [open, projectData, defaultProjectName, joiners, projectStatusData?.data]);
 
   // useEffect(() => {
   //   function handleClickOutside(event: MouseEvent) {
@@ -422,6 +422,7 @@ export default function ProjectDrawer({
               })}
               placeholder="Project Name"
               error={errors.projectName}
+              isMandatory
             />
             <FormInputField
               label="Project Description"
@@ -430,6 +431,7 @@ export default function ProjectDrawer({
               })}
               placeholder="Project Description"
               error={errors.projectDescription}
+              isMandatory
             />
             <Controller
               control={control}
@@ -544,6 +546,12 @@ export default function ProjectDrawer({
             <Controller
               control={control}
               name="employeeId"
+              rules={{
+                required: {
+                  value: true,
+                  message: "Please select employees",
+                },
+              }}
               render={({ field }) => (
                 <FormSelect
                   label="Assign Employees"
@@ -553,6 +561,7 @@ export default function ProjectDrawer({
                   error={errors.employeeId}
                   isMulti={true}
                   placeholder="Select employees"
+                  isMandatory
                 />
               )}
             />

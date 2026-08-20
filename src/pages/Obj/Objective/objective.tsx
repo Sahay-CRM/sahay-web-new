@@ -22,6 +22,8 @@ import ObjectiveFormModal from "./ObjectiveFormModal/objectiveAddFormModal";
 import ObjDeleteModal from "./objDeleteModal";
 import { RotateCcw } from "lucide-react";
 import FormSelect from "@/components/shared/Form/FormSelect";
+import { formatToLocalDateTime, getInitials } from "@/features/utils/app.utils";
+import { getColorFromName } from "@/features/utils/formatting.utils";
 
 const dataFilterOption = [
   {
@@ -72,7 +74,12 @@ export default function Objective() {
     // { key: "isResolved", label: "isResolved", visible: true },
     { key: "type", label: "Type", visible: true },
     { key: "departmentName", label: "Department Name", visible: true },
-     { key: "totalTime", label: "Total Time Spend", visible: true , isTimeFormat: true  },
+    {
+      key: "totalTime",
+      label: "Total Time Spend",
+      visible: true,
+      isTimeFormat: true,
+    },
   ]);
 
   const visibleColumns = columnToggleOptions.reduce(
@@ -180,7 +187,39 @@ export default function Objective() {
             isLoading={isLoading}
             permissionKey="users"
             moduleKey="DESIGNATION"
-            actionColumnWidth="w-[130px] overflow-hidden "
+            actionColumnWidth="w-[100px] overflow-hidden "
+            extraColumns={[
+              {
+                label: "Added By",
+                width: "w-[100px]",
+                render: (row) => {
+                  const initials = getInitials(row.createdByName || "");
+                  return (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(initials)}`}
+                          >
+                            {initials}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{row.createdByName}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  );
+                },
+              },
+              {
+                label: "Added On",
+                width: "w-[160px]",
+                render: (row) => (
+                  <span className="text-[12px] text-muted-foreground">
+                    {formatToLocalDateTime(row.createdDateTime).toUpperCase()}
+                  </span>
+                ),
+              },
+            ]}
             customActions={(row) => {
               return (
                 <>

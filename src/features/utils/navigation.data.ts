@@ -1,5 +1,13 @@
 export const companyNavigationData = [
   {
+    id: 0,
+    icon: "LayoutDashboard",
+    label: "My Day",
+    link: "/dashboard/my-day",
+    permission: "View",
+    moduleKey: "",
+  },
+  {
     id: 1,
     icon: "CalendarRange",
     label: "Routine Task",

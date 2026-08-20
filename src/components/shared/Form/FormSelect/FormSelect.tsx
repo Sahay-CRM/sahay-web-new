@@ -133,8 +133,10 @@ export default function FormSelect({
                 color: textColor,
               }}
             >
-              <div className="flex items-center justify-between w-full">
-                <SelectValue placeholder={placeholder} />
+              <div className="flex items-center justify-between w-full min-w-0">
+                <div className="truncate text-left pr-2 flex-1 min-w-0">
+                  <SelectValue placeholder={placeholder} />
+                </div>
 
                 {isClear && value && (
                   <button
@@ -150,7 +152,7 @@ export default function FormSelect({
                       e.preventDefault();
                       onChange("");
                     }}
-                    className="ml-2 z-20 cursor-pointer text-slate-400 hover:text-red-500"
+                    className="ml-2 z-20 cursor-pointer text-slate-400 hover:text-red-500 shrink-0"
                   >
                     <X className="h-4 w-4 hover:text-red-500" />
                   </button>
@@ -159,7 +161,7 @@ export default function FormSelect({
             </SelectTrigger>
           </FormControl>
 
-          <SelectContent className="w-full max-h-60 overflow-auto z-[9999]">
+          <SelectContent className="w-[var(--radix-select-trigger-width)] max-h-60 overflow-x-hidden overflow-y-auto z-[9999]">
             {isSearchable && (
               <div className="p-2">
                 <Input
@@ -172,7 +174,7 @@ export default function FormSelect({
             )}
             {filteredOptions.map((opt) => (
               <SelectItem key={opt.value} value={String(opt.value)}>
-                {opt.label}
+                  {opt.label}
               </SelectItem>
             ))}
           </SelectContent>
@@ -185,7 +187,7 @@ export default function FormSelect({
             <button
               type="button"
               disabled={disabled}
-              className={`w-full border rounded-md px-3 text-left text-sm py-2 ${placeclassName} 
+              className={`w-full border rounded-md px-3 text-left text-sm py-2 truncate ${placeclassName} 
     ${disabled ? " text-gray-400" : "bg-white text-black"}
   `}
             >

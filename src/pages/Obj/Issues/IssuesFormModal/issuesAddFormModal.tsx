@@ -29,6 +29,7 @@ export default function IssueFormModal({
   const typeOptions = [
     { label: "RESOLVED", value: "RESOLVED" },
     { label: "UNRESOLVED", value: "UNRESOLVED" },
+    { label: "PARKED", value: "PARKED" },
   ];
 
   return (

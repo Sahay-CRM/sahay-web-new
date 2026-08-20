@@ -28,6 +28,7 @@ export default function ObjectiveFormModal({
   const typeOptions = [
     { label: "RESOLVED", value: "RESOLVED" },
     { label: "UNRESOLVED", value: "UNRESOLVED" },
+    { label: "PARKED", value: "PARKED" },
   ];
 
   return (

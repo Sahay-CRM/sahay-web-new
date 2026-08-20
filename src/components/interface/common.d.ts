@@ -1394,6 +1394,8 @@ interface IssuesProps {
   type?: string | null;
   totalTime?: string;
   isPriority?: boolean;
+  createdByName?: string;
+  createdDateTime?: string;
 }
 
 interface UseIssuesFormModalProps {
@@ -1421,6 +1423,8 @@ interface ObjectiveProps {
   type?: string | null;
   totalTime?: string;
   isPriority?: boolean;
+  createdByName?: string;
+  createdDateTime?: string;
 }
 interface UpdateItem {
   srNo: number;
