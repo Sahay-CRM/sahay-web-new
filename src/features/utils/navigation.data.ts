@@ -152,7 +152,7 @@ export const companyNavigationData = [
         label: "Clone Agenda",
         link: "/dashboard/clone-agenda",
         permission: "View",
-        moduleKey: "MEETING_LIST",
+        moduleKey: "CLONE_AGENDA",
       },
     ],
   },

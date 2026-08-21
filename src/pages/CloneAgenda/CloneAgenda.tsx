@@ -16,7 +16,7 @@ import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 
 export default function CloneAgenda() {
   const { setBreadcrumbs } = useBreadcrumbs();
-  const permission = useSelector(getUserPermission).MEETING_LIST;
+  const permission = useSelector(getUserPermission).CLONE_AGENDA;
 
   useEffect(() => {
     setBreadcrumbs([{ label: "Clone Agenda", href: "" }]);
@@ -359,7 +359,7 @@ export default function CloneAgenda() {
             )}
 
             {/* Warning Section */}
-            {sourceMeetingId && targetMeetingId && selectedAgendaIds.length > 0 && (
+            {/* {sourceMeetingId && targetMeetingId && selectedAgendaIds.length > 0 && (
               <div className="bg-amber-50 border border-amber-100 rounded-lg p-4 flex gap-3">
                 <div className="text-amber-500 text-xl">⚠️</div>
                 <div className="text-sm text-amber-800">
@@ -367,7 +367,7 @@ export default function CloneAgenda() {
                   This action will copy the selected agenda items from the source meeting and add them to the target meeting.
                 </div>
               </div>
-            )}
+            )} */}
 
             {/* Actions */}
             <div className="pt-4 border-t border-gray-100 flex justify-end gap-3">
@@ -378,6 +378,7 @@ export default function CloneAgenda() {
               >
                 Reset
               </Button>
+               {permission.Add && (
               <Button
                 onClick={handleExecuteClone}
                 disabled={
@@ -391,6 +392,7 @@ export default function CloneAgenda() {
               >
                 Clone Agenda
               </Button>
+               )}
             </div>
           </div>
         </div>
