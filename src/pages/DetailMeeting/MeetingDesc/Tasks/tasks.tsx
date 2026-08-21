@@ -273,7 +273,10 @@ export default function Tasks({
             ? formatToLocalDateTime(task.taskDeadline)
             : "",
           rawTaskDeadline: task.taskDeadline,
+          showDoth: task.deadlineRequest === "PENDING",
         }))}
+        dotsKey="showDoth"
+        dotsAnchorKey="taskName"
         columns={tableColumns}
         primaryKey="taskId"
         rowClassName={(item) => {

@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { useParams } from "react-router-dom";
 import { AxiosError } from "axios";
@@ -128,12 +128,35 @@ export default function TaskDrawer({
         color: status.color,
       }))
     : [];
-  const employeeOption = employeedata
-    ? employeedata.data.map((status) => ({
-        label: status.employeeName,
-        value: status.employeeId,
-      }))
-    : [];
+  const employeeOption = useMemo(() => {
+    if (!employeedata) return [];
+
+    const attendeeIds = new Set((joiners || []).map((j) => j.employeeId));
+
+    const attendeesList = employeedata.data.filter((emp) => attendeeIds.has(emp.employeeId));
+    const otherList = employeedata.data.filter((emp) => !attendeeIds.has(emp.employeeId));
+
+    const attendeesOptions = attendeesList.map((emp) => ({
+      label: emp.employeeName,
+      value: emp.employeeId,
+      isPinned: true,
+    }));
+
+    const otherOptions = otherList.map((emp) => ({
+      label: emp.employeeName,
+      value: emp.employeeId,
+    }));
+
+    if (attendeesOptions.length > 0 && otherOptions.length > 0) {
+      return [
+        ...attendeesOptions,
+        { value: "SEPARATOR", label: "" },
+        ...otherOptions,
+      ];
+    }
+
+    return [...attendeesOptions, ...otherOptions];
+  }, [employeedata, joiners]);
 
   const projectListOption = projectListdata
     ? Array.isArray(projectListdata.data)
@@ -155,7 +178,7 @@ export default function TaskDrawer({
     .slice()
     .sort((a, b) => (a.taskStatusOrder || 0) - (b.taskStatusOrder || 0))[0];
 
-  const defaultAssignees = (joiners || []).map((j) => j.employeeId);
+  const defaultAssignees = [] as string[];
 
   const defaultValues = taskData
     ? {
@@ -517,16 +540,24 @@ export default function TaskDrawer({
               name="taskDeadline"
               rules={{ required: "Task Dedline is required " }}
               render={({ field }) => (
-                <FormDateTimePicker
-                  label="Task Deadline"
-                  value={field.value ?? null}
-                  onChange={field.onChange}
-                  error={errors.taskDeadline}
-                  disablePastDays={
-                    Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
-                  }
-                  isMandatory
-                />
+                <div>
+                  <FormDateTimePicker
+                    label="Task Deadline"
+                    value={field.value ?? null}
+                    onChange={field.onChange}
+                    error={errors.taskDeadline}
+                    disabled={taskData?.deadlineRequest === "PENDING"}
+                    disablePastDays={
+                      Number(import.meta.env.VITE_DISABLEPASTDATES) || 3
+                    }
+                    isMandatory
+                  />
+                  {taskData?.deadlineRequest === "PENDING" && (
+                    <p className="text-xs text-primary mt-1">
+                      Deadline change request is pending approval
+                    </p>
+                  )}
+                </div>
               )}
             />
 

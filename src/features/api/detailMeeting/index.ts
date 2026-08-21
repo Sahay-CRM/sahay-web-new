@@ -41,3 +41,6 @@ export {
   useGetAdminMeetingTemplatesAll,
   useCloneAdminMeetingTemplateToMeeting,
 } from "./useCloneAdminMeetingTemplate";
+
+export { default as useCloneMeetingAgenda } from "./useCloneMeetingAgenda";
+export { default as useGetDetailMeetingAll } from "./useGetDetailMeetingAll";

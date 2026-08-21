@@ -13,7 +13,7 @@ import {
 import { FormLabel, FormControl } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { useState } from "react";
-import { CheckIcon, X } from "lucide-react";
+import { CheckIcon, X, Pin } from "lucide-react";
 import { twMerge } from "tailwind-merge";
 import { isColorDark } from "@/features/utils/color.utils";
 
@@ -22,6 +22,7 @@ interface Option {
   value?: string | number;
   label?: string | number;
   color?: string;
+  isPinned?: boolean;
 }
 
 interface FormSelectProps {
@@ -68,6 +69,7 @@ export default function FormSelect({
 
   const filteredOptions = isSearchable
     ? options.filter((opt) =>
+        opt.value === "SEPARATOR" ||
         String(opt.label).toLowerCase().includes(searchTerm.toLowerCase()),
       )
     : options;
@@ -172,11 +174,21 @@ export default function FormSelect({
                 />
               </div>
             )}
-            {filteredOptions.map((opt) => (
-              <SelectItem key={opt.value} value={String(opt.value)}>
-                  {opt.label}
-              </SelectItem>
-            ))}
+            {filteredOptions.map((opt) => {
+               if (opt.value === "SEPARATOR") {
+                 return (
+                   <div
+                     key="attendees-separator"
+                     className="my-1 border-t-2 border-[#2E3090]"
+                   />
+                 );
+               }
+               return (
+                 <SelectItem key={opt.value} value={String(opt.value)}>
+                     {opt.label}
+                 </SelectItem>
+               );
+             })}
           </SelectContent>
         </Select>
       )}
@@ -210,25 +222,40 @@ export default function FormSelect({
               className="max-h-60 overflow-auto"
               onWheel={(e) => e.stopPropagation()}
             >
-              {filteredOptions.map((opt) => {
-                const stringVal = String(opt.value);
-                const selected = Array.isArray(value)
-                  ? value.includes(stringVal)
-                  : false;
-                return (
-                  <div
-                    key={stringVal}
-                    className="flex items-center gap-2 p-1 hover:bg-gray-100 rounded cursor-pointer"
-                    onClick={() => handleMultiChange(stringVal)}
-                  >
-                    <input type="checkbox" checked={selected} readOnly />
-                    <span>{opt.label}</span>
-                    {selected && (
-                      <CheckIcon className="ml-auto text-blue-500" />
-                    )}
-                  </div>
-                );
-              })}
+               {filteredOptions.map((opt) => {
+                 if (opt.value === "SEPARATOR") {
+                   return (
+                     <div
+                       key="attendees-separator"
+                       className="my-1 border-t-1 border-[#2E3090]"
+                     />
+                   );
+                 }
+                 const stringVal = String(opt.value);
+                 const selected = Array.isArray(value)
+                   ? value.includes(stringVal)
+                   : false;
+                 return (
+                   <div
+                     key={stringVal}
+                     className="flex items-center gap-2 p-1 hover:bg-gray-100 rounded cursor-pointer"
+                     onClick={() => handleMultiChange(stringVal)}
+                   >
+                     <input type="checkbox" checked={selected} readOnly />
+                     <span>{opt.label}</span>
+                     <div className="ml-auto flex items-center gap-1.5 shrink-0">
+                       <div className="w-5 h-5 flex items-center justify-center shrink-0">
+                         {selected && (
+                           <CheckIcon className="text-blue-500 h-4 w-4 shrink-0" />
+                         )}
+                       </div>
+                       {opt.isPinned && (
+                         <Pin className="h-3.5 w-3.5 text-primary rotate-45 shrink-0" />
+                       )}
+                     </div>
+                   </div>
+                 );
+               })}
             </div>
           </PopoverContent>
         </Popover>

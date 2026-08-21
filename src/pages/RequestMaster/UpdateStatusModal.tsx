@@ -29,14 +29,21 @@ export const UpdateStatusModal = ({
   onSubmit,
   data,
 }: UpdateStatusModalProps) => {
-  const [status, setStatus] = useState(data?.status || "PENDING");
+  const getDefaultStatus = (currentStatus?: string) => {
+    if (currentStatus === "APPROVED" || currentStatus === "DECLINED") {
+      return currentStatus;
+    }
+    return "APPROVED"; // Default to Approved if it is Pending/Cancelled
+  };
+
+  const [status, setStatus] = useState(getDefaultStatus(data?.status));
   const initialRemarks =
     data?.remarks && data.remarks.trim() !== "-" ? data.remarks : "";
   const [remarks, setRemarks] = useState(initialRemarks);
 
   useEffect(() => {
     if (data?.status) {
-      setStatus(data.status);
+      setStatus(getDefaultStatus(data.status));
     }
     if (data?.remarks && data.remarks.trim() !== "-") {
       setRemarks(data.remarks);
@@ -92,9 +99,7 @@ export const UpdateStatusModal = ({
                 <SelectValue placeholder="Select Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="PENDING">Pending</SelectItem>
                 <SelectItem value="APPROVED">Approved</SelectItem>
-                <SelectItem value="CANCELLED">Cancelled</SelectItem>
                 <SelectItem value="DECLINED">Declined</SelectItem>
               </SelectContent>
             </Select>

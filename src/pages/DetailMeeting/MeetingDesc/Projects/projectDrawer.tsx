@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { AxiosError } from "axios";
@@ -114,12 +114,35 @@ export default function ProjectDrawer({
         color: status.color,
       }))
     : [];
-  const employeeOption = employeeData
-    ? employeeData.data.map((status) => ({
-        label: status.employeeName,
-        value: status.employeeId,
-      }))
-    : [];
+  const employeeOption = useMemo(() => {
+    if (!employeeData) return [];
+
+    const attendeeIds = new Set((joiners || []).map((j) => j.employeeId));
+
+    const attendeesList = employeeData.data.filter((emp) => attendeeIds.has(emp.employeeId));
+    const otherList = employeeData.data.filter((emp) => !attendeeIds.has(emp.employeeId));
+
+    const attendeesOptions = attendeesList.map((emp) => ({
+      label: emp.employeeName,
+      value: emp.employeeId,
+      isPinned: true,
+    }));
+
+    const otherOptions = otherList.map((emp) => ({
+      label: emp.employeeName,
+      value: emp.employeeId,
+    }));
+
+    if (attendeesOptions.length > 0 && otherOptions.length > 0) {
+      return [
+        ...attendeesOptions,
+        { value: "SEPARATOR", label: "" },
+        ...otherOptions,
+      ];
+    }
+
+    return [...attendeesOptions, ...otherOptions];
+  }, [employeeData, joiners]);
 
   const coreParameterOption = coreParameterData
     ? coreParameterData.data.map((item) => ({
@@ -138,7 +161,7 @@ export default function ProjectDrawer({
 
   const deadlineVal = rawProjectDeadline || projectData?.projectDeadline;
 
-  const defaultAssignees = (joiners || []).map((j) => j.employeeId);
+  const defaultAssignees = [] as string[];
 
   const defaultValues = projectData
     ? {

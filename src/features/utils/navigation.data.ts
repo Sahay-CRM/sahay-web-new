@@ -147,6 +147,13 @@ export const companyNavigationData = [
         permission: "View",
         moduleKey: "OBJECTIVE",
       },
+      {
+        id: 3,
+        label: "Clone Agenda",
+        link: "/dashboard/clone-agenda",
+        permission: "View",
+        moduleKey: "MEETING_LIST",
+      },
     ],
   },
   {

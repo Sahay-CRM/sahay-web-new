@@ -18,6 +18,7 @@ interface KpiDrawerProps {
   issueId?: string;
   ioType?: string;
   ioKPIId?: string | null;
+  disabled?: boolean;
 }
 
 const frequenceOptions = [
@@ -48,6 +49,7 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
   ioType,
   issueId,
   ioKPIId,
+  disabled = false,
 }) => {
   const drawerRef = useRef<HTMLDivElement>(null);
   const { data: kpiData } = useGetDatapointById(kpiId || "");
@@ -208,27 +210,31 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
                 options={frequenceOptions}
                 disabled
               />
-              <FormInputField
+               <FormInputField
                 label="Tag"
                 value={editableData.tag || ""}
                 onChange={(e) => handleChange("tag", e.target.value)}
+                disabled={disabled}
               />
               <FormInputField
                 label="Unit"
                 value={editableData.unit || ""}
                 onChange={(e) => handleChange("unit", e.target.value)}
+                disabled={disabled}
               />
               <FormSelect
                 label="Validation Type"
                 value={editableData.validationType || ""}
                 onChange={(val) => handleChange("validationType", val)}
                 options={validationOptions}
+                disabled={disabled}
               />
               <FormInputField
                 label="Value 1"
                 value={editableData.value1 || ""}
                 type="number"
                 onChange={(e) => handleChange("value1", e.target.value)}
+                disabled={disabled}
               />
               {editableData.validationType === "BETWEEN" && (
                 <FormInputField
@@ -236,6 +242,7 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
                   type="number"
                   value={editableData.value2 || ""}
                   onChange={(e) => handleChange("value2", e.target.value)}
+                  disabled={disabled}
                 />
               )}
               {editableData.frequencyType !== "YEARLY" && (
@@ -245,20 +252,25 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
                   onChange={(val) => handleChange("visualFrequencyTypes", val)}
                   options={getFilteredVisualFrequencyOptions()}
                   isMulti
+                  disabled={disabled}
                 />
               )}
-              <button
-                className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80"
-                onClick={() => onSubmit(editableData)}
-              >
-                Submit
-              </button>
-              <button
-                className="bg-red-500 ml-5 text-white px-4 py-2 rounded hover:bg-red-700"
-                onClick={handleDeleteKpi}
-              >
-                Delete From Meeting
-              </button>
+              {!disabled && (
+                <>
+                  <button
+                    className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80"
+                    onClick={() => onSubmit(editableData)}
+                  >
+                    Submit
+                  </button>
+                  <button
+                    className="bg-red-500 ml-5 text-white px-4 py-2 rounded hover:bg-red-700"
+                    onClick={handleDeleteKpi}
+                  >
+                    Delete From Meeting
+                  </button>
+                </>
+              )}
             </div>
           )}
         </div>
