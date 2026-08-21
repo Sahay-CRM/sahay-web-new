@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
@@ -202,6 +203,7 @@ export default function Agenda({
     follow,
   });
   const [contentWidth, setContentWidth] = useState("90%");
+  const [isSetPriorityMode, setIsSetPriorityMode] = useState(false);
   const sensors = useSensors(useSensor(PointerSensor));
 
   const SIDEBAR_WIDTH = 600;
@@ -738,7 +740,7 @@ export default function Agenda({
             )}
           </div>
           <div className="relative h-full">
-            <div className="mb-3">
+            <div className="mb-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
               <Tabs
                 defaultValue="UNSOLVED"
                 onValueChange={(value) => {
@@ -755,7 +757,7 @@ export default function Agenda({
                   );
                 }}
                 value={resolutionFilter}
-                className="w-full"
+                className="w-fit"
               >
                 <TabsList className="grid w-86 grid-cols-3">
                   <TabsTrigger
@@ -782,6 +784,17 @@ export default function Agenda({
                 <TabsContent value="SOLVED" className="mt-0"></TabsContent>
                 <TabsContent value="PARKED" className="mt-0"></TabsContent>
               </Tabs>
+
+              {meetingStatus === "NOT_STARTED" && agendaList && agendaList.length > 0 && (
+                <div className="flex items-center gap-2 pr-2 shrink-0">
+                  <span className="text-md font-semibold text-primary">Set Priority</span>
+                  <Switch
+                    checked={isSetPriorityMode}
+                    onCheckedChange={setIsSetPriorityMode}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                </div>
+              )}
             </div>
             <div className="mt-2 h-[calc(100vh-280px)] pr-1 w-full overflow-auto">
               {agendaList && agendaList.length > 0 ? (
@@ -817,6 +830,7 @@ export default function Agenda({
                           isTeamLeader={isTeamLeader}
                           isUnFollow={unFollowByUser}
                           meetingTime={meetingTime}
+                          isSetPriorityMode={isSetPriorityMode}
                         />
                       ))}
                     </ul>
@@ -988,6 +1002,7 @@ export default function Agenda({
                         ioType={ioType}
                         selectedIssueId={isSelectedAgenda}
                         isTeamLeader={isTeamLeader}
+                        joiners={joiners}
                       />
                     )}
                     {activeTab === "projects" && (
@@ -1007,6 +1022,7 @@ export default function Agenda({
                         ioType={ioType}
                         selectedIssueId={isSelectedAgenda}
                         isTeamLeader={isTeamLeader}
+                        joiners={joiners}
                       />
                     )}
                     {activeTab === "kpis" && (

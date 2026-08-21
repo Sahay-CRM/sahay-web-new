@@ -71,7 +71,7 @@ interface TaskData {
 }
 
 const MeetingNotes: React.FC<MeetingNotesProps> = ({
-  // joiners,
+  joiners,
   employeeId,
   meetingId,
   className,
@@ -865,6 +865,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
               // eslint-disable-next-line no-console
               console.error("Function not implemented.");
             }}
+            joiners={joiners}
           />
         )}
         {drawerProj && (
@@ -876,6 +877,7 @@ const MeetingNotes: React.FC<MeetingNotesProps> = ({
               // eslint-disable-next-line no-console
               console.error("Function not implemented.");
             }}
+            joiners={joiners}
           />
         )}
 

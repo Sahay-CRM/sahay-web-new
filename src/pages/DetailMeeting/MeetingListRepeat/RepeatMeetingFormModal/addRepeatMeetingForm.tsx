@@ -1,8 +1,8 @@
-import { useEffect, useRef, useState } from "react"; // Added useState, useRef, ChangeEvent
+import { useEffect, useRef, useState } from "react";
 import CompanyAccessGuard from "@/components/shared/CompanyAccessGuard/CompanyAccessGuard";
 import { useSelector } from "react-redux";
 import { getCompaniesList } from "@/features/selectors/company.selector";
-import { FormProvider, useFormContext, Controller } from "react-hook-form"; // Added useFormContext, Controller
+import { FormProvider, useFormContext, Controller } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -12,15 +12,13 @@ import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
 import TableData from "@/components/shared/DataTable/DataTable";
 import SearchInput from "@/components/shared/SearchInput";
 import DropdownSearchMenu from "@/components/shared/DropdownSearchMenu/DropdownSearchMenu";
-// import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 
 import AddMeetingModal from "./addRepeatMeetingModal";
-import useAddRepeatMeetingForm from "./useAddRepeatMeetingForm"; // Renamed import
+import useAddRepeatMeetingForm from "./useAddRepeatMeetingForm"; 
 
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getEmployee } from "@/features/api/companyEmployee";
 import { getMeetingType } from "@/features/api/meetingType";
-// import { useDdMeetingStatus } from "@/features/api/meetingStatus";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,8 +27,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
-// import FormSelect from "@/components/shared/Form/FormSelect";
-// import DatePicker from "react-datepicker";
 import PageNotAccess from "@/pages/PageNoAccess";
 import { Repeat } from "lucide-react";
 import CustomModalFile from "@/components/shared/CustomModalRepeatMeeting";
@@ -54,6 +50,7 @@ interface MeetingData {
   repeatTime?: string;
   employeeId?: Employee[];
   repetitiveMeetingId?: string;
+  perAgendaTime?: number;
 }
 const MeetingType = () => {
   const {
@@ -279,132 +276,217 @@ const MeetingInfo = () => {
           isMandatory
         />
 
-        <Controller
-          control={control}
-          name="repeatType"
-          rules={{ required: "Please select Repetition Type" }}
-          render={({ field }) => {
-            const selectedRepeatLabel =
-              repeatOptions.find((item) => item.value === selectedRepeat)
-                ?.label ||
-              (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
+        {/* Left Column of Row 2: Meeting Time + Per Agenda Time */}
+        <div className="col-span-1 flex gap-6 items-start">
+           <div className="shrink-0">
+            {/* ⏱️ Per Agenda Time Picker */}
+            <Controller
+              control={control}
+              name="perAgendaTime"
+              render={({ field, fieldState }) => {
+                const totalMinutes = Number(field.value) || 0;
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
 
-            return (
-              <div className="flex flex-col space-y-1">
-                <FormLabel className="flex items-center">
-                  Repetition
-                  <span className="text-red-500 ml-1">*</span>
-                </FormLabel>
-
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <div
-                      className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer border rounded-md ${
-                        !repeatTime
-                          ? "opacity-50 cursor-not-allowed"
-                          : "hover:bg-accent"
-                      }`}
-                      onClick={(e) => {
-                        if (!repeatTime) e.preventDefault();
-                      }}
-                    >
-                      <Repeat className="w-4 h-4" />
-                      <span>{selectedRepeatLabel}</span>
-                    </div>
-                  </DropdownMenuTrigger>
-
-                  <DropdownMenuContent align="start" className="w-fit">
-                    {repeatOptions.map((item) => {
-                      const isSelected = item.value === selectedRepeat;
-                      return (
-                        <DropdownMenuItem
-                          key={item.value}
-                          onClick={() => {
-                            if (item.value === "CUSTOMTYPE") {
-                              setOpenCustomModal(true);
-                            } else {
-                              field.onChange(item.value);
-                              setValue("repeatType", item.value);
-                              setValue("customObj", undefined);
-                              setCustomRepeatData(undefined);
-                              setIsRepeatChange(true);
-                            }
-                          }}
-                          className={`flex items-center justify-between ${
-                            isSelected ? "bg-accent text-accent-foreground" : ""
-                          }`}
-                        >
-                          <span>{item.label}</span>
-                          {isSelected && <span className="ml-2">✔</span>}
-                        </DropdownMenuItem>
-                      );
-                    })}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-
-                {errors.repeatType && (
-                  <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
-                    {String(errors.repeatType.message)}
-                  </span>
-                )}
-
-                {/* 🧩 Custom Repeat Modal */}
-                <CustomModalFile
-                  open={openCustomModal}
-                  multiSelectAllow={false}
-                  defaultValues={
-                    watch("customObj") ||
-                    CustomRepeatData ||
-                    meetingApiData?.customObj
+                const handleHourChange = (newHour: string) => {
+                  if (newHour !== "" && (Number(newHour) < 0 || newHour.includes("."))) {
+                    return;
                   }
-                  onOpenChange={setOpenCustomModal}
-                  onSave={(data) => {
-                    field.onChange("CUSTOMTYPE");
-                    setValue("repeatType", "CUSTOMTYPE");
-                    setValue("customObj", data);
-                    saveCustomRepeatData(data);
-                    setIsRepeatChange(true);
-                  }}
-                />
-              </div>
-            );
-          }}
-        />
+                  const h = Number(newHour) || 0;
+                  const newTotal = h * 60 + minutes;
+                  field.onChange(newTotal);
+                };
 
-        {/* ⏰ Time Picker */}
-        <Controller
-          control={control}
-          name="repeatTime"
-          rules={{ required: "Time is required" }}
-          render={({ field, fieldState }) => (
-            <FormTimePicker
-              label="Meeting Time"
-              value={field.value}
-              onChange={field.onChange}
-              error={fieldState.error}
-              isMandatory
+                const handleMinuteChange = (newMin: string) => {
+                  if (newMin !== "" && (Number(newMin) < 0 || Number(newMin) > 59 || newMin.includes("."))) {
+                    return;
+                  }
+                  const m = Number(newMin) || 0;
+                  const newTotal = hours * 60 + m;
+                  field.onChange(newTotal);
+                };
+
+                return (
+                  <div className="flex items-center gap-3 pt-6 select-none">
+                    <FormLabel className="flex items-center select-none whitespace-nowrap mb-0">
+                      Per Agenda Time
+                    </FormLabel>
+                    <div className="flex items-center gap-2">
+                      {/* Hours */}
+                      <div className="flex items-baseline gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          value={hours === 0 ? "" : hours}
+                          onChange={(e) => handleHourChange(e.target.value)}
+                          className="w-10 text-center text-sm font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-primary focus:outline-none pb-0.5 placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="text-slate-500 font-medium text-xs">hr</span>
+                      </div>
+
+                      {/* Separator */}
+                      <span className="text-slate-300 text-sm font-light pb-0.5">:</span>
+
+                      {/* Minutes */}
+                      <div className="flex items-baseline gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          max={59}
+                          placeholder="00"
+                          value={minutes === 0 ? "" : String(minutes).padStart(2, "0")}
+                          onChange={(e) => handleMinuteChange(e.target.value)}
+                          className="w-10 text-center text-sm font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-primary focus:outline-none pb-0.5 placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="text-slate-500 font-medium text-xs">min</span>
+                      </div>
+                    </div>
+                    {fieldState.error?.message && (
+                      <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] block mt-1">
+                        {fieldState.error.message}
+                      </span>
+                    )}
+                  </div>
+                );
+              }}
             />
-          )}
-        />
+          </div>
+          <div className="flex-1">
+            {/* ⏰ Time Picker */}
+            <Controller
+              control={control}
+              name="repeatTime"
+              rules={{ required: "Time is required" }}
+              render={({ field, fieldState }) => (
+                <FormTimePicker
+                  label="Meeting Time"
+                  value={field.value}
+                  onChange={field.onChange}
+                  error={fieldState.error}
+                  isMandatory
+                />
+              )}
+            />
+          </div>
+        
+        </div>
 
-        {hasUserChangedRepeat && repeatResult && isRepeatChange ? (
-          <div className="flex gap-2 text-sm text-gray-700 col-span-2">
-            <p>
-              <strong>Create First Meeting:</strong>{" "}
-              {formatToLocalDateTime(repeatResult.createDateUTC)}
-            </p>
-            <p>
-              <strong>Next Meeting:</strong>{" "}
-              {formatToLocalDateTime(repeatResult.nextDateUTC)}
-            </p>
-          </div>
-        ) : meetingApiData?.nextDate ? (
-          <div className="flex gap-2 text-sm text-gray-700 col-span-2">
-            <p>
-              <strong>Next Meeting:</strong> {oldDate}
-            </p>
-          </div>
-        ) : null}
+        {/* Right Column of Row 2: Repetition */}
+        <div className="col-span-1">
+          <Controller
+            control={control}
+            name="repeatType"
+            rules={{ required: "Please select Repetition Type" }}
+            render={({ field }) => {
+              const selectedRepeatLabel =
+                repeatOptions.find((item) => item.value === selectedRepeat)
+                  ?.label ||
+                (selectedRepeat === "CUSTOMTYPE" ? "Custom" : "Repeat");
+
+              return (
+                <div className="flex flex-col space-y-1">
+                  <FormLabel className="flex items-center">
+                    Repetition
+                    <span className="text-red-500 ml-1">*</span>
+                  </FormLabel>
+
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <div
+                        className={`flex items-center gap-2 px-3 py-1.5 cursor-pointer border rounded-md ${
+                          !repeatTime
+                            ? "opacity-50 cursor-not-allowed"
+                            : "hover:bg-accent"
+                        }`}
+                        onClick={(e) => {
+                          if (!repeatTime) e.preventDefault();
+                        }}
+                      >
+                        <Repeat className="w-4 h-4" />
+                        <span>{selectedRepeatLabel}</span>
+                      </div>
+                    </DropdownMenuTrigger>
+
+                    <DropdownMenuContent align="start" className="w-fit">
+                      {repeatOptions.map((item) => {
+                        const isSelected = item.value === selectedRepeat;
+                        return (
+                          <DropdownMenuItem
+                            key={item.value}
+                            onClick={() => {
+                              if (item.value === "CUSTOMTYPE") {
+                                setOpenCustomModal(true);
+                              } else {
+                                field.onChange(item.value);
+                                setValue("repeatType", item.value);
+                                setValue("customObj", undefined);
+                                setCustomRepeatData(undefined);
+                                setIsRepeatChange(true);
+                              }
+                            }}
+                            className={`flex items-center justify-between ${
+                              isSelected ? "bg-accent text-accent-foreground" : ""
+                            }`}
+                          >
+                            <span>{item.label}</span>
+                            {isSelected && <span className="ml-2">✔</span>}
+                          </DropdownMenuItem>
+                        );
+                      })}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {errors.repeatType && (
+                    <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*']">
+                      {String(errors.repeatType.message)}
+                    </span>
+                  )}
+
+                  {/* 🧩 Custom Repeat Modal */}
+                  <CustomModalFile
+                    open={openCustomModal}
+                    multiSelectAllow={false}
+                    defaultValues={
+                      watch("customObj") ||
+                      CustomRepeatData ||
+                      meetingApiData?.customObj
+                    }
+                    onOpenChange={setOpenCustomModal}
+                    onSave={(data) => {
+                      field.onChange("CUSTOMTYPE");
+                      setValue("repeatType", "CUSTOMTYPE");
+                      setValue("customObj", data);
+                      saveCustomRepeatData(data);
+                      setIsRepeatChange(true);
+                    }}
+                  />
+
+                  {/* 📅 Next Meeting under Repetition dropdown */}
+                  {hasUserChangedRepeat && repeatResult && isRepeatChange ? (
+                    <div className="flex flex-col gap-1 text-sm text-gray-700 mt-2 select-none">
+                      <p>
+                        <strong>Create First Meeting:</strong>{" "}
+                        {formatToLocalDateTime(repeatResult.createDateUTC)}
+                      </p>
+                      <p>
+                        <strong>Next Meeting:</strong>{" "}
+                        {formatToLocalDateTime(repeatResult.nextDateUTC)}
+                      </p>
+                    </div>
+                  ) : meetingApiData?.nextDate ? (
+                    <div className="flex flex-col gap-1 text-sm text-gray-700 mt-2 select-none">
+                      <p>
+                        <strong>Next Meeting:</strong> {oldDate}
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
+              );
+            }}
+          />
+        </div>
+
       </Card>
     </div>
   );

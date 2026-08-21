@@ -2367,7 +2367,7 @@ export default function UpdatedKpiTable() {
                             <th
                               key={idx}
                               className={clsx(
-                                "border p-2 min-w-[80px] font-semibold text-gray text-center h-[43px]",
+                                "border p-2 min-w-[80px] font-semibold text-gray text-center h-[51px]",
                                 header.isSunday &&
                                   header.isHoliday &&
                                   header.isSkipDay
@@ -2423,7 +2423,7 @@ export default function UpdatedKpiTable() {
                               return (
                                 <tr
                                   key={kpi.kpiId}
-                                  className={`h-[50px] ${kpi.isMurgeKpi ? "bg-gray-100/80" : ""}`}
+                                  className={`h-[59px] ${kpi.isMurgeKpi ? "bg-gray-100/80" : ""}`}
                                 >
                                   {headers.map((_, colIdx) => {
                                     const cell = dataRow?.[colIdx];
@@ -2462,7 +2462,7 @@ export default function UpdatedKpiTable() {
                                         <td
                                           key={colIdx}
                                           className={clsx(
-                                            "p-2 border text-center w-[80px] h-[42px]",
+                                            "px-2 py-1 border text-center w-[80px] h-[42px]",
                                             headers[colIdx].isSunday &&
                                               headers[colIdx].isHoliday &&
                                               headers[colIdx].isSkipDay
@@ -2680,7 +2680,7 @@ export default function UpdatedKpiTable() {
                                       <td
                                         key={colIdx}
                                         className={clsx(
-                                          "p-2 border text-center w-[80px] h-[42px] relative",
+                                          "px-2 py-1 border text-center w-[80px] h-[42px] relative",
                                           headers[colIdx].isSunday &&
                                             headers[colIdx].isHoliday &&
                                             headers[colIdx].isSkipDay

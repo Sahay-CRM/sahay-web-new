@@ -43,7 +43,7 @@ export default function RepeatTaskToDo() {
   const { setBreadcrumbs } = useBreadcrumbs();
 
   useEffect(() => {
-    setBreadcrumbs([{ label: "My Day", href: "" }]);
+    setBreadcrumbs([{ label: "Routine Task", href: "" }]);
   }, [setBreadcrumbs]);
 
   const {

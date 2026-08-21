@@ -66,6 +66,7 @@ const AddCompanyDatapoint = lazy(
 );
 const AddGraph = lazy(() => import("../pages/homePage"));
 // const AddGraph = lazy(() => import("../pages/Graph/graph"));
+const MyDay = lazy(() => import("../pages/MyDay"));
 
 const Brand = lazy(() => import("../pages/Brand"));
 const Product = lazy(() => import("../pages/Product"));
@@ -173,6 +174,7 @@ export default function EmployeeRoutes() {
 
       <Route path="/dashboard" element={<DashboardLayout />}>
         <Route index element={<AddGraph />} />
+        <Route path="my-day" element={<MyDay />} />
 
         <Route path="notifications" Component={AllNotifications} />
 

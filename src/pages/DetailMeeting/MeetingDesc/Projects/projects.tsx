@@ -43,6 +43,7 @@ interface ProjectProps {
   isTeamLeader?: boolean | undefined;
   headerLeft?: React.ReactNode;
   isExtra?: boolean;
+  joiners?: Joiners[];
 }
 
 export default function Projects({
@@ -53,6 +54,7 @@ export default function Projects({
   isTeamLeader,
   headerLeft,
   isExtra,
+  joiners,
 }: ProjectProps) {
   const { id: meetingId } = useParams();
   const { mutate: addMeetingProject } = addMeetingProjectDataMutation();
@@ -80,6 +82,7 @@ export default function Projects({
   const [selected, setSelected] = useState<CompanyProjectDataProps | null>(
     null,
   );
+  const [defaultProjectName, setDefaultProjectName] = useState("");
 
   const handleAdd = (data: IProjectFormData) => {
     if (issueId && meetingId) {
@@ -232,6 +235,7 @@ export default function Projects({
   }, [selectedIssueId, meetingId]);
 
   const handleAddProject = () => {
+    setDefaultProjectName("");
     setDrawerOpen(true);
     setSelected(null);
   };
@@ -251,6 +255,11 @@ export default function Projects({
                 onAdd={handleAdd}
                 minSearchLength={3}
                 filterProps={{ pageSize: 25 }}
+                onEnterPress={(value) => {
+                  setDefaultProjectName(value);
+                  setSelected(null);
+                  setDrawerOpen(true);
+                }}
               />
               <Button className="py-2 w-fit" onClick={handleAddProject}>
                 Add Company Project
@@ -288,8 +297,11 @@ export default function Projects({
               : "",
             rawProjectDeadline: item.projectDeadline,
             status: item.projectStatusId,
+            showDoth: item.deadlineRequest === "PENDING",
           })) ?? []
         }
+        dotsKey="showDoth"
+        dotsAnchorKey="projectName"
         columns={tableColumns}
         primaryKey="projectId"
         rowClassName={(item) => {
@@ -302,6 +314,7 @@ export default function Projects({
         isEditDeleteShow={false}
         onRowClick={(row) => {
           if (row) {
+            setDefaultProjectName("");
             setSelected(row);
             setDrawerOpen(true);
           }
@@ -356,6 +369,8 @@ export default function Projects({
           projectsFireBase={projectsFireBase}
           ioType={ioType}
           isExtra={isExtra}
+          defaultProjectName={defaultProjectName}
+          joiners={joiners}
         />
       )}
     </div>

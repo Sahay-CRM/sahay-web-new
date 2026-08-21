@@ -575,6 +575,7 @@ const Urls = {
   companyReportLibraryUpdate: (id: string) => `${baseUrl}/company/report/library/update/${id}`,
   companyReportRun: (id: string) => `${baseUrl}/company/report/run/${id}`,
   companyReportLibraryDelete: (id: string) => `${baseUrl}/company/report/library/delete/${id}`,
+  employeeToday: () => `${baseUrl}/company/employeeToday`,
 };
 
 export default Urls;

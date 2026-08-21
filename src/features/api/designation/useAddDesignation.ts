@@ -15,6 +15,7 @@ export default function useAddOrUpdateDesignation() {
         departmentId: data.departmentId,
         parentId: data.parentId,
         isOwner: data.isOwner,
+        isForceChange: data.isForceChange,
       };
       const config = {
         url: isUpdate

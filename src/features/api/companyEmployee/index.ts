@@ -6,3 +6,4 @@ export { default as ddAllEmployee } from "./useDdEmployee";
 
 export { default as useGetEmployeeLog } from "./useGetEmployeeLog";
 export { default as useGetEmployeeDd } from "./useGetEmployeeDd";
+export { default as useGetEmployeeToday } from "./useGetEmployeeToday";

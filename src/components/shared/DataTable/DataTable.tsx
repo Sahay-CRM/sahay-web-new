@@ -41,7 +41,7 @@ import { getColorFromName } from "@/features/utils/formatting.utils";
 import { isColorDark } from "@/features/utils/color.utils";
 import { TableTooltip } from "./tableTooltip";
 import { twMerge } from "tailwind-merge";
-import { formatAgendaTime } from "@/features/utils/app.utils";
+import { formatAgendaTime, formatEmployeeType } from "@/features/utils/app.utils";
 
 interface DetailsPermission {
   view: boolean;
@@ -594,7 +594,9 @@ const TableData = <T extends Record<string, unknown>>({
                               }
                             }
 
-                            const cellValue = String(item[clm] ?? " - ");
+                            const cellValue = clm === "employeeType" && item[clm]
+                              ? formatEmployeeType(String(item[clm]))
+                              : String(item[clm] ?? " - ");
                             const tooltipValue = columnConfig?.tooltipColumn
                               ? String(
                                   item[columnConfig.tooltipColumn as keyof T] ??

@@ -32,6 +32,7 @@ interface DesignationData {
   companyName: string;
   isParentDesignation?: boolean;
   isOwner?: boolean;
+  isForceChange?: boolean;
 }
 // kk
 interface DesignationAddFormProps {
@@ -421,6 +422,7 @@ interface CompanyMeetingDataProps {
   status?: string;
   companyId?: string;
   color?: string;
+  perAgendaTime?: number;
 }
 
 interface ProjectParameters {
@@ -1280,6 +1282,9 @@ interface MeetingResFire {
       [objectiveId: string]: TimerEntry;
     };
   };
+  priorities?: {
+    [agendaId: string]: boolean;
+  };
 }
 
 interface FbIssues {
@@ -1327,6 +1332,9 @@ interface KpiAllList {
   detailMeetingKPIId?: string;
   kpiMergeId?: string;
   ioKPIId?: string;
+  isFocus?: boolean;
+  departmentId?: string;
+  departmentName?: string;
 }
 
 interface KPICoreParameter {
@@ -1385,6 +1393,9 @@ interface IssuesProps {
   isDelete?: boolean;
   type?: string | null;
   totalTime?: string;
+  isPriority?: boolean;
+  createdByName?: string;
+  createdDateTime?: string;
 }
 
 interface UseIssuesFormModalProps {
@@ -1411,6 +1422,9 @@ interface ObjectiveProps {
   isDelete?: boolean;
   type?: string | null;
   totalTime?: string;
+  isPriority?: boolean;
+  createdByName?: string;
+  createdDateTime?: string;
 }
 interface UpdateItem {
   srNo: number;
@@ -1449,6 +1463,7 @@ interface MeetingAgenda {
   departmentId?: string;
   departmentName?: string;
   type?: string;
+  isPriority?: boolean;
 }
 
 interface DetailMeetingAgendaIssue {
@@ -1514,6 +1529,7 @@ interface RepeatMeeting {
   customObj?: CustomObjREPT;
   joinerNames?: string;
   companyId?: string;
+  perAgendaTime?: number;
   // meetingStatusId?: string;
 }
 
@@ -1614,6 +1630,10 @@ interface AgendaListProps {
   isTeamLeader?: boolean;
   isUnFollow?: boolean;
   meetingTime?: string;
+  perAgendaTime?: number;
+  hasPriorityAgenda?: boolean;
+  handleTogglePriority?: (issueObjectiveId: string) => void;
+  isSetPriorityMode?: boolean;
 }
 
 interface EditingProps {

@@ -23,8 +23,15 @@ export function capitalizeFirstLetter(str: string): string {
 
 export function formatEmployeeType(type: string): string {
   if (!type) return "";
-  if (type === "SAHAYTEAMMATE") return "Sahay Teammate";
-  return capitalizeFirstLetter(type);
+  const normalized = type.toUpperCase().replace(/\s+/g, "").replace(/_/g, "");
+  if (normalized === "SAHAYTEAMMATE") return "Sahay Teammate";
+
+  return type
+    .replace(/_/g, " ")
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
 }
 
 export function formatFrequencyType(value: string) {

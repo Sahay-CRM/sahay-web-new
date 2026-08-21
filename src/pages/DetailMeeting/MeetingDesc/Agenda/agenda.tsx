@@ -1,4 +1,4 @@
-import React, { Suspense, useEffect, useState } from "react";
+import React, { Suspense, useCallback, useEffect, useState } from "react";
 
 import {
   ArrowUp,
@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import {
   Dialog,
   DialogContent,
@@ -51,7 +52,9 @@ import ModalData from "@/components/shared/Modal/ModalData/ModalData";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   closestCenter,
+  CollisionDetection,
   DndContext,
+  Modifier,
   PointerSensor,
   useSensor,
   useSensors,
@@ -200,6 +203,7 @@ interface AgendaProps {
   meetingResponse?: MeetingResFire | null;
   joiners: Joiners[];
   meetingTime?: string;
+  perAgendaTime?: number;
   isTeamLeader: boolean | undefined;
   isSuperAdmin: boolean;
   follow?: boolean;
@@ -213,6 +217,7 @@ export default function Agenda({
   meetingStatus,
   meetingResponse,
   meetingTime,
+  perAgendaTime,
   isTeamLeader,
   isSuperAdmin,
   follow,
@@ -256,6 +261,7 @@ export default function Agenda({
     tasksFireBase,
     isPending,
     handleStartMeeting,
+    handleTogglePriority,
     handleCloseMeetingWithLog,
     endMeetingLoading,
     conclusionLoading,
@@ -294,6 +300,10 @@ export default function Agenda({
     (item) => item.type === "UNRESOLVED",
   ).length;
 
+  const hasPriorityAgenda = agendaList?.some(
+    (item) => item.isPriority === true && item.type === "UNRESOLVED"
+  );
+
   const resolvedCount = agendaList?.filter(
     (item) => item.type === "RESOLVED",
   ).length;
@@ -303,6 +313,72 @@ export default function Agenda({
   ).length;
 
   const [showMaxAgendaModal, setShowMaxAgendaModal] = useState(false);
+  const [startAnywayFlow, setStartAnywayFlow] = useState<"meeting" | "discussion" | null>(null);
+  const [isSetPriorityMode, setIsSetPriorityMode] = useState(false);
+
+  const customCollisionDetection = useCallback<CollisionDetection>(
+    (args) => {
+      const activeId = String(args.active.id);
+      const activeItem = agendaList?.find((item) => item?.issueObjectiveId === activeId);
+      if (!activeItem) return [];
+
+      const isActivePriority = activeItem.isPriority === true;
+
+      // Filter droppable containers to only allow matching priority items
+      const validContainers = args.droppableContainers.filter((container) => {
+        const item = agendaList?.find(
+          (i) => i?.issueObjectiveId === String(container.id)
+        );
+        if (!item) return false;
+        return (item.isPriority === true) === isActivePriority;
+      });
+
+      return closestCenter({
+        ...args,
+        droppableContainers: validContainers,
+      });
+    },
+    [agendaList]
+  );
+
+  const restrictPriorityDrag = useCallback<Modifier>(
+    ({ transform, active, activeNodeRect }) => {
+      if (!active || !activeNodeRect || !agendaList) return transform;
+
+      const activeItem = agendaList.find((item) => item?.issueObjectiveId === active.id);
+      if (!activeItem) return transform;
+
+      const isActivePriority = activeItem.isPriority === true;
+
+      // Query all rendered list items
+      const items = Array.from(
+        document.querySelectorAll("li[data-priority]")
+      ) as HTMLLIElement[];
+      
+      const groupItems = items.filter(
+        (el) => (el.getAttribute("data-priority") === "true") === isActivePriority
+      );
+      if (groupItems.length === 0) return transform;
+
+      // Get bounding boxes in window coordinates
+      const rects = groupItems.map((el) => el.getBoundingClientRect());
+      
+      // Calculate screen boundaries
+      const allowedTop = Math.min(...rects.map((r) => r.top));
+      const allowedBottom = Math.max(...rects.map((r) => r.bottom));
+
+      // Calculate restricted displacement (y)
+      const minY = allowedTop - activeNodeRect.top;
+      const maxY = allowedBottom - activeNodeRect.top - activeNodeRect.height;
+
+      return {
+        ...transform,
+        x: 0,
+        y: Math.max(minY, Math.min(maxY, transform.y)),
+      };
+    },
+    [agendaList]
+  );
 
   const defaultAgendaOrder = ["tasks", "kpis", "projects"];
   const configuredAgendaOrder = (
@@ -363,14 +439,33 @@ export default function Agenda({
     onConfirm: () => {},
   });
 
-  const handleStartMeetingClick = () => {
+  const checkMaxAgendaReached = () => {
     const totalMinutes = Math.floor(Number(meetingTime || 0) / 60);
-    const durationPerAgenda = Number(
-      import.meta.env.VITE_DETAILMEETINGAGENDADURATION || 5,
-    );
-    const maxAgenda = Math.floor(totalMinutes / durationPerAgenda);
 
-    if (unresolvedCount !== undefined && unresolvedCount > maxAgenda) {
+    let countToCompare = unresolvedCount || 0;
+    let durationPerAgenda = Number(
+      import.meta.env.VITE_DETAILMEETINGAGENDADURATION || 5
+    );
+
+    if (hasPriorityAgenda) {
+      // 1. Only count unresolved priority agendas
+      countToCompare = agendaList?.filter(
+        (item) => item.isPriority === true && item.type === "UNRESOLVED"
+      ).length || 0;
+
+      // 2. Use perAgendaTime if present, otherwise fallback to VITE_DETAILMEETINGAGENDADURATION
+      if (perAgendaTime && perAgendaTime > 0) {
+        durationPerAgenda = perAgendaTime;
+      }
+    }
+
+    const maxAgenda = Math.floor(totalMinutes / durationPerAgenda);
+    return countToCompare > maxAgenda;
+  };
+
+  const handleStartMeetingClick = () => {
+    if (checkMaxAgendaReached()) {
+      setStartAnywayFlow("meeting");
       setShowMaxAgendaModal(true);
     } else {
       setConfirmModal({
@@ -390,15 +485,20 @@ export default function Agenda({
       setNoAgendaModalOpen(true);
       return;
     }
-    setConfirmModal({
-      open: true,
-      title: "Start Discussion",
-      description: "Are you sure you want to start the discussion?",
-      onConfirm: () => {
-        handleDesc();
-        setConfirmModal((prev) => ({ ...prev, open: false }));
-      },
-    });
+    if (checkMaxAgendaReached()) {
+      setStartAnywayFlow("discussion");
+      setShowMaxAgendaModal(true);
+    } else {
+      setConfirmModal({
+        open: true,
+        title: "Start Discussion",
+        description: "Are you sure you want to start the discussion?",
+        onConfirm: () => {
+          handleDesc();
+          setConfirmModal((prev) => ({ ...prev, open: false }));
+        },
+      });
+    }
   };
 
   const sensors = useSensors(useSensor(PointerSensor));
@@ -514,15 +614,27 @@ export default function Agenda({
         onClose={() => setShowMaxAgendaModal(false)}
         onStartAnyway={() => {
           setShowMaxAgendaModal(false);
-          setConfirmModal({
-            open: true,
-            title: "Start Meeting",
-            description: "Are you sure you want to start the meeting anyway?",
-            onConfirm: () => {
-              handleStartMeeting();
-              setConfirmModal((prev) => ({ ...prev, open: false }));
-            },
-          });
+          if (startAnywayFlow === "discussion") {
+            setConfirmModal({
+              open: true,
+              title: "Start Discussion",
+              description: "Are you sure you want to start the discussion anyway?",
+              onConfirm: () => {
+                handleDesc();
+                setConfirmModal((prev) => ({ ...prev, open: false }));
+              },
+            });
+          } else {
+            setConfirmModal({
+              open: true,
+              title: "Start Meeting",
+              description: "Are you sure you want to start the meeting anyway?",
+              onConfirm: () => {
+                handleStartMeeting();
+                setConfirmModal((prev) => ({ ...prev, open: false }));
+              },
+            });
+          }
         }}
       />
       <Dialog open={noAgendaModalOpen} onOpenChange={setNoAgendaModalOpen}>
@@ -845,7 +957,7 @@ export default function Agenda({
             )}
           </div>
           <div className="relative h-full">
-            <div className="mb-3">
+            <div className="mb-3 flex flex-wrap sm:flex-nowrap items-center justify-between gap-4">
               <Tabs
                 defaultValue="UNRESOLVED"
                 onValueChange={(value) => {
@@ -862,7 +974,7 @@ export default function Agenda({
                   );
                 }}
                 value={resolutionFilter}
-                className="w-full"
+                className="w-fit"
               >
                 <TabsList className="grid w-86 grid-cols-3">
                   <TabsTrigger
@@ -900,6 +1012,17 @@ export default function Agenda({
                 <TabsContent value="SOLVED" className="mt-0"></TabsContent>
                 <TabsContent value="PARKED" className="mt-0"></TabsContent>
               </Tabs>
+
+              {(meetingStatus === "NOT_STARTED" || meetingStatus === "STARTED") && agendaList && agendaList.length > 0 && (
+                <div className="flex items-center gap-2 pr-2 shrink-0">
+                  <span className="text-md font-semibold text-primary">Set Priority</span>
+                  <Switch
+                    checked={isSetPriorityMode}
+                    onCheckedChange={setIsSetPriorityMode}
+                    className="data-[state=checked]:bg-primary"
+                  />
+                </div>
+              )}
             </div>
             <div
               className={`mt-1 pr-1 w-full overflow-auto ${meetingStatus === "DISCUSSION" ? "h-[calc(var(--vh,100vh)-230px)]" : "h-[calc(var(--vh,100vh)-260px)]"}`}
@@ -907,12 +1030,14 @@ export default function Agenda({
               {agendaList && agendaList.length > 0 ? (
                 <DndContext
                   sensors={sensors}
-                  collisionDetection={closestCenter}
+                  collisionDetection={customCollisionDetection}
                   onDragEnd={handleDragEnd}
+                  modifiers={[restrictPriorityDrag]}
                 >
                   <SortableContext
                     items={agendaList
                       .slice()
+                      .filter((data) => resolutionFilter === data.type)
                       .sort((a, b) => {
                         const seqA = a.sequence;
                         const seqB = b.sequence;
@@ -966,6 +1091,10 @@ export default function Agenda({
                               isTeamLeader={isTeamLeader || isSuperAdmin}
                               isUnFollow={unFollowByUser}
                               meetingTime={meetingTime}
+                              perAgendaTime={perAgendaTime}
+                              hasPriorityAgenda={hasPriorityAgenda}
+                              handleTogglePriority={handleTogglePriority}
+                              isSetPriorityMode={isSetPriorityMode}
                             />
                           ))}
                     </ul>
@@ -1432,6 +1561,7 @@ export default function Agenda({
                       selectedIssueId={isSelectedAgenda}
                       isTeamLeader={isTeamLeader || isSuperAdmin}
                       isExtra={isExtra}
+                      joiners={joiners}
                       headerLeft={
                         isStacked
                           ? sectionLabel("Tasks", detailAgendaData?.noOfTasks)
@@ -1467,6 +1597,7 @@ export default function Agenda({
                       selectedIssueId={isSelectedAgenda}
                       isTeamLeader={isTeamLeader || isSuperAdmin}
                       isExtra={isExtra}
+                      joiners={joiners}
                       headerLeft={
                         isStacked
                           ? sectionLabel(

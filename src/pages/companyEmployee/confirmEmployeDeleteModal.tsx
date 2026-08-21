@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 // import { getUserDetail } from "@/features/selectors/auth.selector";
 import ModalData from "@/components/shared/Modal/ModalData";
+import { formatEmployeeType } from "@/features/utils/app.utils";
 
 interface DeleteModalProps {
   modalData: EmployeeData;
@@ -108,7 +109,7 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
             {(modalData?.designationName || modalData?.employeeType) && (
               <div>
                 <span className="font-medium text-primary">Designation : </span>
-                {modalData.designationName || modalData.employeeType}
+                {modalData.designationName || formatEmployeeType(modalData.employeeType || "")}
               </div>
             )}
 

@@ -909,11 +909,7 @@ export default function GanttItemDetailModal({
                       {validationErrors.map((err, idx) => (
                         <li key={idx} className="leading-relaxed">
                           {err.message}
-                          {err.expectedDate && err.actualDate && (
-                            <span className="block mt-0.5 text-[11px] text-red-700/80 font-semibold">
-                              Expected: {err.expectedDate} | Actual: {err.actualDate}
-                            </span>
-                          )}
+                          
                         </li>
                       ))}
                     </ul>

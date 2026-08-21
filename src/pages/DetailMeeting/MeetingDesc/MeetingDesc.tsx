@@ -1,5 +1,6 @@
-import React, { Suspense, useEffect, useMemo } from "react";
+import React, { Suspense, useEffect, useMemo, useContext } from "react";
 import { useSelector } from "react-redux";
+import SidebarControlContext from "@/features/layouts/DashboardLayout/SidebarControlContext";
 import { useSwitchCompany } from "@/features/hooks/useSwitchCompany";
 import {
   CircleCheckBig,
@@ -140,6 +141,18 @@ export default function MeetingDesc() {
     !meetingTiming || meetingTiming.companyId === currentCompany?.companyId;
 
   const { switchCompany, isSwitching } = useSwitchCompany();
+  const sidebarControl = useContext(SidebarControlContext);
+
+  useEffect(() => {
+    if (
+      meetingStatus === "STARTED" ||
+      meetingStatus === "DISCUSSION" ||
+      meetingStatus === "CONCLUSION"
+    ) {
+      sidebarControl?.setOpen(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [meetingStatus]);
 
   useEffect(() => {
     if (meetingTiming?.meetingName && isMeetingInCurrentCompany) {
@@ -268,6 +281,7 @@ export default function MeetingDesc() {
             meetingResponse={meetingResponse}
             joiners={meetingTiming?.joiners as Joiners[]}
             meetingTime={meetingTiming?.meetingTimePlanned}
+            perAgendaTime={meetingTiming?.perAgendaTime}
             isTeamLeader={isTeamLeader}
             isSuperAdmin={!!isSuperAdmin}
             isBellRing={handleRing}

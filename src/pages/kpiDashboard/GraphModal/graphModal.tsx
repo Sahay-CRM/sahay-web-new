@@ -239,12 +239,23 @@ export default function GraphModal({
 
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto px-4">
+    <div className="bg-white rounded-lg shadow-xl w-full max-w-5xl max-h-[90vh] overflow-y-auto px-4">
         <div className="flex items-center justify-between py-4">
           <div className="flex items-center gap-6 flex-wrap">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <span className="font-semibold text-gray-700">KPI Name:</span>{" "}
-              <span className="text-gray-900 text-lg">{kpiData?.kpiName}</span>
+            <div className="p-4 bg-gray-50 rounded-lg flex items-center gap-3">
+              <span>
+                <span className="font-semibold text-gray-700">
+                  KPI Name:
+                </span>{" "}
+                <span className="text-gray-900 text-lg">
+                  {kpiData?.kpiName}
+                </span>
+              </span>
+              {kpiData?.tag && (
+                <span className="px-2 py-1 text-xs font-medium bg-gray-200 rounded-full text-primary">
+                  {kpiData.tag}
+                </span>
+              )}
             </div>
 
             <DateRangePicker
