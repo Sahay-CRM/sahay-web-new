@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { SearchIcon } from "@/components/shared/Icons";
 import { useGetCompanyTask } from "@/features/api/companyTask";
-import { Plus } from "lucide-react";
+import { CornerDownLeft } from "lucide-react";
 
 interface TaskSearchDropdownProps {
   onAdd: (selectedTasks: TaskGetPaging) => void;
@@ -76,9 +76,9 @@ const TaskSearchDropdown: React.FC<TaskSearchDropdownProps> = ({
         </span>
         <Input
           type="text"
-          placeholder="Add Task to Meeting"
+          placeholder="Add or Create Task"
           value={searchValue}
-          onChange={(e) => {
+          onChange={(e) => { 
             setSearchValue(e.target.value);
             setShowDropdown(e.target.value.length >= minSearchLength);
           }}
@@ -93,7 +93,7 @@ const TaskSearchDropdown: React.FC<TaskSearchDropdownProps> = ({
           className={`pl-8 pr-2 w-full h-10 py-2 text-sm ${inputClassName}`}
         />
         <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none text-sm">
-          <Plus className="text-gray-400 w-4" />
+          <CornerDownLeft className="text-gray-400 w-4" />
         </span>
       </div>
       {/* Dropdown */}

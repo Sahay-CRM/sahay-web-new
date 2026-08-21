@@ -73,7 +73,7 @@ export const useAgenda = ({
   const [isSelectedAgenda, setIsSelectedAgenda] = useState<string>();
   const [isSideBar, setIsSideBar] = useState(false);
   const [activeTab, setActiveTab] = useState<ActiveTab>("tasks");
-  const [layoutMode, setLayoutMode] = useState<"stacked" | "tab">("tab");
+  const [layoutMode, setLayoutMode] = useState<"stacked" | "tab">("stacked");
 
   const unFollowByUser = meetingResponse?.state.unfollow?.[userId] ?? false;
 

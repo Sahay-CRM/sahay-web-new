@@ -235,8 +235,12 @@ const Urls = {
     `${baseUrl}/company/detail-meeting/update/${id}`,
   detailMeetingAdd: () => `${baseUrl}/company/detail-meeting/add`,
   detailMeetingGet: () => `${baseUrl}/company/detail-meeting/get`,
+  detailMeetingGetAll: () => `${baseUrl}/company/detail-meeting/get-all`,
   detailMeetingDelete: (id: string) =>
     `${baseUrl}/company/detail-meeting/delete/${id}`,
+
+  cloneMeetingAgenda: (targetMeetingId: string) =>
+    `${baseUrl}/company/detail-meeting/clone-agenda/${targetMeetingId}`,
 
   getConclusionByMeeting: (id: string) =>
     `${baseUrl}/company/detail-meeting/get-conclusion/${id}`,

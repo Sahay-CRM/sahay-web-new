@@ -946,7 +946,11 @@ export default function KPITable({
     setIoKPIId("");
   };
 
-  const canEditData = isTeamLeader && (follow || isUnfollow);
+  const canEditData =
+    isTeamLeader &&
+    (follow || isUnfollow) &&
+    meetingStatus !== "CONCLUSION" &&
+    meetingStatus !== "ENDED";
 
   if (isLoading) {
     return <Loader />;
@@ -1567,6 +1571,7 @@ export default function KPITable({
           kpisFireBase={kpisFireBase}
           ioKPIId={selectedKpi && selectedKpi.ioKPIId}
           ioType={ioType}
+          disabled={!canEditData}
         />
       </Suspense>
     </FormProvider>
