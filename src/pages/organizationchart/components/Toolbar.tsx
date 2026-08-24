@@ -5,6 +5,11 @@ import {
   Search,
   Activity,
   Info,
+  Save,
+  Loader2,
+  RotateCcw,
+  Undo,
+  Redo,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import {
@@ -23,6 +28,14 @@ export function Toolbar({
   onAddSeat,
   spanOfControl,
   permission,
+  hasChanges,
+  onSave,
+  isSaving,
+  onDiscard,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }: ToolbarProps) {
   return (
     <div className="flex flex-wrap items-center justify-between px-6 py-4 border-b border-gray-200 bg-white sticky top-0 shrink-0 z-50 gap-4 shadow-xs">
@@ -92,9 +105,9 @@ export function Toolbar({
             {totalNodes} Total positions
           </div> */}
         </div>
-
+ 
         <div className="h-6 w-px bg-gray-200" />
-
+ 
         {/* Level Controls */}
         <div className="flex items-center gap-1 rounded-md border border-gray-200 bg-white px-2 py-1 ">
           <Button
@@ -106,11 +119,11 @@ export function Toolbar({
           >
             <ChevronUp className="h-4 w-4" />
           </Button>
-
+ 
           <div className="min-w-[60px] text-center text-sm font-semibold text-gray-700">
             Level {visibleLevel}
           </div>
-
+ 
           <Button
             type="button"
             className="flex h-7 w-7 items-center justify-center rounded-md border border-gray-200 bg-gray-50 text-primary transition-all hover:bg-primary hover:text-white disabled:cursor-not-allowed disabled:opacity-40"
@@ -122,7 +135,7 @@ export function Toolbar({
           </Button>
         </div>
       </div>
-
+ 
       {/* Right Section: Actions */}
       <div className="flex items-center gap-3">
         <div className="relative h-10 w-full max-w-sm">
@@ -136,7 +149,55 @@ export function Toolbar({
             className="pl-8 pr-2 w-64 lg:w-80 h-10 py-2 text-sm bg-transparent"
           />
         </div>
+ 
+        {/* Undo/Redo Buttons */}
+        <div className="flex items-center gap-1 border border-gray-200 rounded-lg p-1 bg-white h-10 shrink-0 shadow-2xs">
+          <Button
+            variant="ghost"
+            onClick={onUndo}
+            disabled={!canUndo || isSaving}
+            className="h-8 w-8 p-0 flex items-center justify-center text-gray-500 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-md border-none bg-transparent hover:bg-gray-100 transition shadow-none"
+            title="Undo (Ctrl + Z)"
+          >
+            <Undo className="w-4 h-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={onRedo}
+            disabled={!canRedo || isSaving}
+            className="h-8 w-8 p-0 flex items-center justify-center text-gray-500 hover:text-gray-800 disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer rounded-md border-none bg-transparent hover:bg-gray-100 transition shadow-none"
+            title="Redo (Ctrl + Y)"
+          >
+            <Redo className="w-4 h-4" />
+          </Button>
+        </div>
 
+        {hasChanges && (
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              onClick={onDiscard}
+              disabled={isSaving}
+              className="flex py-2 w-fit items-center text-gray-600 hover:bg-gray-100 border border-gray-200 cursor-pointer h-10 px-4 rounded-md"
+            >
+              <RotateCcw className="w-4 h-4 mr-1.5" />
+              Discard Changes
+            </Button>
+            <Button
+              onClick={onSave}
+              disabled={isSaving}
+              className="flex py-2 w-fit items-center bg-emerald-600 hover:bg-emerald-700 text-white cursor-pointer h-10 px-4 rounded-md"
+            >
+              {isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-1" />
+              ) : (
+                <Save className="w-4 h-4 mr-1" />
+              )}
+              Save Changes
+            </Button>
+          </div>
+        )}
+ 
         {permission.Add && (
           <Button
             onClick={onAddSeat}

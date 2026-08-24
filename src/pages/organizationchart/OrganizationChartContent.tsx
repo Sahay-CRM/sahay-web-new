@@ -7,9 +7,9 @@ import {
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import {
   useGetTeamPositions,
-  useAddUpdateTeamPosition,
-  useDeleteTeamPosition,
+  useSaveMultipleTeamPositions,
 } from "@/features/api/companyTeam";
+import { useGetEmployeeDd } from "@/features/api/companyEmployee";
 import {
   ReactFlow,
   Background,
@@ -72,12 +72,19 @@ export const OrganizationChartContent = () => {
     setBreadcrumbs([{ label: "Organization Structure", href: "" }]);
   }, [setBreadcrumbs]);
 
-  const { data: positionsRes, isLoading } = useGetTeamPositions(
+  const { data: positionsRes, isLoading: isPositionsLoading, dataUpdatedAt } = useGetTeamPositions(
     user?.companyId as string,
   );
-  const { mutate: addUpdatePosition, isPending: isAdding } =
-    useAddUpdateTeamPosition();
-  const { mutate: deletePosition } = useDeleteTeamPosition();
+  
+  const { data: employeesRes, isLoading: isEmployeesLoading } = useGetEmployeeDd({
+    filter: { companyId: user?.companyId as string, search: "" },
+    enable: Boolean(user?.companyId),
+  });
+
+  const { mutate: saveMultiplePositions, isPending: isSaving } = useSaveMultipleTeamPositions();
+
+  const isLoading = isPositionsLoading || isEmployeesLoading;
+
   const { fitView, zoomIn, zoomOut } = useReactFlow();
   const { zoom } = useViewport();
 
@@ -108,14 +115,169 @@ export const OrganizationChartContent = () => {
     return positionsRes.data.positions || [];
   }, [positionsRes?.data]);
 
+  const [localPositions, setLocalPositions] = useState<TeamPosition[]>([]);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [lastSyncTime, setLastSyncTime] = useState(0);
+
+  const [history, setHistory] = useState<TeamPosition[][]>([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+
+  const hasChanges = useMemo(() => {
+    if (localPositions.length !== positionsList.length) return true;
+    for (const local of localPositions) {
+      const original = positionsList.find((p) => p.positionId === local.positionId);
+      if (!original) return true;
+      if (local.seatTitle !== original.seatTitle) return true;
+      if (local.employeeId !== original.employeeId) return true;
+      if (local.parentPositionId !== original.parentPositionId) return true;
+      if (Boolean(local.isDeptHead) !== Boolean(original.isDeptHead)) return true;
+      if (Boolean(local.isManager) !== Boolean(original.isManager)) return true;
+    }
+    return false;
+  }, [localPositions, positionsList]);
+
+  // 1. Initial load from localStorage (prioritized) or fallback to positionsList when ready
+  useEffect(() => {
+    if (!user?.companyId) return;
+
+    const storageKey = `org_chart_local_changes_${user.companyId}`;
+    const cached = localStorage.getItem(storageKey);
+
+    if (cached && !isInitialized) {
+      try {
+        const parsed = JSON.parse(cached);
+        if (Array.isArray(parsed)) {
+          setLocalPositions(parsed);
+          setHistory([parsed]);
+          setHistoryIndex(0);
+          setIsInitialized(true);
+          return;
+        }
+      } catch (e) {
+        console.error("Error parsing local positions from localStorage", e);
+      }
+    }
+
+    if (positionsList.length > 0 && !isInitialized) {
+      setLocalPositions(positionsList);
+      setHistory([positionsList]);
+      setHistoryIndex(0);
+      setIsInitialized(true);
+    }
+  }, [positionsList, user?.companyId, isInitialized]);
+
+  // 2. Keep localStorage in sync when changes are made
+  useEffect(() => {
+    if (!user?.companyId || !isInitialized) return;
+
+    const storageKey = `org_chart_local_changes_${user.companyId}`;
+    if (hasChanges) {
+      localStorage.setItem(storageKey, JSON.stringify(localPositions));
+    } else {
+      localStorage.removeItem(storageKey);
+    }
+  }, [localPositions, hasChanges, user?.companyId, isInitialized]);
+
+  // 3. Tab/Browser Close Guard: prompt when there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasChanges) {
+        e.preventDefault();
+        e.returnValue = "Please save your changes";
+        return "Please save your changes";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [hasChanges]);
+
+  // 4. Sync from database AFTER a successful save (waits until background query refetches new data)
+  useEffect(() => {
+    if (lastSyncTime > 0 && dataUpdatedAt > lastSyncTime) {
+      setLocalPositions(positionsList);
+      setHistory([positionsList]);
+      setHistoryIndex(0);
+      setLastSyncTime(0);
+      setIsInitialized(true);
+    }
+  }, [positionsList, dataUpdatedAt, lastSyncTime]);
+
+  const updatePositionsAndHistory = useCallback(
+    (nextValue: TeamPosition[] | ((prev: TeamPosition[]) => TeamPosition[])) => {
+      setLocalPositions((prev) => {
+        const next = typeof nextValue === "function" ? nextValue(prev) : nextValue;
+        setHistory((prevHistory) => {
+          const truncated = prevHistory.slice(0, historyIndex + 1);
+          const updated = [...truncated, next];
+          setHistoryIndex(updated.length - 1);
+          return updated;
+        });
+        return next;
+      });
+    },
+    [historyIndex],
+  );
+
+  const handleUndo = useCallback(() => {
+    if (historyIndex > 0) {
+      const nextIndex = historyIndex - 1;
+      const prevState = history[nextIndex];
+      setLocalPositions(prevState);
+      setHistoryIndex(nextIndex);
+    }
+  }, [history, historyIndex]);
+
+  const handleRedo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      const nextIndex = historyIndex + 1;
+      const nextState = history[nextIndex];
+      setLocalPositions(nextState);
+      setHistoryIndex(nextIndex);
+    }
+  }, [history, historyIndex]);
+
+  // Keypress event listener for Undo/Redo hotkeys
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const activeEl = document.activeElement;
+      const isInput = activeEl && (
+        activeEl.tagName === "INPUT" || 
+        activeEl.tagName === "TEXTAREA" || 
+        activeEl.getAttribute("contenteditable") === "true"
+      );
+      if (isInput) return; // Do not intercept standard input undo/redo typing
+
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        if (e.key === "z" || e.key === "Z") {
+          e.preventDefault();
+          handleUndo();
+        } else if (e.key === "y" || e.key === "Y") {
+          e.preventDefault();
+          handleRedo();
+        }
+      } else if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === "z" || e.key === "Z")) {
+        e.preventDefault();
+        handleRedo();
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleUndo, handleRedo]);
+
   const spanOfControl: SpanOfControl | null = useMemo(() => {
     if (!positionsRes?.data) return null;
     return positionsRes.data.spanOfControl || null;
   }, [positionsRes?.data]);
 
-  // Build graph from API
+  // Build graph from localPositions
   useEffect(() => {
-    if (positionsList.length === 0) {
+    if (localPositions.length === 0) {
       setNodes([]);
       setEdges([]);
       setMaxLevel(1);
@@ -126,7 +288,7 @@ export const OrganizationChartContent = () => {
     // 1. First, build a map of parent -> children to calculate depths
     const childMap: Record<string, string[]> = {};
     const posMap: Record<string, TeamPosition> = {};
-    positionsList.forEach((p) => {
+    localPositions.forEach((p) => {
       posMap[p.positionId] = p;
       if (p.parentPositionId) {
         if (!childMap[p.parentPositionId]) childMap[p.parentPositionId] = [];
@@ -135,7 +297,7 @@ export const OrganizationChartContent = () => {
     });
 
     // 2. Find root(s) - nodes with no parent or parent not in the list
-    const roots = positionsList.filter(
+    const roots = localPositions.filter(
       (p) => !p.parentPositionId || !posMap[p.parentPositionId],
     );
 
@@ -153,32 +315,31 @@ export const OrganizationChartContent = () => {
     setMaxLevel(currentMaxLevel);
     setVisibleLevel(currentMaxLevel); // Initially show all levels
 
-    const rawNodes = positionsList.map((pos) => {
-      const employees: AssignedEmployee[] =
-        pos.employees &&
-        Array.isArray(pos.employees) &&
-        pos.employees.length > 0
-          ? pos.employees.map((e) => ({
-              employeeId: e.employeeId,
-              employeeName: e.employeeName,
-              employeeEmail: e.employeeEmail,
-              employeeMobile: e.employeeMobile,
-              employeeType: e.employeeType,
-              departmentName: e.departmentName || pos.departmentName,
-              designationName: e.designationName || pos.designationName,
-              photo: e.photo,
-            }))
+    const employeeMap = new Map<string, EmployeeData>();
+    (employeesRes?.data || []).forEach((emp) => {
+      employeeMap.set(emp.employeeId, emp);
+    });
+
+    const rawNodes = localPositions.map((pos) => {
+      const empIds =
+        pos.employees && Array.isArray(pos.employees) && pos.employees.length > 0
+          ? pos.employees.map((e) => e.employeeId)
           : pos.employeeId
-            ? [
-                {
-                  employeeId: pos.employeeId,
-                  employeeName: pos.employeeName || "Employee",
-                  designationName: pos.designationName,
-                  departmentName: pos.departmentName,
-                  employeeType: pos.employeeType,
-                },
-              ]
+            ? pos.employeeId.split(",").map((id) => id.trim()).filter(Boolean)
             : [];
+      const employees: AssignedEmployee[] = empIds.map((id) => {
+        const lookup = employeeMap.get(id);
+        const original = pos.employees?.find((e) => e.employeeId === id);
+        return {
+          employeeId: id,
+          employeeName: lookup?.employeeName || original?.employeeName || "Employee",
+          employeeEmail: lookup?.employeeEmail || original?.employeeEmail || "",
+          employeeMobile: lookup?.employeeMobile || original?.employeeMobile || "",
+          employeeType: lookup?.employeeType || original?.employeeType || "",
+          departmentName: lookup?.departmentName || original?.departmentName || pos.departmentName || "",
+          designationName: lookup?.designationName || original?.designationName || pos.designationName || "",
+        };
+      });
 
       return {
         id: pos.positionId,
@@ -196,7 +357,7 @@ export const OrganizationChartContent = () => {
       };
     });
 
-    const rawEdges = positionsList
+    const rawEdges = localPositions
       .filter(
         (p) => p.parentPositionId && typeof p.parentPositionId === "string",
       )
@@ -215,7 +376,7 @@ export const OrganizationChartContent = () => {
     );
     setNodes(ln as Node<OrgChartNodeData>[]);
     setEdges(le as Edge[]);
-  }, [positionsList, setNodes, setEdges, direction]);
+  }, [localPositions, employeesRes, setNodes, setEdges, direction]);
 
   // Collapse/Expand helpers
   const getDescendants = useCallback(
@@ -261,9 +422,14 @@ export const OrganizationChartContent = () => {
 
   const confirmDeletePosition = useCallback(() => {
     if (!pendingDeletePositionId) return;
-    deletePosition(pendingDeletePositionId);
+    const descendants = getDescendants(pendingDeletePositionId, edges);
+    const toDelete = new Set([pendingDeletePositionId, ...descendants]);
+    updatePositionsAndHistory((prev) =>
+      prev.filter((p) => !toDelete.has(p.positionId)),
+    );
     setPendingDeletePositionId(null);
-  }, [deletePosition, pendingDeletePositionId]);
+    setTimeout(() => fitView({ duration: 600 }), 300);
+  }, [pendingDeletePositionId, edges, getDescendants, fitView, updatePositionsAndHistory]);
 
   const closeDeletePositionModal = useCallback(() => {
     setPendingDeletePositionId(null);
@@ -279,68 +445,107 @@ export const OrganizationChartContent = () => {
   const confirmRemoveEmployee = useCallback(() => {
     if (!pendingRemoveEmployee) return;
 
-    const targetPos = positionsList.find(
-      (p) => p.positionId === pendingRemoveEmployee.positionId,
+    updatePositionsAndHistory((prev) =>
+      prev.map((p) => {
+        if (p.positionId === pendingRemoveEmployee.positionId) {
+          const currentEmps =
+            p.employees && Array.isArray(p.employees)
+              ? p.employees.map((e) => e.employeeId)
+              : p.employeeId
+                ? p.employeeId.split(",")
+                : [];
+          const remainingEmps = currentEmps.filter(
+            (id) => id !== pendingRemoveEmployee.employeeId,
+          );
+          return {
+            ...p,
+            employeeId: remainingEmps.join(","),
+            employees: undefined, // Clear so mapping resolves it from list
+          };
+        }
+        return p;
+      }),
     );
-    if (!targetPos) {
-      setPendingRemoveEmployee(null);
-      return;
-    }
-
-    const currentEmps =
-      targetPos.employees && Array.isArray(targetPos.employees)
-        ? targetPos.employees.map((e) => e.employeeId)
-        : targetPos.employeeId
-          ? [targetPos.employeeId]
-          : [];
-
-    const remainingEmps = currentEmps.filter(
-      (id) => id !== pendingRemoveEmployee.employeeId,
-    );
-
-    addUpdatePosition(
-      {
-        teamPositionId: pendingRemoveEmployee.positionId,
-        employeeId: remainingEmps.join(","),
-        parentPositionId: targetPos.parentPositionId || null,
-        seatTitle:
-          targetPos.seatTitle || targetPos.designationName || "Position",
-        isDeptHead: targetPos.isDeptHead || false,
-        isManager: targetPos.isManager || false,
-      },
-      {
-        onSuccess: () => {
-          setPendingRemoveEmployee(null);
-          setTimeout(() => fitView({ duration: 600 }), 300);
-        },
-      },
-    );
-  }, [positionsList, pendingRemoveEmployee, addUpdatePosition, fitView]);
+    setPendingRemoveEmployee(null);
+    setTimeout(() => fitView({ duration: 600 }), 300);
+  }, [pendingRemoveEmployee, fitView, updatePositionsAndHistory]);
 
   const closeRemoveEmployeeModal = useCallback(() => {
     setPendingRemoveEmployee(null);
   }, []);
 
   const handleAddSubmit = (data: AddSeatFormData) => {
-    addUpdatePosition(
-      {
-        teamPositionId: editingNodeId || undefined,
+    if (editingNodeId) {
+      updatePositionsAndHistory((prev) =>
+        prev.map((p) => {
+          if (p.positionId === editingNodeId) {
+            return {
+              ...p,
+              employeeId: data.employeeId.join(","),
+              parentPositionId: data.parentPositionId || null,
+              seatTitle: data.seatTitle,
+              isDeptHead: data.isDeptHead,
+              isManager: data.isManager,
+              employees: undefined, // Clear so mapping resolves it from list
+            };
+          }
+          return p;
+        }),
+      );
+      setIsEditOpen(false);
+      setEditingNodeId(null);
+      setTimeout(() => fitView({ duration: 600 }), 300);
+    } else {
+      const newPosId = `temp-${Date.now()}`;
+      const newPos: TeamPosition = {
+        positionId: newPosId,
         employeeId: data.employeeId.join(","),
         parentPositionId: data.parentPositionId || null,
         seatTitle: data.seatTitle,
         isDeptHead: data.isDeptHead,
         isManager: data.isManager,
-      },
+        designationName: data.seatTitle,
+      };
+      updatePositionsAndHistory((prev) => [...prev, newPos]);
+      setIsAddOpen(false);
+      setInitialParentId(undefined);
+      setTimeout(() => fitView({ duration: 600 }), 300);
+    }
+  };
 
-      {
-        onSuccess: () => {
-          setIsAddOpen(false);
-          setIsEditOpen(false);
-          setEditingNodeId(null);
-          setTimeout(() => fitView({ duration: 600 }), 300);
-        },
+  const handleSave = () => {
+    const payload = localPositions.map((p) => {
+      const empIdStr =
+        p.employees && Array.isArray(p.employees) && p.employees.length > 0
+          ? p.employees.map((e) => e.employeeId).join(",")
+          : (p.employeeId || "");
+      return {
+        positionId: p.positionId,
+        employeeId: empIdStr,
+        parentPositionId: p.parentPositionId || null,
+        seatTitle: p.seatTitle || p.designationName || "Position",
+        isDeptHead: Boolean(p.isDeptHead),
+        isManager: Boolean(p.isManager),
+      };
+    });
+    saveMultiplePositions(payload, {
+      onSuccess: () => {
+        if (user?.companyId) {
+          localStorage.removeItem(`org_chart_local_changes_${user.companyId}`);
+        }
+        setLastSyncTime(Date.now());
       },
-    );
+    });
+  };
+
+  const handleDiscard = () => {
+    if (user?.companyId) {
+      localStorage.removeItem(`org_chart_local_changes_${user.companyId}`);
+    }
+    setLocalPositions(positionsList);
+    setHistory([positionsList]);
+    setHistoryIndex(0);
+    toast.info("Unsaved changes discarded.");
   };
 
   // Computed display nodes
@@ -456,36 +661,20 @@ export const OrganizationChartContent = () => {
         return;
       }
 
-      // Find the child position (target) to get its existing details
-      const targetPos = positionsList.find((p) => p.positionId === target);
-      if (!targetPos) return;
-
-      const employeeIds =
-        targetPos.employees && Array.isArray(targetPos.employees)
-          ? targetPos.employees.map((e) => e.employeeId)
-          : targetPos.employeeId
-            ? [targetPos.employeeId]
-            : [];
-
-      // Update the position with the new parentId
-      addUpdatePosition(
-        {
-          teamPositionId: target,
-          employeeId: employeeIds.join(","),
-          parentPositionId: source,
-          seatTitle:
-            targetPos.seatTitle || targetPos.designationName || "Position",
-          isDeptHead: targetPos.isDeptHead || false,
-          isManager: targetPos.isManager || false,
-        },
-        {
-          onSuccess: () => {
-            setTimeout(() => fitView({ duration: 600 }), 300);
-          },
-        },
+      updatePositionsAndHistory((prev) =>
+        prev.map((p) => {
+          if (p.positionId === target) {
+            return {
+              ...p,
+              parentPositionId: source,
+            };
+          }
+          return p;
+        }),
       );
+      setTimeout(() => fitView({ duration: 600 }), 300);
     },
-    [positionsList, edges, getDescendants, addUpdatePosition, fitView],
+    [edges, getDescendants, fitView, updatePositionsAndHistory],
   );
 
   if (permission && permission.View === false) {
@@ -503,6 +692,14 @@ export const OrganizationChartContent = () => {
         onAddSeat={() => setIsAddOpen(true)}
         spanOfControl={spanOfControl}
         permission={permission}
+        hasChanges={hasChanges}
+        onSave={handleSave}
+        isSaving={isSaving}
+        onDiscard={handleDiscard}
+        onUndo={handleUndo}
+        onRedo={handleRedo}
+        canUndo={historyIndex > 0}
+        canRedo={historyIndex < history.length - 1}
       />
 
       <div className="flex-1 relative overflow-hidden">
@@ -622,8 +819,8 @@ export const OrganizationChartContent = () => {
           setInitialParentId(undefined);
         }}
         onSubmit={handleAddSubmit}
-        isLoading={isAdding}
-        positions={positionsList}
+        isLoading={isSaving}
+        positions={localPositions}
         companyId={user?.companyId}
         initialParentId={initialParentId}
       />
@@ -636,12 +833,12 @@ export const OrganizationChartContent = () => {
           setEditingNodeId(null);
         }}
         onSubmit={handleAddSubmit}
-        isLoading={isAdding}
-        positions={positionsList}
+        isLoading={isSaving}
+        positions={localPositions}
         companyId={user?.companyId}
         editingNodeId={editingNodeId || undefined}
         isRoot={
-          !positionsList.find((p) => p.positionId === editingNodeId)
+          !localPositions.find((p) => p.positionId === editingNodeId)
             ?.parentPositionId
         }
         initialData={(() => {
@@ -653,7 +850,7 @@ export const OrganizationChartContent = () => {
               node.data.employees?.map((e: AssignedEmployee) => e.employeeId) ||
               [],
             parentPositionId:
-              positionsList.find((p) => p.positionId === editingNodeId)
+              localPositions.find((p) => p.positionId === editingNodeId)
                 ?.parentPositionId || "",
             isDeptHead: node.data.isDeptHead || false,
             isManager: node.data.isManager || false,
@@ -702,7 +899,7 @@ export const OrganizationChartContent = () => {
             btnText: "Unassign",
             buttonCss: "py-1.5 px-5 bg-red-600 text-white hover:bg-red-700",
             btnClick: confirmRemoveEmployee,
-            isLoading: isAdding,
+            isLoading: isSaving,
           },
         ]}
       >

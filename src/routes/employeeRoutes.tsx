@@ -151,6 +151,7 @@ const FormSubmissionDetail = lazy(
 
 const HandOverData = lazy(() => import("../pages/HandOverData"));
 const CloneAgenda = lazy(() => import("../pages/CloneAgenda"));
+const MergeAgenda = lazy(() => import("../pages/MergeAgenda"));
 const Reports = lazy(() => import("../pages/Reports/report"));
 const CompanyReportsList = lazy(() => import("../pages/CompanyReports/CompanyReportsList"));
 const CompanyReportRunView = lazy(() => import("../pages/CompanyReports/CompanyReportRunView"));
@@ -300,6 +301,7 @@ export default function EmployeeRoutes() {
         <Route path="form-builder" Component={FormBuilder} />
         <Route path="handover" Component={HandOverData} />
         <Route path="clone-agenda" Component={CloneAgenda} />
+        <Route path="merge-agenda" Component={MergeAgenda} />
         <Route path="blueprint" Component={Blueprint} />
         <Route
           path="form-preview"

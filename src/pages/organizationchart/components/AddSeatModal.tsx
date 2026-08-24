@@ -2,13 +2,6 @@ import { useEffect, useState } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { Loader2 } from "lucide-react";
 
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetFooter,
-} from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
@@ -32,6 +25,8 @@ export function AddSeatModal({
     name: string;
     onChange: () => void;
   } | null>(null);
+
+  const [pendingDuplicateSeat, setPendingDuplicateSeat] = useState<AddSeatFormData | null>(null);
 
   const { data: empRes } = useGetEmployeeDd({
     filter: { companyId: companyId || "", search: empSearch },
@@ -104,21 +99,51 @@ export function AddSeatModal({
   }, [isOpen, initialParentId, reset]);
 
   const onFormSubmit = (data: AddSeatFormData) => {
-    onSubmit(data);
-    onClose();
+    const hasDuplicateTitle = positions.some((p) => {
+      const parentA = p.parentPositionId || "";
+      const parentB = data.parentPositionId || "";
+      const sameParent = parentA === parentB;
+      const sameTitle = p.seatTitle?.trim().toLowerCase() === data.seatTitle.trim().toLowerCase();
+      return sameParent && sameTitle;
+    });
+
+    if (hasDuplicateTitle) {
+      setPendingDuplicateSeat(data);
+    } else {
+      onSubmit(data);
+      onClose();
+    }
   };
 
   return (
-    <Sheet open={isOpen} onOpenChange={onClose}>
-      <SheetContent
-        side="right"
-        className="sm:max-w-[450px] p-0 flex flex-col border-l shadow-2xl bg-white [&>button]:text-white/80 hover:[&>button]:text-white [&>button]:top-5 [&>button]:right-6"
+    <>
+      {/* Overlay */}
+      {isOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-50 transition-opacity cursor-pointer" 
+          onClick={onClose} 
+        />
+      )}
+      {/* Drawer Container */}
+      <div
+        className={`fixed top-0 right-0 h-full w-full sm:max-w-[450px] bg-white shadow-2xl z-50 transform transition-transform duration-300 ease-in-out flex flex-col border-l
+          ${isOpen ? "translate-x-0" : "translate-x-full"}
+        `}
+        style={{ pointerEvents: isOpen ? "auto" : "none" }}
       >
-        <SheetHeader className="px-8 py-5 border-b bg-primary flex flex-row items-center justify-between space-y-0 shrink-0">
-          <SheetTitle className="text-xl font-bold text-white ">
+        {/* Header */}
+        <div className="px-8 py-5 border-b bg-primary flex flex-row items-center justify-between space-y-0 shrink-0">
+          <h2 className="text-xl font-bold text-white">
             Add position
-          </SheetTitle>
-        </SheetHeader>
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-white hover:text-white/80 text-2xl border-none bg-transparent cursor-pointer shadow-none p-0 flex items-center justify-center font-normal"
+          >
+            &times;
+          </button>
+        </div>
 
         <form
           onSubmit={handleSubmit(onFormSubmit)}
@@ -242,7 +267,7 @@ export function AddSeatModal({
             </div>
           </div>
 
-          <SheetFooter className="px-8 py-5 bg-gray-50 border-t flex items-center justify-end shrink-0">
+          <div className="px-8 py-5 bg-gray-50 border-t flex items-center justify-end shrink-0">
             <div className="flex items-center gap-3">
               <Button
                 type="button"
@@ -264,7 +289,7 @@ export function AddSeatModal({
                 )}
               </Button>
             </div>
-          </SheetFooter>
+          </div>
         </form>
 
         {/* Warning Modal for Duplicate Employee Assignment */}
@@ -296,7 +321,38 @@ export function AddSeatModal({
             Employee <strong>{pendingEmployee?.name}</strong> is already assigned to another position. Do you want to also assign them to this position?
           </p>
         </ModalData>
-      </SheetContent>
-    </Sheet>
+
+        {/* Warning Modal for Duplicate Seat Title */}
+        <ModalData
+          isModalOpen={!!pendingDuplicateSeat}
+          modalTitle="Duplicate Position Title"
+          modalClose={() => setPendingDuplicateSeat(null)}
+          containerClass="!min-w-0 !max-w-[425px] !min-h-0 w-full"
+          buttons={[
+            {
+              btnText: "Cancel",
+              buttonCss:
+                "py-1.5 px-5 bg-white border border-gray-300 text-black hover:bg-gray-50",
+              btnClick: () => setPendingDuplicateSeat(null),
+            },
+            {
+              btnText: "Confirm",
+              buttonCss: "py-1.5 px-5 bg-primary text-white hover:bg-primary/95",
+              btnClick: () => {
+                if (pendingDuplicateSeat) {
+                  onSubmit(pendingDuplicateSeat);
+                  setPendingDuplicateSeat(null);
+                  onClose();
+                }
+              },
+            },
+          ]}
+        >
+          <p className="text-sm text-gray-600">
+            A position with the title <strong>{pendingDuplicateSeat?.seatTitle}</strong> already reports to the selected supervisor. Do you want to create another one?
+          </p>
+        </ModalData>
+      </div>
+    </>
   );
 }

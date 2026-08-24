@@ -244,8 +244,8 @@ const SearchDropdown = ({
                             : "hover:bg-gray-100 px-2 hover:text-gray-900",
                         )}
                       >
-                        <div className="flex items-center gap-2 overflow-hidden flex-1 mr-2">
-                          <span className="truncate">{item.label}</span>
+                        <div className="flex items-center gap-2 overflow-hidden flex-1 mr-2 py-0.5">
+                          <span className="whitespace-normal break-words leading-tight">{item.label}</span>
                           {onActionClick &&
                             selectedValues.includes(item.value) && (
                               <button

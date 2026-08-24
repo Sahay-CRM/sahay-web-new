@@ -1396,6 +1396,7 @@ interface IssuesProps {
   isPriority?: boolean;
   createdByName?: string;
   createdDateTime?: string;
+  updatedByName?: string;
 }
 
 interface UseIssuesFormModalProps {
@@ -1425,6 +1426,7 @@ interface ObjectiveProps {
   isPriority?: boolean;
   createdByName?: string;
   createdDateTime?: string;
+  updatedByName?: string;
 }
 interface UpdateItem {
   srNo: number;
@@ -1444,6 +1446,7 @@ interface DetailMeetingObjectives {
   id: string;
   name: string;
   ioType: string;
+  isPriority?: boolean;
 }
 
 interface MeetingAgenda {
@@ -2288,4 +2291,21 @@ interface MeetingSearchItem {
 interface DetailedMeetingSearchGroup {
   normal: MeetingSearchItem[];
   detail: MeetingSearchItem[];
+}
+
+
+interface MeetingChangeLogItem {
+  changeLogId: string;
+  meetingId: string;
+  issueObjectiveId: string;
+  ioType: string;
+  entityType: string;
+  entityId: string;
+  entityName: string | null;
+  changeType: string;
+  oldValue: string | null;
+  newValue: string | null;
+  employeeId: string;
+  createdDatetime: string;
+  companyEmployee?: EmployeeData;
 }

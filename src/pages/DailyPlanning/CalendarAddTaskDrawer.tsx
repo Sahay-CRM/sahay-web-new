@@ -35,6 +35,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
 
 interface FormValues {
   project: string;
@@ -50,6 +51,7 @@ interface FormValues {
   estimatedHours?: string;
   estimatedMinutes?: string;
   remarks?: string;
+  isTodayPlanTask?: boolean;
 }
 
 interface GroupedCompanyMeetings {
@@ -64,6 +66,7 @@ interface CalendarAddTaskDrawerProps {
   isPlanningMode?: boolean;
   onPlanningSubmit?: (task: { taskId: string; estimatedTime: number; remarks: string; title: string }) => void;
   hideProjectMeetingAdd?: boolean;
+  isToday?: boolean;
 }
 
 export default function CalendarAddTaskDrawer({
@@ -73,6 +76,7 @@ export default function CalendarAddTaskDrawer({
   isPlanningMode = false,
   onPlanningSubmit,
   hideProjectMeetingAdd = false,
+  isToday = false,
 }: CalendarAddTaskDrawerProps) {
   const queryClient = useQueryClient();
   const drawerRef = useRef<HTMLDivElement>(null);
@@ -120,6 +124,7 @@ export default function CalendarAddTaskDrawer({
       estimatedHours: "",
       estimatedMinutes: "",
       remarks: "",
+      isTodayPlanTask: false,
     },
     mode: "onChange",
   });
@@ -151,6 +156,7 @@ export default function CalendarAddTaskDrawer({
         estimatedHours: "",
         estimatedMinutes: "",
         remarks: "",
+        isTodayPlanTask: false,
       });
     }
   }, [open, reset]);
@@ -190,6 +196,7 @@ export default function CalendarAddTaskDrawer({
     ? taskStatus.data.map((status) => ({
         label: status.taskStatus,
         value: status.taskStatusId,
+        color: status.color,
       }))
     : [];
 
@@ -197,11 +204,13 @@ export default function CalendarAddTaskDrawer({
     .slice()
     .sort((a, b) => (a.taskStatusOrder || 0) - (b.taskStatusOrder || 0))[0];
 
+  const currentStatusId = watch("taskStatusId");
+
   useEffect(() => {
-    if (open && defaultTaskStatus && !watch("taskStatusId")) {
+    if (open && defaultTaskStatus && !currentStatusId) {
       setValue("taskStatusId", defaultTaskStatus.taskStatusId);
     }
-  }, [defaultTaskStatus, open, setValue, watch]);
+  }, [defaultTaskStatus, open, setValue, currentStatusId]);
 
   const taskTypeOptions = taskTypeData
     ? taskTypeData.data.map((status) => ({
@@ -237,15 +246,14 @@ export default function CalendarAddTaskDrawer({
 
   const handleSuccess = (newTask: any) => {
     queryClient.invalidateQueries({ queryKey: ["get-all-task-dropdown"] });
-    if (isPlanningMode && onPlanningSubmit && newTask?.taskId) {
+    if (isPlanningMode && watch("isTodayPlanTask") && onPlanningSubmit && newTask?.taskId) {
       const hours = Number(watch("estimatedHours")) || 0;
       const minutes = Number(watch("estimatedMinutes")) || 0;
       const mins = hours * 60 + minutes;
-      const remarksVal = watch("remarks") || "";
       onPlanningSubmit({
         taskId: newTask.taskId,
         estimatedTime: mins,
-        remarks: remarksVal,
+        remarks: "",
         title: newTask.taskName || watch("taskName"),
       });
     } else {
@@ -286,7 +294,7 @@ export default function CalendarAddTaskDrawer({
   };
 
   const onSubmit = (data: FormValues) => {
-    if (isPlanningMode) {
+    if (isPlanningMode && data.isTodayPlanTask) {
       const hours = Number(data.estimatedHours) || 0;
       const minutes = Number(data.estimatedMinutes) || 0;
       const mins = hours * 60 + minutes;
@@ -562,40 +570,57 @@ export default function CalendarAddTaskDrawer({
               />
             </div>
 
-            {isPlanningMode && (
-              <>
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1">
-                    <Label className="text-sm font-semibold text-gray-700">Estimated Hours</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      placeholder="0"
-                      {...register("estimatedHours")}
-                      className="border-gray-200 focus:border-primary"
-                    />
+            {isPlanningMode && isToday && (
+              <div className="space-y-4 pt-2">
+                <Controller
+                  name="isTodayPlanTask"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex items-center justify-between p-3 rounded-lg border border-slate-100 bg-slate-50/50">
+                      <div className="space-y-0.5">
+                        <Label className="text-sm font-semibold text-slate-800">Is this today's plan task?</Label>
+                        <p className="text-xs text-slate-500">Enable to estimate duration and add to today's planning.</p>
+                      </div>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </div>
+                  )}
+                />
+
+                {watch("isTodayPlanTask") && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold text-gray-700">Estimated Duration</Label>
+                    <div className="flex items-center gap-3 py-2 px-4 bg-slate-50/50 rounded-xl border border-slate-100 w-fit">
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          {...register("estimatedHours")}
+                          className="w-12 text-center text-lg font-bold bg-transparent border-0 border-b-2 border-slate-300 focus:border-primary focus:outline-none focus:ring-0 rounded-none p-0.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="text-sm font-medium text-slate-500">hr</span>
+                      </div>
+                      
+                      <span className="text-lg font-bold text-slate-300">:</span>
+                      
+                      <div className="flex items-center gap-1.5">
+                        <Input
+                          type="number"
+                          min={0}
+                          max={59}
+                          placeholder="00"
+                          {...register("estimatedMinutes")}
+                          className="w-12 text-center text-lg font-bold bg-transparent border-0 border-b-2 border-slate-300 focus:border-primary focus:outline-none focus:ring-0 rounded-none p-0.5 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="text-sm font-medium text-slate-500">min</span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="space-y-1">
-                    <Label className="text-sm font-semibold text-gray-700">Estimated Minutes</Label>
-                    <Input
-                      type="number"
-                      min={0}
-                      max={59}
-                      placeholder="0"
-                      {...register("estimatedMinutes")}
-                      className="border-gray-200 focus:border-primary"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-1">
-                  <Label className="text-sm font-semibold text-gray-700">Remarks</Label>
-                  <Textarea
-                    placeholder="Add planning remarks..."
-                    {...register("remarks")}
-                    className="border-gray-200 focus:border-primary resize-none min-h-[80px]"
-                  />
-                </div>
-              </>
+                )}
+              </div>
             )}
 
           </div>
