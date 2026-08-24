@@ -1,6 +1,6 @@
 export const companyNavigationData = [
   {
-    id: 0,
+    id: 1,
     icon: "LayoutDashboard",
     label: "My Day",
     link: "/dashboard/my-day",
@@ -8,7 +8,30 @@ export const companyNavigationData = [
     moduleKey: "",
   },
   {
-    id: 1,
+    id: 2,
+    icon: "CalendarRange",
+    label: "Daily Planning",
+    permission: "View",
+    // moduleKey: ["ROLES_PERMISSION", "KPI_PERMISSION"],
+    items: [
+      {
+        id: 1,
+        label: "Check-in",
+        link: "/dashboard/daily-planning/check-in",
+        permission: "View",
+        moduleKey: "ROLES_PERMISSION",
+      },
+      {
+        id: 2,
+        label: "Check-out",
+        link: "/dashboard/daily-planning/check-out",
+        permission: "View",
+        moduleKey: "ROLES_PERMISSION",
+      },
+    ],
+  },
+  {
+    id: 3,
     icon: "CalendarRange",
     label: "Routine Task",
     link: "/dashboard/repeat-task-list",
@@ -16,7 +39,7 @@ export const companyNavigationData = [
     moduleKey: "ROUTINE_TASK",
   },
   {
-    id: 2,
+    id: 4,
     icon: "Presentation",
     label: "Organization ",
     permission: "View",
@@ -70,7 +93,7 @@ export const companyNavigationData = [
         moduleKey: "SAHAY_EMP",
       },
       {
-        id: 5,
+        id: 6,
         icon: "LaptopMinimal",
         label: "Company Profile",
         link: "/dashboard/company-profile",
@@ -80,7 +103,7 @@ export const companyNavigationData = [
     ],
   },
   {
-    id: 3,
+    id: 5,
     icon: "ListTodo",
     label: "Performance Insights",
     link: "/dashboard/reports",
@@ -88,7 +111,7 @@ export const companyNavigationData = [
     moduleKey: "PERFORMANCE_REPORTS",
   },
   {
-    id: 4,
+    id: 6,
     icon: "Calendar",
     label: "Calendar",
     link: "/dashboard/calendar",
@@ -96,7 +119,7 @@ export const companyNavigationData = [
     moduleKey: "IMPORTANT_DATE",
   },
   {
-    id: 5,
+    id: 7,
     icon: "Presentation",
     label: "Meetings",
     permission: "View",
@@ -127,11 +150,11 @@ export const companyNavigationData = [
     ],
   },
   {
-    id: 6,
+    id: 8,
     icon: "Target",
     label: "Agenda",
     permission: "View",
-    moduleKey: ["OBJECTIVE", "ISSUES"],
+    moduleKey: ["OBJECTIVE", "ISSUES", "CLONE_AGENDA", "AGENDA_MURGE"],
     items: [
       {
         id: 1,
@@ -154,10 +177,17 @@ export const companyNavigationData = [
         permission: "View",
         moduleKey: "CLONE_AGENDA",
       },
+      {
+        id: 4,
+        label: "Merge Agenda",
+        link: "/dashboard/merge-agenda",
+        permission: "View",
+        moduleKey: "AGENDA_MURGE",
+      },
     ],
   },
   {
-    id: 7,
+    id: 9,
     icon: "CheckSquare",
     label: "Tasks",
     permission: "View",
@@ -187,7 +217,7 @@ export const companyNavigationData = [
     ],
   },
   {
-    id: 8,
+    id: 10,
     icon: "FolderOpen",
     label: "Projects",
     link: "/dashboard/projects",
@@ -195,7 +225,7 @@ export const companyNavigationData = [
     moduleKey: "PROJECT_LIST",
   },
   {
-    id: 9,
+    id: 11,
     icon: "BarChart3",
     label: "KPI List",
     permission: "View",
@@ -218,7 +248,7 @@ export const companyNavigationData = [
     ],
   },
   {
-    id: 10,
+    id: 12,
     icon: "TrendingUp",
     label: "KPI Dashboard",
     link: "/dashboard/kpi-dashboard",
@@ -226,7 +256,7 @@ export const companyNavigationData = [
     moduleKey: "DATAPOINT_TABLE",
   },
   {
-    id: 11,
+    id: 13,
     icon: "Heart",
     label: "Business Health",
     permission: "View",
@@ -256,7 +286,7 @@ export const companyNavigationData = [
     ],
   },
   {
-    id: 12,
+    id: 14,
     icon: "Presentation",
     label: "Other",
     permission: "View",
@@ -298,7 +328,7 @@ export const companyNavigationData = [
     ],
   },
   {
-    id: 13,
+    id: 15,
     icon: "Shield",
     label: "Role & Permission",
     permission: "View",
@@ -320,31 +350,9 @@ export const companyNavigationData = [
       },
     ],
   },
+  
   {
-    id: 14,
-    icon: "CalendarRange",
-    label: "Daily Planning",
-    permission: "View",
-    // moduleKey: ["ROLES_PERMISSION", "KPI_PERMISSION"],
-    items: [
-      {
-        id: 1,
-        label: "Check-in",
-        link: "/dashboard/daily-planning/check-in",
-        permission: "View",
-        moduleKey: "ROLES_PERMISSION",
-      },
-      {
-        id: 2,
-        label: "Check-out",
-        link: "/dashboard/daily-planning/check-out",
-        permission: "View",
-        moduleKey: "ROLES_PERMISSION",
-      },
-    ],
-  },
-  {
-    id: 23,
+    id: 16,
     icon: "GanttChart",
     label: "Gantt",
     permission: "View",

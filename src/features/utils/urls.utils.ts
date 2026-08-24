@@ -392,6 +392,14 @@ const Urls = {
   updateIoSequence: () =>
     `${baseUrl}/company/detail-meeting/agenda/io/rearrange`,
 
+  recordMeetingChangeLog: () =>
+    `${baseUrl}/company/detail-meeting/record-change-log`,
+
+  getMeetingChangeLogs: (id: string) =>
+    `${baseUrl}/company/detail-meeting/change-logs/${id}`,
+  getMeetingSummary: (id: string) =>
+    `${baseUrl}/company/detail-meeting/get-summary/${id}`,
+
   getAllNotesGroup: (id: string) =>
     `${baseUrl}/company/repetitive-meeting/note/get/${id}`,
   addNotesGroup: () => `${baseUrl}/company/detail-meeting/note/add-to-group`,
@@ -446,6 +454,8 @@ const Urls = {
     `${baseUrl}/company/team/position/delete/${id}`,
   teamPositionUpdate: (id: string) =>
     `${baseUrl}/company/team/position/update/${id}`,
+  teamPositionCreateMultiple: () =>
+    `${baseUrl}/company/team/position/create-multiple`,
 
   // Dashboard Registry
   getAllDashboardRegistry: () => `${baseUrl}/company/registry/get-all`,
@@ -580,6 +590,12 @@ const Urls = {
   companyReportRun: (id: string) => `${baseUrl}/company/report/run/${id}`,
   companyReportLibraryDelete: (id: string) => `${baseUrl}/company/report/library/delete/${id}`,
   employeeToday: () => `${baseUrl}/company/employeeToday`,
+
+  getallIssues: () => `${baseUrl}/company/issue/get-all`,
+  getallObjectives: () => `${baseUrl}/company/objective/get-all`,
+
+  fetchLinkedData: () => `${baseUrl}/company/agenda-merge/linked-data`,
+  mergeAgenda: (id: string) => `${baseUrl}/company/agenda-merge/merge/${id}`,
 };
 
 export default Urls;

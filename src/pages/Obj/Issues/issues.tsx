@@ -209,6 +209,29 @@ export default function Issues() {
                 },
               },
               {
+                label: "Updated By",
+                width: "w-[110px]",
+                render: (row) => {
+                  const initials = getInitials(row.updatedByName || "");
+                  return initials ? (
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div
+                            className={`w-7 h-7 bg-primary text-white flex items-center justify-center aspect-square rounded-full text-[12px] font-medium ${getColorFromName(initials)}`}
+                          >
+                            {initials}
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>{row.updatedByName}</TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
+                  ) : (
+                    <span className="text-[12px] text-muted-foreground">-</span>
+                  );
+                },
+              },
+              {
                 label: "Added On",
                 width: "w-[160px]",
                 render: (row) => (
