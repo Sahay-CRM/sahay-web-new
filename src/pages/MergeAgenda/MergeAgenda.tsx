@@ -15,7 +15,7 @@ import PageNotAccess from "@/pages/PageNoAccess";
 import { toast } from "sonner";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import ModalData from "@/components/shared/Modal/ModalData";
-import { GitMerge, Layers, FolderDot, BarChart3, Calendar, AlertTriangle } from "lucide-react";
+import {  Layers, FolderDot, BarChart3, Calendar, AlertTriangle } from "lucide-react";
 
 export interface AgendaMergeItem {
   issueObjectiveId: string;
@@ -327,11 +327,10 @@ export default function MergeAgenda() {
           <div className="bg-gray-50/50 px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <div className="flex items-center gap-2">
-                <GitMerge className="h-6 w-6 text-indigo-600" />
                 <h1 className="text-xl font-bold text-gray-900">Agenda Merge</h1>
               </div>
               <p className="text-sm text-gray-500 mt-1">
-                Merge tasks, projects, and KPIs from one agenda (Issue/Objective) into a target agenda.
+                Merge one agenda to another agenda (all associated Tasks, Projects, and KPIs will be transferred).
               </p>
             </div>
           </div>
@@ -344,7 +343,7 @@ export default function MergeAgenda() {
                   {/* Source Type Dropdown */}
                   <div className="w-[140px] shrink-0 space-y-1.5">
                     <label className="text-sm font-semibold text-gray-700">
-                      Source Type
+                      Agenda Type
                     </label>
                     <Controller
                       control={control}
@@ -407,7 +406,7 @@ export default function MergeAgenda() {
                   {/* Target Type Dropdown */}
                   <div className="w-[140px] shrink-0 space-y-1.5">
                     <label className="text-sm font-semibold text-gray-700">
-                      Target Type
+                      Agenda Type
                     </label>
                     <Controller
                       control={control}
