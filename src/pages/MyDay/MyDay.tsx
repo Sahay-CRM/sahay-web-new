@@ -139,9 +139,9 @@ interface SectionHeadingProps {
 function SectionHeading({ title, count }: SectionHeadingProps) {
   return (
     <div className="flex items-center gap-2 mb-4">
-      <h2 className="font-inter text-[1.15rem] font-semibold text-[#2E3090]">{title}</h2>
+      <h2 className="text-[1.15rem] font-semibold text-[#2E3090]">{title}</h2>
       {count !== undefined && (
-        <span className="inline-flex items-center justify-center min-w-[1.4rem] h-[1.4rem] px-1.5 rounded-full bg-[#E3E3F6] text-[#2E3090] text-xs font-semibold">
+        <span className="inline-flex items-center justify-center min-w-[1.4rem] h-[1.4rem] px-1.5 rounded-md bg-[#E3E3F6] text-[#2E3090] text-xs font-semibold">
           {count}
         </span>
       )}
@@ -174,7 +174,7 @@ function DashboardSkeleton() {
 // Shared table head cell
 function TH({ children, className = "" }: { children: React.ReactNode; className?: string }) {
   return (
-    <th className={`text-left font-mono text-sm tracking-[0.1em] uppercase text-[#5C5FA8] pb-2 border-b border-[#2E3090] pr-4 ${className}`}>
+    <th className={`text-left text-sm tracking-[0.05em] uppercase text-[#5C5FA8] pb-2 border-b border-[#2E3090] pr-4 font-semibold ${className}`}>
       {children}
     </th>
   );
@@ -205,7 +205,7 @@ export default function MyDay() {
 
   const dataPayload = apiResponse?.data;
 
-  const { myToday, myPendencies, completedCount, pendingCount, totalCount, overdueCount } =
+  const { myToday, myPendencies, completedCount, pendingCount, totalCount } =
     useMemo(() => {
       const defaultToday = {
         repeatTaskCount: 0,
@@ -261,7 +261,7 @@ export default function MyDay() {
           <div className="bg-red-50 p-4 rounded-full border border-red-100">
             <AlertTriangle className="w-10 h-10 text-red-500" />
           </div>
-          <h2 className="text-lg font-bold text-slate-800">Failed to Load Ledger</h2>
+          <h2 className="text-lg font-bold text-slate-800">Failed to Load My Day</h2>
           <p className="text-sm text-slate-500 leading-relaxed">
             {apiError instanceof Error ? apiError.message : "Dashboard data is currently unavailable."}
           </p>
@@ -282,67 +282,59 @@ export default function MyDay() {
 
   return (
     <TooltipProvider>
-      <div className="bg-white text-slate-800 min-h-full px-6 pt-4 pb-16 font-sans">
+      <div className="bg-white text-slate-800 min-h-full px-6 pt-4 pb-16">
 
         {/* ── Masthead ── */}
         <header className="w-full mb-8 border-b-2 border-[#2E3090] pb-5">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            {/* Left: Title */}
-            <div>
-              <h1 className="font-inter font-semibold  leading-[1.05] tracking-tight text-[#2E3090]">
-                Today's Ledger
-              </h1>
-            </div>
-            {/* Right: Date + Buttons below */}
-            <div className="flex flex-col items-end gap-3">
-              <div className="font-mono text-sm text-[#5C5FA8] text-right">
-                <strong className="block text-base text-[#2E3090]">{dayName}</strong>
-                {dateStr}
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => navigate("/dashboard/daily-planning/check-in")}
-                  type="button"
-                  className="bg-white border border-[#2E3090] hover:bg-[#E3E3F6] text-[#2E3090] rounded-lg text-sm font-semibold px-4 py-2 whitespace-nowrap flex items-center gap-1.5"
-                >
-                  Check In <ArrowUpRight  size={14} />
-                </Button>
-                <Button
-                  onClick={() => navigate("/dashboard/daily-planning/check-out")}
-                  type="button"
-                  className="bg-[#2E3090] hover:bg-[#202270] text-white rounded-lg text-sm font-semibold px-4 py-2 border-0 whitespace-nowrap flex items-center gap-1.5"
-                >
-                  Check Out <ArrowUpRight size={14} />
-                </Button>
-              </div>
-            </div>
-          </div>
-
           {/* Stat Strip */}
-          <div className="mt-5 grid grid-cols-4 gap-px bg-[#D9D9F0] border border-[#D9D9F0]">
+          <div className="grid grid-cols-1 sm:grid-cols-5 gap-px bg-[#D9D9F0] border border-[#D9D9F0] rounded-2xl overflow-hidden shadow-sm">
+            {/* Box 1: Date & Day */}
+            <div className="bg-white px-4 py-3.5 flex flex-col justify-center">
+              <strong className="block text-lg text-primary font-bold"> {dateStr}</strong>
+              <span className="text-sm text-primary mt-1 font-semibold">{dayName}</span>
+            </div>
+
+            {/* Box 2-4: Stats */}
             {[
               { num: completedCount, label: "Completed Repeat", red: false },
               { num: pendingCount,   label: "Pending Repeat",   red: false },
               { num: totalCount,     label: "Total Repeat",    red: false },
-              { num: overdueCount,   label: "Overdue items",   red: true  },
             ].map(({ num, label, red }) => (
-              <div key={label} className="bg-white px-4 py-3.5">
-                <div className={`font-mono text-[1.9rem] font-semibold leading-none ${red ? "text-[#B23A2A]" : "text-[#2E3090]"}`}>
+              <div key={label} className="bg-white px-4 py-3.5 flex flex-col justify-center">
+                <div className={`text-[1.9rem] font-bold leading-none ${red ? "text-[#B23A2A]" : "text-[#2E3090]"}`}>
                   {num}
                 </div>
-                <div className="font-mono text-sm tracking-[0.1em] uppercase text-[#5C5FA8] mt-1">
+                <div className="text-xs tracking-wider uppercase text-[#5C5FA8] mt-1 font-semibold">
                   {label}
                 </div>
               </div>
             ))}
+
+            {/* Box 5: Check In / Check Out Buttons */}
+            <div className="bg-white px-4 py-3.5 flex flex-col justify-center gap-1.5">
+              <Button
+                onClick={() => navigate("/dashboard/daily-planning/check-in")}
+                type="button"
+                className="w-full bg-white border border-[#2E3090] hover:bg-[#E3E3F6] text-[#2E3090] rounded-lg text-sm font-semibold py-1.5 px-3 whitespace-nowrap flex items-center justify-center gap-1 h-8"
+              >
+                Check In <ArrowUpRight size={12} />
+              </Button>
+              <Button
+                onClick={() => navigate("/dashboard/daily-planning/check-out")}
+                type="button"
+                className="w-full bg-[#2E3090] hover:bg-[#202270] text-white rounded-lg text-sm font-semibold py-1.5 px-3 border-0 whitespace-nowrap flex items-center justify-center gap-1 h-8"
+              >
+                Check Out <ArrowUpRight size={12} />
+              </Button>
+            </div>
           </div>
         </header>
 
         {/* ── 3-col grid ── */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-
+ 
           {/* I. Today's Schedule */}
-          <div className="bg-white border border-[#D9D9F0] p-6 mb-8">
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 mb-8 shadow-sm hover:shadow-md transition-all duration-300">
             <SectionHeading  title="Today's Schedule Meeting" count={myToday.todayMeetings?.length || 0} />
             {/* Timeline */}
             <div className="relative pl-6 max-h-[310px] overflow-y-auto pr-2">
@@ -356,7 +348,7 @@ export default function MyDay() {
                   onClick={() => navigate(m.isDetailMeeting ? `/dashboard/meeting/detail/${m.meetingId}` : `/dashboard/meeting/edit/${m.meetingId}`)}
                 >
                   <span className="absolute -left-6 top-[3px] w-2.5 h-2.5 rounded-full bg-white border-2 border-[#2E3090]" />
-                  <p className="font-mono text-sm text-[#2E3090] tracking-wide">
+                  <p className="text-sm text-[#2E3090] tracking-wide font-semibold">
                     {fmtTime(m.meetingDateTime)} · {formatMeetingStatus(m.detailMeetingStatus || m.meetingStatus)}
                   </p>
                   <p className="font-semibold text-sm mt-0.5 text-slate-800">{m.meetingName}</p>
@@ -367,7 +359,7 @@ export default function MyDay() {
           </div>
 
           {/* II. Today's Tasks */}
-          <div className="bg-white border border-[#D9D9F0] p-6 mb-8">
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 mb-8 shadow-sm hover:shadow-md transition-all duration-300">
             <SectionHeading  title="Today's Tasks" count={myToday.todayTasks?.length || 0} />
             <div className="max-h-[310px] overflow-y-auto pr-2">
               {(!myToday.todayTasks || myToday.todayTasks.length === 0) ? (
@@ -382,7 +374,7 @@ export default function MyDay() {
                     ? <CheckCircle2 size={17} className="text-[#2F6B45] shrink-0" />
                     : <Circle size={17} className="text-[#2E3090] shrink-0" />}
                   <span className="flex-1 text-sm font-medium text-slate-800">{t.taskName}</span>
-                  <span className="font-mono text-sm text-slate-500 shrink-0 flex items-center gap-1">
+                  <span className="text-sm text-slate-500 shrink-0 flex items-center gap-1 font-medium">
                     <Clock size={11} />
                     {fmtTime(t.deadline)}
                   </span>
@@ -393,7 +385,7 @@ export default function MyDay() {
           </div>
 
           {/* III. Today's Projects */}
-          <div className="bg-white border border-[#D9D9F0] p-6 mb-8">
+          <div className="bg-white border border-slate-100 rounded-2xl p-6 mb-8 shadow-sm hover:shadow-md transition-all duration-300">
             <SectionHeading  title="Today's Projects" count={myToday.projects?.length || 0} />
             <div className="max-h-[310px] overflow-y-auto pr-2">
               {(!myToday.projects || myToday.projects.length === 0) ? (
@@ -408,7 +400,7 @@ export default function MyDay() {
                     ? <CheckCircle2 size={17} className="text-[#2F6B45] shrink-0" />
                     : <Circle size={17} className="text-[#2E3090] shrink-0" />}
                   <span className="flex-1 text-sm font-medium text-slate-800">{p.projectName}</span>
-                  <span className="font-mono text-sm text-slate-500 shrink-0 flex items-center gap-1">
+                  <span className="text-sm text-slate-500 shrink-0 flex items-center gap-1 font-medium">
                     <CalendarClock size={11} />
                     {fmtDate(p.deadline)}
                   </span>
@@ -419,7 +411,7 @@ export default function MyDay() {
           </div>
 
           {/* IV. KPIs — Today (full-width) */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-[#D9D9F0] p-6 mb-8">
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-slate-100 rounded-2xl p-6 mb-8 shadow-sm hover:shadow-md transition-all duration-300">
             <SectionHeading  title="KPI — Today" count={myToday.kpis?.length || 0} />
             <table className="w-full border-collapse">
               <thead>
@@ -440,8 +432,8 @@ export default function MyDay() {
                       onClick={() => navigate(`/dashboard/kpi-dashboard?selectedType=${(k.frequency || "DAILY").toUpperCase()}`)}
                     >
                       <TD>{k.kpiName}</TD>
-                      <TD><span className="font-mono text-sm text-slate-500">{k.frequency}</span></TD>
-                      <TD><span className="font-mono text-sm text-slate-500">{k.tag || "—"}</span></TD>
+                      <TD><span className="text-sm text-slate-500 font-medium">{k.frequency}</span></TD>
+                      <TD><span className="text-sm text-slate-500 font-medium">{k.tag || "—"}</span></TD>
                       <TD>
                         {k.isTodayFillData ? (
                           <Check size={16} className="text-[#2F6B45]" strokeWidth={2.5} />
@@ -462,33 +454,33 @@ export default function MyDay() {
             </table>
           </div>
 
-          {/* V. Outstanding Ledger (full-width) */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-[#D9D9F0] p-6 mb-8">
+          {/* V. Non-Updated Tasks/Projects (full-width) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-slate-100 rounded-2xl p-6 mb-8 shadow-sm hover:shadow-md transition-all duration-300">
             <SectionHeading
-              title="Outstanding Ledger"
+              title="Non-Updated Tasks/Projects"
               count={tab === "tasks" ? pendTasks.length : pendProjects.length}
             />
 
             {/* Controls row */}
             <div className="flex flex-wrap items-center justify-between gap-3">
               {/* Tab switcher */}
-              <div className="flex border border-[#2E3090] w-fit">
+              <div className="flex border border-slate-200 rounded-lg overflow-hidden w-fit bg-slate-50 p-1">
                 {["tasks", "projects"].map((t) => (
                   <button
                     key={t}
                     onClick={() => { setTab(t); setStatusFilter("All"); }}
-                    className={`font-mono text-sm tracking-[0.08em] uppercase px-4 py-1.5 border-0 cursor-pointer transition-colors ${
+                    className={`text-xs tracking-wide uppercase px-4 py-1.5 rounded-md cursor-pointer transition-all font-semibold border-none ${
                       tab === t
-                        ? "bg-[#2E3090] text-white"
-                        : "bg-transparent text-[#2E3090] hover:bg-[#E3E3F6]"
-                    } ${t === "projects" ? "border-l border-[#2E3090]" : ""}`}
+                        ? "bg-white text-[#2E3090] shadow-sm"
+                        : "bg-transparent text-slate-500 hover:text-slate-900"
+                    }`}
                   >
                     {t === "tasks" ? "Tasks" : "Projects"}
                   </button>
                 ))}
               </div>
               {/* Search */}
-              <div className="flex items-center gap-2 border border-[#D9D9F0] px-2.5 py-1.5 bg-white">
+              <div className="flex items-center gap-2 border border-slate-200 px-3 py-1.5 bg-white rounded-lg shadow-2xs">
                 <Search size={13} className="text-[#5C5FA8]" />
                 <input
                   className="border-none bg-transparent outline-none text-sm text-slate-800 w-40 placeholder:text-slate-400"
@@ -505,10 +497,10 @@ export default function MyDay() {
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`font-mono text-sm tracking-[0.04em] px-3 py-1 border cursor-pointer transition-colors ${
+                  className={`text-xs px-3 py-1 border cursor-pointer transition-all font-semibold rounded-md ${
                     statusFilter === s
                       ? "border-[#2E3090] text-[#2E3090] bg-[#E3E3F6]"
-                      : "border-[#D9D9F0] text-[#5C5FA8] bg-white hover:border-[#2E3090]"
+                      : "border-slate-200 text-[#5C5FA8] bg-white hover:border-[#2E3090]"
                   }`}
                 >
                   {s}
@@ -540,7 +532,7 @@ export default function MyDay() {
                       >
                         <TD>{name}</TD>
                         <TD><Stamp status={item.status} statusColor={item.statusColor} /></TD>
-                        <TD><span className="font-intel text-sm text-slate-500">{fmtDate(item.deadline)}</span></TD>
+                        <TD><span className="text-sm text-slate-500 font-medium">{fmtDate(item.deadline)}</span></TD>
                         {/* <TD>
                           {d < 0 ? (
                             <span className="flex items-center gap-1 text-[#B23A2A] font-semibold text-sm">
@@ -566,10 +558,10 @@ export default function MyDay() {
             </div>
           </div>
 
-          {/* VI. KPIs — Outstanding (full-width) */}
-          <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-[#D9D9F0] p-6 mb-8">
+          {/* VI. KPIs — Pending (full-width) */}
+          <div className="col-span-1 md:col-span-2 lg:col-span-3 bg-white border border-slate-100 rounded-2xl p-6 mb-8 shadow-sm hover:shadow-md transition-all duration-300">
             <SectionHeading
-              title="KPI — Outstanding"
+              title="Pending KPIs"
               count={(myToday.kpis || []).filter((k) => !k.isTodayFillData).length}
             />
             <table className="w-full border-collapse">
@@ -588,8 +580,8 @@ export default function MyDay() {
                     onClick={() => navigate(`/dashboard/kpi-dashboard?selectedType=${(k.frequency || "DAILY").toUpperCase()}`)}
                   >
                     <TD>{k.kpiName}</TD>
-                    <TD><span className="font-mono text-sm text-slate-500">{k.frequency}</span></TD>
-                    <TD><span className="font-mono text-sm text-slate-500">{k.tag || "—"}</span></TD>
+                    <TD><span className="text-sm text-slate-500 font-medium">{k.frequency}</span></TD>
+                    <TD><span className="text-sm text-slate-500 font-medium">{k.tag || "—"}</span></TD>
                   </tr>
                 ))}
                 {!(myToday.kpis || []).some((k) => !k.isTodayFillData) && (
