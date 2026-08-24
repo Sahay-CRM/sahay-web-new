@@ -1591,7 +1591,7 @@ export default function UpdatedKpiTable() {
 
           // Headers
           const columnHeaders = [
-            "Who",
+            "User",
             "KPI",
             "Tag",
             "Goal",
@@ -2200,7 +2200,7 @@ export default function UpdatedKpiTable() {
                         // onClick={() => handleSort("employeeName")}
                       >
                         <div className="flex items-center">
-                          Who
+                          User
                           {/* <MultiIconSelect
                           value={selectedEmployees}
                           options={uniqueEmployeeOptions}

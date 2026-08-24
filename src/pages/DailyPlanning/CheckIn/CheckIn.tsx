@@ -153,6 +153,7 @@ export default function CheckIn() {
 
   const [isOpenTaskDrawer, setIsOpenTaskDrawer] = useState(false);
   const [isOpenMeetingDrawer, setIsOpenMeetingDrawer] = useState(false);
+  const [openedFromPlanningModal, setOpenedFromPlanningModal] = useState(false);
 
   // Accordion open/collapse states
   const [isRepetitiveExpanded, setIsRepetitiveExpanded] = useState(false);
@@ -803,9 +804,21 @@ export default function CheckIn() {
                 <div>
                   <h3 className="font-bold text-slate-800 text-sm">Pending Tasks</h3>
                 </div>
-                <span className="text-sm font-semibold px-2 py-0.5 bg-indigo-50 text-primary rounded">
-                  {pendingTasks.length} Tasks
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold px-2 py-0.5 bg-indigo-50 text-primary rounded">
+                    {pendingTasks.length} Tasks
+                  </span>
+                  <Button
+                    size="sm"
+                    className="h-7 px-2.5 text-xs bg-primary hover:bg-primary/90 text-white rounded-md cursor-pointer flex items-center gap-1 font-semibold"
+                    onClick={() => {
+                      setOpenedFromPlanningModal(false);
+                      setIsOpenTaskDrawer(true);
+                    }}
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add Task
+                  </Button>
+                </div>
               </div>
               
               <div className="p-2 divide-y divide-slate-100 max-h-[300px] overflow-y-auto">
@@ -917,6 +930,7 @@ export default function CheckIn() {
             date={selectedDate}
             onAddTaskClick={() => {
               setIsAddModalOpen(false);
+              setOpenedFromPlanningModal(true);
               setIsOpenTaskDrawer(true);
             }}
             onAddMeetingClick={() => {
@@ -937,6 +951,7 @@ export default function CheckIn() {
             date={selectedDate}
             onAddTaskClick={() => {
               setEditingItem(null);
+              setOpenedFromPlanningModal(true);
               setIsOpenTaskDrawer(true);
             }}
             onAddMeetingClick={() => {
@@ -977,12 +992,17 @@ export default function CheckIn() {
             open={isOpenTaskDrawer}
             onClose={() => {
               setIsOpenTaskDrawer(false);
-              setIsAddModalOpen(true);
+              if (openedFromPlanningModal) {
+                setIsAddModalOpen(true);
+                setOpenedFromPlanningModal(false);
+              }
             }}
             isPlanningMode={true}
+            isToday={selectedDate === todayDate}
             hideProjectMeetingAdd={true}
             onPlanningSubmit={async (payload) => {
               setIsOpenTaskDrawer(false);
+              setOpenedFromPlanningModal(false);
               await handleDirectSubmitPlanningItem({
                 taskId: payload.taskId,
                 estimatedTime: payload.estimatedTime,

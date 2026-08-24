@@ -95,4 +95,12 @@ interface ToolbarProps {
   onAddSeat: () => void;
   spanOfControl?: SpanOfControl | null;
   permission?: permission;
+  hasChanges?: boolean;
+  onSave?: () => void;
+  isSaving?: boolean;
+  onDiscard?: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }

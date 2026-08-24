@@ -15,6 +15,7 @@ interface Option {
   id?: string | number;
   value?: string | number;
   label?: string | number;
+  color?: string;
 }
 
 // Define the props for the FormSelect component

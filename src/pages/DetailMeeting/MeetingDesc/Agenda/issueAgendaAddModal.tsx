@@ -9,6 +9,7 @@ interface DetailMeetingObjectives {
   id: string;
   name: string;
   ioType: string;
+  isPriority?: boolean;
 }
 
 interface IssueAgendaAddModalProps {

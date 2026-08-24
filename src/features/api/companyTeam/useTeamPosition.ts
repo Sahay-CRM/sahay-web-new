@@ -78,3 +78,33 @@ export function useDeleteTeamPosition() {
     },
   });
 }
+
+export function useSaveMultipleTeamPositions() {
+  return useMutation({
+    mutationKey: ["save-multiple-team-positions"],
+    mutationFn: async (payload: {
+      positionId?: string;
+      employeeId: string;
+      parentPositionId?: string | null;
+      seatTitle?: string;
+      isDeptHead?: boolean;
+      isManager?: boolean;
+    }[]) => {
+      const { data } = await Api.post<{ message?: string }>({
+        url: Urls.teamPositionCreateMultiple(),
+        data: payload,
+      });
+      return data;
+    },
+    onSuccess: (res) => {
+      toast.success(res.message || "Organization structure saved successfully");
+      queryClient.invalidateQueries({ queryKey: ["get-team-positions"] });
+      queryClient.invalidateQueries({
+        queryKey: ["get-employee-list-dd"],
+      });
+    },
+    onError: (error: AxiosError<{ message?: string }>) => {
+      toast.error(error.response?.data?.message || "Failed to save organization structure");
+    },
+  });
+}

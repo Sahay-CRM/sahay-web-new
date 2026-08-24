@@ -19,7 +19,7 @@ interface Team {
 interface TeamPosition {
   srNo?: number;
   positionId: string;
-  teamId: string;
+  teamId?: string;
   employeeId?: string | null;
   parentPositionId?: string | null;
   employeeName?: string;
