@@ -186,7 +186,7 @@ export default function MeetingDesc() {
     [meetingTiming?.joiners],
   );
   const sidebarItems = [
-    { key: "JOINERS", icon: UsersRound, label: " Joiners" },
+    { key: "JOINERS", icon: UsersRound, label: "  Attendees" },
     { key: "DOCUMENTS", icon: FileText, label: " Notes" },
     { key: "UPDATES", icon: RefreshCcw, label: " Updates" },
     { key: "APPRECIATION", icon: ThumbsUp, label: " Appreciation" },

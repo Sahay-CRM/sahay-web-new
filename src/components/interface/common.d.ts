@@ -1335,6 +1335,7 @@ interface KpiAllList {
   isFocus?: boolean;
   departmentId?: string;
   departmentName?: string;
+   photo?: string | null;
 }
 
 interface KPICoreParameter {

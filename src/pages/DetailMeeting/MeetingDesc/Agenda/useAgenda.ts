@@ -850,7 +850,7 @@ export const useAgenda = ({
       setIoType(io);
       queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
       queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
-      queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
+      queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-data"] });
 
       if (meetingStatus !== "ENDED" && !isUnFollow) {
         await update(ref(db), {
@@ -932,7 +932,7 @@ export const useAgenda = ({
       setIoType(io);
       queryClient.resetQueries({ queryKey: ["get-meeting-tasks-res"] });
       queryClient.resetQueries({ queryKey: ["get-meeting-Project-res"] });
-      queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
+      queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-data"] });
     }
   };
   const tasksFireBase = () => {
@@ -976,7 +976,7 @@ export const useAgenda = ({
   };
 
   const kpisFireBase = () => {
-    queryClient.invalidateQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
+    queryClient.invalidateQueries({ queryKey: ["get-detailMeeting-kpis-data"] });
     queryClient.invalidateQueries({ queryKey: ["get-detailMeetingAgendaIssue"] });
 
     if (

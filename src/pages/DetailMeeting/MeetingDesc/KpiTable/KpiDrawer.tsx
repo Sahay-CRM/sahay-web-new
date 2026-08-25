@@ -72,7 +72,10 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
         {
           onSuccess: () => {
             queryClient.resetQueries({
-              queryKey: ["get-detailMeeting-kpis-res"],
+              queryKey: ["get-detailMeeting-kpis-frame"],
+            });
+            queryClient.resetQueries({
+              queryKey: ["get-detailMeeting-kpis-data"],
             });
             queryClient.resetQueries({
               queryKey: ["get-detailMeetingAgendaIssue"],
@@ -95,7 +98,12 @@ const KpiDrawer: React.FC<KpiDrawerProps> = ({
     };
     addDatapoint(payload, {
       onSuccess: () => {
-        queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
+        queryClient.resetQueries({
+          queryKey: ["get-detailMeeting-kpis-frame"],
+        });
+        queryClient.resetQueries({
+          queryKey: ["get-detailMeeting-kpis-data"],
+        });
         onClose();
       },
     });

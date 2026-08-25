@@ -223,6 +223,7 @@ const Urls = {
 
   addMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/add`,
   getMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/get`,
+   getMeetingKpiFrame: () => `${baseUrl}/company/detail-meeting/kpi/get-frame`,
   getMeetingSelectedKpisData: () =>
     `${baseUrl}/company/detail-meeting/kpi/get-data`,
 
