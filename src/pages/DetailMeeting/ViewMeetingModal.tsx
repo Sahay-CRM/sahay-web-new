@@ -24,7 +24,7 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
   // Edit handler
   const handleEdit = () => {
     if (modalData?.meetingId) {
-      navigate(`/dashboard/meeting/edit/${modalData.meetingId}`);
+      navigate(`/meeting/edit/${modalData.meetingId}`);
     }
   };
 

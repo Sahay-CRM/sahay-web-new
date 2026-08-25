@@ -88,12 +88,12 @@ export default function FormSubmissionDetailPage() {
   useEffect(() => {
     if (submission) {
       setBreadcrumbs([
-        { label: "Forms", href: "/dashboard/forms" },
+        { label: "Forms", href: "/forms" },
         ...(isAuthorized
           ? [
               {
                 label: submission.formName,
-                href: `/dashboard/forms/${submission.form.id}/responses`,
+                href: `/forms/${submission.form.id}/responses`,
               },
             ]
           : []),

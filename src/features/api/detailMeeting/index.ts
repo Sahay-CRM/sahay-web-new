@@ -44,15 +44,15 @@ export {
 
 export { default as useCloneMeetingAgenda } from "./useCloneMeetingAgenda";
 export { default as useGetDetailMeetingAll } from "./useGetDetailMeetingAll";
-export {
-  default as recordMeetingChangeLogMutation,
-  type RecordMeetingChangeLogPayload,
-  type MeetingChangeIoType,
-  type MeetingChangeEntityType,
-  type MeetingChangeType,
-} from "./useRecordMeetingChangeLog";
-export { default as useGetMeetingChangeLogs } from "./useGetMeetingChangeLogs";
-export { default as useGetMeetingSummary } from "./useGetMeetingSummary";
+// export {
+//   default as recordMeetingChangeLogMutation,
+//   type RecordMeetingChangeLogPayload,
+//   type MeetingChangeIoType,
+//   type MeetingChangeEntityType,
+//   type MeetingChangeType,
+// } from "./useRecordMeetingChangeLog";
+// export { default as useGetMeetingChangeLogs } from "./useGetMeetingChangeLogs";
+// export { default as useGetMeetingSummary } from "./useGetMeetingSummary";
 export { default as useGetallIssues } from "./useGetallIssues";
 export { default as useGetallObjectives } from "./useGetallObjectives";
 export { default as useExecuteAgendaMerge, type ExecuteAgendaMergePayload } from "./useExecuteAgendaMerge";

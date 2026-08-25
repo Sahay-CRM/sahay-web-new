@@ -42,7 +42,7 @@ export default function CompanyImportantDate() {
   const { setBreadcrumbs } = useBreadcrumbs();
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Calendar", href: "/dashboard/calendar" },
+      { label: "Calendar", href: "/calendar" },
       { label: "important Dates", href: "", isHighlight: true },
     ]);
   }, [setBreadcrumbs]);

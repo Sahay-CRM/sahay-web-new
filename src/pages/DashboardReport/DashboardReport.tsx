@@ -41,7 +41,7 @@ export default function DashboardReport() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Dashboard Report", href: "/dashboard/report-builder" },
+      { label: "Dashboard Report", href: "/report-builder" },
     ]);
   }, [setBreadcrumbs]);
 
@@ -107,7 +107,7 @@ export default function DashboardReport() {
             {permission.Add && (
               <Button
                 className="py-2 w-fit"
-                onClick={() => navigate("/dashboard/report-builder/add")}
+                onClick={() => navigate("/report-builder/add")}
               >
                 Add Widget
               </Button>
@@ -133,7 +133,7 @@ export default function DashboardReport() {
             columns={visibleColumns}
             primaryKey="id"
             onEdit={(row: DashboardRegistryReport) =>
-              navigate(`/dashboard/report-builder/edit/${row.id}`)
+              navigate(`/report-builder/edit/${row.id}`)
             }
             onDelete={(row: DashboardRegistryReport) => onDelete(row)}
             isActionButton={() =>

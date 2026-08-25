@@ -104,11 +104,11 @@ export default function FormListPage() {
     setIsAddEditModalOpen(true);
   };
   const handleOpenBuilder = (id: string) =>
-    navigate(`/dashboard/form-builder?id=${id}`);
+    navigate(`/form-builder?id=${id}`);
   const handleSettings = (id: string) =>
-    navigate(`/dashboard/forms/${id}/settings`);
+    navigate(`/forms/${id}/settings`);
   const handleResponses = (id: string) =>
-    navigate(`/dashboard/forms/${id}/responses`);
+    navigate(`/forms/${id}/responses`);
   const handleDelete = (id: string) => deleteForm(id);
   const handleDuplicate = (id: string) => duplicateForm(id);
 

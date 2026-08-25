@@ -108,7 +108,7 @@ const DashboardLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const isMeetingDesc = /\/dashboard\/meeting\/detail\//.test(
+  const isMeetingDesc = /\/meeting\/detail\//.test(
     location.pathname,
   );
   const [open, setOpen] = useState(!isMeetingDesc);
@@ -388,14 +388,14 @@ const DashboardLayout = () => {
   const handleView = (type?: string, typeId?: string, frequencyType?: string) => {
     const upperType = type?.toUpperCase();
     if (upperType === "TASK" && typeId) {
-      navigate(`/dashboard/tasks/view/${typeId}`);
+      navigate(`/tasks/view/${typeId}`);
     } else if (upperType === "PROJECT" && typeId) {
-      navigate(`/dashboard/projects/view/${typeId}`);
+      navigate(`/projects/view/${typeId}`);
     } else if (upperType === "MEETING" && typeId) {
-      navigate(`/dashboard/meeting/detail/${typeId}`);
+      navigate(`/meeting/detail/${typeId}`);
     } else if (upperType === "KPI" || upperType === "KPIDASHBOARD") {
       const query = frequencyType ? `?selectedType=${frequencyType.toUpperCase()}` : "";
-      navigate(`/dashboard/kpi-dashboard${query}`);
+      navigate(`/kpi-dashboard${query}`);
     }
     setIsNotificationOpen(false);
   };
@@ -524,7 +524,7 @@ const DashboardLayout = () => {
                         onMarkAsRead={handleMarkAsRead}
                         onAllRead={handleAllRead}
                         onViewAll={() => {
-                          navigate("/dashboard/notifications");
+                          navigate("/notifications");
                           setIsNotificationOpen(false);
                         }}
                       />
@@ -618,7 +618,7 @@ const DashboardLayout = () => {
                   >
                     <DropdownMenuGroup>
                       <DropdownMenuItem
-                        onClick={() => navigate("/dashboard/profile")}
+                        onClick={() => navigate("/profile")}
                       >
                         <User2Icon /> User Profile
                       </DropdownMenuItem>
@@ -630,7 +630,7 @@ const DashboardLayout = () => {
                         <DropdownMenuGroup>
                           <DropdownMenuItem
                             onClick={() =>
-                              navigate("/dashboard/company-profile")
+                              navigate("/company-profile")
                             }
                           >
                             <LaptopMinimal /> Company Profile

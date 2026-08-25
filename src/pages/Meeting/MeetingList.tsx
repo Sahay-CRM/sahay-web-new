@@ -176,7 +176,7 @@ export default function MeetingList() {
               </TooltipProvider>
             )}
             {permission.Add && (
-              <Link to="/dashboard/meeting/add">
+              <Link to="/meeting/add">
                 <Button className="py-2 w-fit">Add Meeting</Button>
               </Link>
             )}
@@ -308,7 +308,7 @@ export default function MeetingList() {
             onEdit={
               permission.Edit
                 ? (row) => {
-                    navigate(`/dashboard/meeting/edit/${row.meetingId}`);
+                    navigate(`/meeting/edit/${row.meetingId}`);
                   }
                 : undefined
             }

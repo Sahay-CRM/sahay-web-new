@@ -88,7 +88,7 @@ export default function useHealthScore() {
             coreParameterId: "",
             levelId: "",
           });
-          navigate("/dashboard/business/healthscore-achieve");
+          navigate("/business/healthscore-achieve");
           setIsEditing(false);
         },
       });

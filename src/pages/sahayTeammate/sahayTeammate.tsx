@@ -208,7 +208,7 @@ export default function SahayTeammate() {
                     size="default"
                     className="h-8 px-2 text-xs cursor-pointer"
                     onClick={() =>
-                      navigate("/dashboard/handover", {
+                      navigate("/handover", {
                         state: { oldUserId: row.employeeId },
                       })
                     }

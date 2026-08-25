@@ -52,7 +52,7 @@ export default function ProjectCard({
   const scale = zoom / 100;
   // const navigate = useNavigate();
   // const handleEdit = () => {
-  //   navigate(`/dashboard/projects/edit/${projectId}`);
+  //   navigate(`/projects/edit/${projectId}`);
   // };
 
   return (

@@ -143,9 +143,9 @@ export default function useAddDetailMeeting() {
 
         handleModalClose();
         if (searchParams.get("from") === "task") {
-          navigate("/dashboard/tasks/add");
+          navigate("/tasks/add");
         } else {
-          navigate("/dashboard/meeting/detail");
+          navigate("/meeting/detail");
         }
       },
     });

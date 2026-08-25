@@ -19,12 +19,12 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
   // Edit handler
   const handleEdit = () => {
     if (modalData?.taskId) {
-      navigate(`/dashboard/tasks/edit/${modalData.taskId}`);
+      navigate(`/tasks/edit/${modalData.taskId}`);
     }
   };
   const handleView = () => {
     if (modalData?.taskId) {
-      navigate(`/dashboard/tasks/view/${modalData.taskId}`);
+      navigate(`/tasks/view/${modalData.taskId}`);
     }
   };
 

@@ -234,7 +234,7 @@ export default function AddGroupKpis() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "KPI Group", href: "/dashboard/kpi/group-kpis" },
+      { label: "KPI Group", href: "/kpi/group-kpis" },
       { label: id ? "Update Group KPI" : "Add Group KPI", href: "" },
     ]);
   }, [setBreadcrumbs, id]);
@@ -689,7 +689,7 @@ export default function AddGroupKpis() {
 
     addUpdateMutation.mutate(payload as AddUpdateKpiMergeRes, {
       onSuccess: () => {
-        navigate("/dashboard/kpi/group-kpis");
+        navigate("/kpi/group-kpis");
       },
     });
   };
@@ -1117,7 +1117,7 @@ export default function AddGroupKpis() {
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => navigate("/dashboard/kpi/group-kpis")}
+                onClick={() => navigate("/kpi/group-kpis")}
                 className="w-full sm:w-auto"
               >
                 Cancel

@@ -36,7 +36,7 @@ export default function TaskBoard() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Task", href: "/dashboard/tasks" },
+      { label: "Company Task", href: "/tasks" },
       { label: "Board View", href: "" },
     ]);
   }, [setBreadcrumbs]);
@@ -277,7 +277,7 @@ export default function TaskBoard() {
               }}
               className="w-80"
             />
-            <Link to="/dashboard/tasks">
+            <Link to="/tasks">
               <Button variant={"outline"} className="py-2 h-10 w-fit">
                 View as List
               </Button>
@@ -323,7 +323,7 @@ export default function TaskBoard() {
             </Button>
 
             <div className="flex items-center gap-2">
-              <Link to="/dashboard/tasks/add">
+              <Link to="/tasks/add">
                 <Button className="py-2 w-fit">Add Company Task</Button>
               </Link>
             </div>

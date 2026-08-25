@@ -69,7 +69,7 @@ export default function KpiPermissionEdit() {
     setBreadcrumbs([
       {
         label: "KPI Permissions",
-        href: "/dashboard/roles/kpi-permission",
+        href: "/roles/kpi-permission",
       },
       { label: "Edit Permissions" },
       ...(userName ? [{ label: `${userName}`, isHighlight: true }] : []),

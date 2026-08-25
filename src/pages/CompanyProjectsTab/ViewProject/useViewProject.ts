@@ -182,7 +182,7 @@ export default function useViewProject() {
   const filteredComments = (commentsData.data || []).filter((comment) => {
     if (filterUserId === "all") return true;
     const activeProject = activeProjectId ? selectedProjectData?.data : projectApiData?.data;
-    const selectedEmployee = activeProject?.otherEmployee?.find(
+    const selectedEmployee = activeProject?.ProjectEmployees?.find(
       (emp) => emp.employeeId === filterUserId,
     );
     if (!selectedEmployee) return true;

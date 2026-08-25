@@ -316,7 +316,7 @@ interface GroupedCompanyMeetings {
 
     addUpdateTask(payload, {
       onSuccess: () => {
-        navigate("/dashboard/tasksrepeat");
+        navigate("/tasksrepeat");
       },
       onError: (error: Error) => {
         const axiosError = error as AxiosError<{
@@ -381,7 +381,7 @@ interface GroupedCompanyMeetings {
             )}
           </div>
           {permission.PROJECT_LIST?.Add && (
-            <a href={`/dashboard/projects/add?from=tasksrepeat${repetitiveTaskId ? `&taskId=${repetitiveTaskId}` : ""}`}>
+            <a href={`/projects/add?from=tasksrepeat${repetitiveTaskId ? `&taskId=${repetitiveTaskId}` : ""}`}>
               <Button className="py-2 w-fit">Add Company Project</Button>
             </a>
           )}
@@ -461,7 +461,7 @@ interface GroupedCompanyMeetings {
 
           {permission.MEETING_LIST?.Add && (
             <a
-              href={`/dashboard/meeting/add?from=tasksrepeat&projectId=${projectId?.projectId ?? ""}${repetitiveTaskId ? `&taskId=${repetitiveTaskId}` : ""}`}
+              href={`/meeting/add?from=tasksrepeat&projectId=${projectId?.projectId ?? ""}${repetitiveTaskId ? `&taskId=${repetitiveTaskId}` : ""}`}
             >
               <Button className="py-2 w-fit">Add Meeting </Button>
             </a>

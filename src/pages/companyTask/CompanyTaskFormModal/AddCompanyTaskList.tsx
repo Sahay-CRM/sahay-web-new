@@ -67,7 +67,7 @@ const ProjectSelectionStep = () => {
           )}
         </div>
         {permission.PROJECT_LIST.Add && (
-          <Link to={`/dashboard/projects/add?from=task${taskId ? `&taskId=${taskId}` : ""}`}>
+          <Link to={`/projects/add?from=task${taskId ? `&taskId=${taskId}` : ""}`}>
             <Button className="py-2 w-fit">Add Company Project</Button>
           </Link>
         )}
@@ -158,7 +158,7 @@ const MeetingSelectionStep = () => {
           )}
         </div>
         {permission.MEETING_LIST?.Add && (
-          <Link to={`/dashboard/meeting/add?from=task&projectId=${projectId}${taskId ? `&taskId=${taskId}` : ""}`}>
+          <Link to={`/meeting/add?from=task&projectId=${projectId}${taskId ? `&taskId=${taskId}` : ""}`}>
             <Button className="py-2 w-fit">Add Meeting</Button>
           </Link>
         )}
@@ -635,13 +635,13 @@ export default function AddCompanyTask() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Task", href: "/dashboard/tasks" },
+      { label: "Company Task", href: "/tasks" },
       { label: taskId ? "Update Task" : "Add Task", href: "" },
       ...(taskId && isAuthorized
         ? [
             {
               label: taskDataById?.data.taskName || "",
-              href: `/dashboard/kpi/${taskId}`,
+              href: `/kpi/${taskId}`,
               isHighlight: true,
             },
           ]

@@ -128,7 +128,7 @@ export default function RepeatMeetingList() {
               </TooltipProvider>
             )}
             {permission.Add && (
-              <Link to="/dashboard/repeat-meeting/add">
+              <Link to="/repeat-meeting/add">
                 <Button className="py-2 w-fit">
                   Add Live Meeting Templates
                 </Button>
@@ -168,7 +168,7 @@ export default function RepeatMeetingList() {
               permission.Edit
                 ? (row) => {
                     navigate(
-                      `/dashboard/repeat-meeting/update/${row.repetitiveMeetingId}`,
+                      `/repeat-meeting/update/${row.repetitiveMeetingId}`,
                     );
                   }
                 : undefined
@@ -184,7 +184,7 @@ export default function RepeatMeetingList() {
                       className={`w-fit mr-1`}
                       onClick={() => {
                         navigate(
-                          `/dashboard/repeat-meeting/detail/${row.repetitiveMeetingId}?meetingName=${encodeURIComponent(row.meetingName || "")}`,
+                          `/repeat-meeting/detail/${row.repetitiveMeetingId}?meetingName=${encodeURIComponent(row.meetingName || "")}`,
                         );
                       }}
                     >

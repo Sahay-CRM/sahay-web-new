@@ -681,7 +681,7 @@ export default function AddProject() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Projects", href: "/dashboard/projects" },
+      { label: "Company Projects", href: "/projects" },
       {
         label: companyProjectId
           ? "Update Company Project"
@@ -696,7 +696,7 @@ export default function AddProject() {
                   ? projectApiData.data.projectName
                   : ""
               }`,
-              href: `/dashboard/kpi/${companyProjectId}`,
+              href: `/kpi/${companyProjectId}`,
               isHighlight: true,
             },
           ]

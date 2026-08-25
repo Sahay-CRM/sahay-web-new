@@ -53,7 +53,7 @@ const FormBuilderPage = () => {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Forms", href: "/dashboard/forms" },
+      { label: "Forms", href: "/forms" },
       { label: "Forms Field Manage", href: "" },
       ...(formId && isAuthorized && name
         ? [{ label: name, isHighlight: true }]

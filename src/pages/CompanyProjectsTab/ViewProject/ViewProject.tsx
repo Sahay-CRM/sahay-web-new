@@ -244,7 +244,7 @@ const ProjectView = () => {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Project", href: "/dashboard/projects" },
+      { label: "Company Project", href: "/projects" },
       { label: "View Company Project", href: "" },
       ...(isAuthorized && projectApiData?.data?.projectName
         ? [
@@ -267,7 +267,7 @@ const ProjectView = () => {
 
   const project = projectApiData?.data;
   const activeProject = activeProjectId ? selectedProjectData?.data : project;
-  const otherEmployees = activeProject?.otherEmployee || [];
+  const otherEmployees = activeProject?.ProjectEmployees || [];
 
   const renderCommentInputBar = () => {
     return (
@@ -703,7 +703,7 @@ const ProjectView = () => {
                       size="sm"
                       onClick={() =>
                         navigate(
-                          `/dashboard/projects/edit/${project.projectId}?source=view`,
+                          `/projects/edit/${project.projectId}?source=view`,
                         )
                       }
                     >
@@ -940,7 +940,7 @@ const ProjectView = () => {
                           className="mt-4 flex items-center gap-1.5"
                           onClick={() =>
                             navigate(
-                              `/dashboard/projects/add?parentProjectId=${project.projectId}`,
+                              `/projects/add?parentProjectId=${project.projectId}`,
                             )
                           }
                         >
@@ -1005,7 +1005,7 @@ const ProjectView = () => {
                             size="sm"
                             onClick={() =>
                               navigate(
-                                `/dashboard/projects/edit/${activeProject.projectId}?source=view`,
+                                `/projects/edit/${activeProject.projectId}?source=view`,
                               )
                             }
                           >

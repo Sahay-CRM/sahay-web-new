@@ -169,7 +169,7 @@ export default function useAddEmployee() {
         };
         await uploadIfPresent(data.photo, "1010");
         handleModalClose();
-        navigate("/dashboard/company-employee");
+        navigate("/company-employee");
       },
     });
   });

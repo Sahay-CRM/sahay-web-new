@@ -48,7 +48,7 @@ export default function BoardColumn({
             <div
               key={project.projectId}
               className="w-full cursor-pointer"
-              onClick={() => navigate(`/dashboard/projects/view/${project.projectId}`)}
+              onClick={() => navigate(`/projects/view/${project.projectId}`)}
             >
               <ProjectCard
                 projectId={project.projectId}

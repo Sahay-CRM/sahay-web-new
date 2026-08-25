@@ -84,14 +84,14 @@ const AllNotifications = () => {
       if (!typeId) return;
       const upperType = type?.toUpperCase();
       if (upperType === "TASK") {
-        navigate(`/dashboard/tasks/view/${typeId}`);
+        navigate(`/tasks/view/${typeId}`);
       } else if (upperType === "PROJECT") {
-        navigate(`/dashboard/projects/view/${typeId}`);
+        navigate(`/projects/view/${typeId}`);
       } else if (upperType === "MEETING") {
-        navigate(`/dashboard/meeting/detail/${typeId}`);
+        navigate(`/meeting/detail/${typeId}`);
       } else if (upperType === "KPI" || upperType === "KPIDASHBOARD") {
         const query = frequencyType ? `?selectedType=${frequencyType.toUpperCase()}` : "";
-        navigate(`/dashboard/kpi-dashboard${query}`);
+        navigate(`/kpi-dashboard${query}`);
       }
     };
 

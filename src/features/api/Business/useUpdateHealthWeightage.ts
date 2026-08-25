@@ -34,7 +34,7 @@ export default function useUpdateHealthWeightage() {
       queryClient.resetQueries({
         queryKey: ["get-healthScore-list"],
       });
-      navigate("/dashboard/business/health-weightage");
+      navigate("/business/health-weightage");
     },
     onError: (error: AxiosError<{ message?: string }>) => {
       toast.error(error.response?.data?.message);

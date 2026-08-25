@@ -98,7 +98,7 @@ export default function AddMeeting() {
   // Set breadcrumbs
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Meeting", href: "/dashboard/meeting" },
+      { label: "Company Meeting", href: "/meeting" },
       {
         label: companyMeetingId ? "Update Meeting" : "Add Meeting",
         href: "",
@@ -107,7 +107,7 @@ export default function AddMeeting() {
         ? [
             {
               label: meetingApiData?.data?.meetingName || "",
-              href: `/dashboard/meeting/detail/${companyMeetingId}`,
+              href: `/meeting/detail/${companyMeetingId}`,
               isHighlight: true,
             },
           ]
@@ -896,7 +896,7 @@ export default function AddMeeting() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/dashboard/meeting")}
+                  onClick={() => navigate("/meeting")}
                   className="px-6 border-gray-300 text-gray-700"
                 >
                   Cancel

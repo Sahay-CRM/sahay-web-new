@@ -64,7 +64,7 @@ export default function CompanyTaskView() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Task", href: "/dashboard/tasks" },
+      { label: "Company Task", href: "/tasks" },
       { label: "View Task", href: "" },
       ...(isAuthorized && taskApiData?.data?.taskName
         ? [
@@ -194,7 +194,7 @@ export default function CompanyTaskView() {
                 {permission?.Edit && (
                   <Button
                     onClick={() =>
-                      navigate(`/dashboard/tasks/edit/${taskData?.taskId}`)
+                      navigate(`/tasks/edit/${taskData?.taskId}`)
                     }
                   >
                     Edit Task

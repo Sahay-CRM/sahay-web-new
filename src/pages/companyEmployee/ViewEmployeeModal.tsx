@@ -20,7 +20,7 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
 
   const handleEdit = () => {
     if (modalData?.employeeId) {
-      navigate(`/dashboard/employees/edit/${modalData.employeeId}`);
+      navigate(`/employees/edit/${modalData.employeeId}`);
     }
   };
 

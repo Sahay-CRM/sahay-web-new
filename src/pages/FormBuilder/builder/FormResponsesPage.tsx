@@ -67,7 +67,7 @@ export default function FormResponsesPage() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Forms", href: "/dashboard/forms" },
+      { label: "Forms", href: "/forms" },
       ...(isAuthorized && form?.name
         ? [{ label: `${form?.name} Form Responses`, href: "" }]
         : [{ label: `Form Responses`, href: "" }]),
@@ -245,7 +245,7 @@ export default function FormResponsesPage() {
                   size="sm"
                   className="h-8 gap-1.5 text-[#2f328e] border-[#2f328e]/20 hover:bg-[#2f328e] hover:text-white transition-all shadow-sm"
                   onClick={() =>
-                    navigate(`/dashboard/form-submission-detail/${row.id}`)
+                    navigate(`/form-submission-detail/${row.id}`)
                   }
                 >
                   <Eye className="w-3.5 h-3.5" />

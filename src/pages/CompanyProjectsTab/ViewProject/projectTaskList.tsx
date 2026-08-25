@@ -205,7 +205,7 @@ export default function ProjectTaskList({
             moduleKey="TASK"
             onRowClick={(row) => {
               if (taskPermission.View) {
-                navigate(`/dashboard/tasks/view/${row.taskId}`);
+                navigate(`/tasks/view/${row.taskId}`);
               }
             }}
             sortableColumns={["taskName", "taskDeadline", "taskStatus"]}

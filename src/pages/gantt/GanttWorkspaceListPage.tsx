@@ -368,7 +368,7 @@ export default function GanttWorkspaceListPage() {
           }
           onViewButton={(row) =>
             navigate(
-              `/dashboard/gantt/workspaces/${String(row.ganttWorkspaceId)}`,
+              `/gantt/workspaces/${String(row.ganttWorkspaceId)}`,
             )
           }
           viewButton={true}
