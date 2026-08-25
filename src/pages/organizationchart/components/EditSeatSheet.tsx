@@ -35,17 +35,23 @@ export function EditSeatSheet({
 
   const currentAssignedOptions: { label: string; value: string }[] = [];
   positions.forEach((p) => {
-    if (p.employees && Array.isArray(p.employees)) {
+    if (p.employees && Array.isArray(p.employees) && p.employees.length > 0) {
       p.employees.forEach((e) => {
         currentAssignedOptions.push({
           label: e.employeeName || "",
           value: e.employeeId || "",
         });
       });
-    } else if (p.employeeId && p.employeeName) {
-      currentAssignedOptions.push({
-        label: p.employeeName,
-        value: p.employeeId,
+    } else if (p.employeeId) {
+      const ids = p.employeeId.split(",").map((id) => id.trim()).filter(Boolean);
+      const names = p.employeeName
+        ? p.employeeName.split(",").map((n) => n.trim())
+        : [];
+      ids.forEach((id, index) => {
+        currentAssignedOptions.push({
+          label: names[index] || "Employee",
+          value: id,
+        });
       });
     }
   });
@@ -187,10 +193,14 @@ export function EditSeatSheet({
                           if (editingNodeId && pos.positionId === editingNodeId) {
                             return false;
                           }
-                          if (pos.employees && Array.isArray(pos.employees)) {
+                          if (pos.employees && Array.isArray(pos.employees) && pos.employees.length > 0) {
                             return pos.employees.some((e) => e.employeeId === val.value);
                           }
-                          return pos.employeeId === val.value;
+                          if (pos.employeeId) {
+                            const ids = pos.employeeId.split(",").map((id) => id.trim()).filter(Boolean);
+                            return ids.includes(val.value);
+                          }
+                          return false;
                         });
 
                         const doSelect = () => {
