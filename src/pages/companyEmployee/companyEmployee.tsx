@@ -155,7 +155,7 @@ export default function CompanyDesignation() {
               </TooltipProvider>
             )}
             {permission.Add && (
-              <Link to="/dashboard/employees/add">
+              <Link to="/employees/add">
                 <Button className="py-2 w-fit">Add Employee</Button>
               </Link>
             )}
@@ -192,7 +192,7 @@ export default function CompanyDesignation() {
             onEdit={
               permission.Edit
                 ? (row) => {
-                    navigate(`/dashboard/employees/edit/${row.employeeId}`);
+                    navigate(`/employees/edit/${row.employeeId}`);
                   }
                 : undefined
             }
@@ -271,7 +271,7 @@ export default function CompanyDesignation() {
                   size="default"
                   className="h-8 px-2 text-xs cursor-pointer"
                   onClick={() =>
-                    navigate("/dashboard/handover", {
+                    navigate("/handover", {
                       state: { oldUserId: row.employeeId },
                     })
                   }
@@ -325,7 +325,7 @@ export default function CompanyDesignation() {
                       "bg-gray-200 text-black border-gray-300 hover:bg-gray-300",
                     btnClick: () => {
                       if (pendingToggleItem) {
-                        navigate("/dashboard/handover", {
+                        navigate("/handover", {
                           state: { oldUserId: pendingToggleItem.employeeId },
                         });
                       }

@@ -14,7 +14,7 @@ export default function useGanttTemplate() {
   // ── Breadcrumbs ────────────────────────────────────────────────────────────
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Gantt", href: "/dashboard/gantt/workspaces" },
+      { label: "Gantt", href: "/gantt/workspaces" },
       { label: "Templates", href: "" },
     ]);
   }, [setBreadcrumbs]);
@@ -108,7 +108,7 @@ export default function useGanttTemplate() {
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleRowClick = (row: { ganttTemplateId: string }) => {
-    navigate(`/dashboard/gantt/templates/${row.ganttTemplateId}`);
+    navigate(`/gantt/templates/${row.ganttTemplateId}`);
   };
 
   return {

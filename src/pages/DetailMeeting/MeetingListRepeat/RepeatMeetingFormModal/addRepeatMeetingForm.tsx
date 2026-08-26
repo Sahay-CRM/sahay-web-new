@@ -675,7 +675,7 @@ const AddRepeatMeeting = () => {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Live Meeting Templates", href: "/dashboard/repeat-meeting" },
+      { label: "Live Meeting Templates", href: "/repeat-meeting" },
       {
         label: repetitiveMeetingId
           ? "Update Live Meeting Templates"
@@ -688,7 +688,7 @@ const AddRepeatMeeting = () => {
               label: `${
                 meetingApiData?.meetingName ? meetingApiData?.meetingName : ""
               }`,
-              href: `/dashboard/kpi/${repetitiveMeetingId}`,
+              href: `/kpi/${repetitiveMeetingId}`,
               isHighlight: true,
             },
           ]

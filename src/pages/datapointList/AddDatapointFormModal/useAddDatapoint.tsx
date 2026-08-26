@@ -45,8 +45,8 @@ export default function useAddDataPoint() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "KPI List", href: "/dashboard/kpi" },
-      { label: "Add KPI", href: "/dashboard/kpi" },
+      { label: "KPI List", href: "/kpi" },
+      { label: "Add KPI", href: "/kpi" },
     ]);
   }, [setBreadcrumbs]);
 
@@ -108,7 +108,7 @@ export default function useAddDataPoint() {
         handleModalClose();
       },
     });
-    navigate("/dashboard/kpi");
+    navigate("/kpi");
   });
 
   const handleRequestModalOpen = () => {

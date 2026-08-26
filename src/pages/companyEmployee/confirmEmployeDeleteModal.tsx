@@ -53,7 +53,7 @@ const ConfirmationDeleteModal: React.FC<DeleteModalProps> = ({
                   buttonCss: "py-1.5 px-5 bg-blue-600 text-white hover:bg-blue-500",
                   btnClick: () => {
                     modalClose();
-                    navigate("/dashboard/handover", {
+                    navigate("/handover", {
                       state: { oldUserId: modalData.employeeId },
                     });
                   },

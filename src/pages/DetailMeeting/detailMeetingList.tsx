@@ -183,12 +183,12 @@ export default function DetailMeetingList() {
 
             <div className="flex gap-2">
               {cloneMeetingPermission?.Add && (
-                <Link to="/dashboard/meeting/detail/clone">
+                <Link to="/meeting/detail/clone">
                   <Button className="py-2 w-fit">Clone Template</Button>
                 </Link>
               )}
               {permission.Add && (
-                <Link to="/dashboard/meeting/detail/add">
+                <Link to="/meeting/detail/add">
                   <Button className="py-2 w-fit">Add Live Meeting</Button>
                 </Link>
               )}
@@ -224,7 +224,7 @@ export default function DetailMeetingList() {
               permission.Edit
                 ? (row) => {
                     navigate(
-                      `/dashboard/meeting/detail/update/${row.meetingId}`,
+                      `/meeting/detail/update/${row.meetingId}`,
                     );
                   }
                 : undefined
@@ -267,7 +267,7 @@ export default function DetailMeetingList() {
                     className={`py-1 w-[150px] px-3 cursor-pointer ${buttonColor}`}
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/dashboard/meeting/detail/${row.meetingId}`);
+                      navigate(`/meeting/detail/${row.meetingId}`);
                     }}
                   >
                     {buttonText}
@@ -280,7 +280,7 @@ export default function DetailMeetingList() {
               onDelete(row as unknown as MeetingData);
             }}
             onRowClick={(row) => {
-              navigate(`/dashboard/meeting/detail/${row.meetingId}`);
+              navigate(`/meeting/detail/${row.meetingId}`);
             }}
             paginationDetails={mapPaginationDetails(meetingData)}
             setPaginationFilter={setPaginationFilter}

@@ -476,7 +476,7 @@ const CloneDetailMeeting = () => {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Meeting", href: "/dashboard/meeting/detail" },
+      { label: "Company Meeting", href: "/meeting/detail" },
       {
         label: "Clone Live Meeting",
         href: "",

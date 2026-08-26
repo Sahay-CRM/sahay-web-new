@@ -327,7 +327,8 @@ export const OrganizationChartContent = () => {
           : pos.employeeId
             ? pos.employeeId.split(",").map((id) => id.trim()).filter(Boolean)
             : [];
-      const employees: AssignedEmployee[] = empIds.map((id) => {
+      const uniqueEmpIds = Array.from(new Set(empIds));
+      const employees: AssignedEmployee[] = uniqueEmpIds.map((id) => {
         const lookup = employeeMap.get(id);
         const original = pos.employees?.find((e) => e.employeeId === id);
         return {

@@ -40,7 +40,7 @@ export default function ConfirmationTaskModal({
         {
           btnText: "Edit",
           buttonCss: "py-1.5 px-5 bg-[#2f328e] text-white hover:bg-[#1e205e]",
-          btnClick: () => navigate(`/dashboard/tasks/edit/${modalData.taskId}`),
+          btnClick: () => navigate(`/tasks/edit/${modalData.taskId}`),
         },
       ]}
     >

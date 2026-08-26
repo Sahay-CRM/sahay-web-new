@@ -10,21 +10,18 @@ export { default as addMeetingTimeMutation } from "./useUpdateMeetingTime";
 export { default as updateKPIDataMutation } from "./useUpdateKPIData";
 export { default as addUpdateDetailMeetingMutation } from "./useAddUpdateDetailMeeting";
 export { default as createIoMutation } from "./useCreateIo";
-
 export { default as duplicateDetailMeetingMutation } from "./useDuplicateDetailMeeting";
-
 export { default as endMeetingMutation } from "./useEndMeeting";
-
 export { default as deleteMeetingObjectiveMutation } from "./useDeleteMeetingObjective";
 export { default as deleteMeetingTaskMutation } from "./useDeleteMeetingTask";
 export { default as deleteMeetingProjectMutation } from "./useDeleteMeetingProject";
 export { default as deleteMeetingKpisMutation } from "./useDeleteMeetingKpis";
 export { default as deleteCompanyMeetingMutation } from "./useDeleteCompanyMeetingNote";
-
 export { default as useGetMeetingTask } from "./useGetMeetingTask";
 export { default as useGetMeetingProject } from "./useGetMeetingProject";
 export { default as useGetMeetingKpis } from "./useGetMeetingKpis";
 export { default as useGetMeetingSelectedKpis } from "./useGetMeetingSelectedKpis";
+export { default as useGetMeetingKpiFrame } from "./useGetMeetingKpiFrame";
 export { default as useGetMeetingTiming } from "./useGetMeetingTiming";
 export { default as useGetMeetingNotes } from "./useGetMeetingNotes";
 export { default as useGetDetailMeetingObj } from "./useGetDetailMeetingObj";
@@ -32,7 +29,6 @@ export { default as useGetDetailMeetingAgenda } from "./useGetDetailMeetingAgend
 export { default as useGetDetailMeetingAgendaIssue } from "./useGetDetailMeetingAgendaIssue";
 export { default as useGetMeetingConclusionTime } from "./useGetMeetingConclusionTime";
 export { default as useGetDetailMeeting } from "./useGetDetailMeeting";
-
 export { default as updateIoSequenceMutation } from "./useUpdateMeetingIoSequence";
 export { default as deleteDetailMeetingMutation } from "./useDeleteDetailMeeting";
 export { default as getTranscript } from "./useGetDetailMeetingTranscript";
@@ -41,19 +37,11 @@ export {
   useGetAdminMeetingTemplatesAll,
   useCloneAdminMeetingTemplateToMeeting,
 } from "./useCloneAdminMeetingTemplate";
-
 export { default as useCloneMeetingAgenda } from "./useCloneMeetingAgenda";
 export { default as useGetDetailMeetingAll } from "./useGetDetailMeetingAll";
-export {
-  default as recordMeetingChangeLogMutation,
-  type RecordMeetingChangeLogPayload,
-  type MeetingChangeIoType,
-  type MeetingChangeEntityType,
-  type MeetingChangeType,
-} from "./useRecordMeetingChangeLog";
-export { default as useGetMeetingChangeLogs } from "./useGetMeetingChangeLogs";
-export { default as useGetMeetingSummary } from "./useGetMeetingSummary";
 export { default as useGetallIssues } from "./useGetallIssues";
 export { default as useGetallObjectives } from "./useGetallObjectives";
 export { default as useExecuteAgendaMerge, type ExecuteAgendaMergePayload } from "./useExecuteAgendaMerge";
 export { default as useGetAgendaLinkedData, type AgendaLinkedData } from "./useGetAgendaLinkedData";
+
+

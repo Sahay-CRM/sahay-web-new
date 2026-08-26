@@ -189,7 +189,7 @@ export default function CompanyProjectTabList() {
               )}
 
               {permission.Add && (
-                <Link to="/dashboard/projects/add">
+                <Link to="/projects/add">
                   <Button
                     size="sm"
                     className="py-2 px-4 border bg-primary text-white border-primary rounded-lg font-bold shadow-sm hover:opacity-90 transition-all"
@@ -388,7 +388,7 @@ export default function CompanyProjectTabList() {
                       <div
                         key={project.projectId}
                         className="w-full cursor-pointer sm:w-[48%] md:w-[30%] lg:w-[25%] max-w-[360px]"
-                        onClick={() => navigate(`/dashboard/projects/view/${project.projectId}`)}
+                        onClick={() => navigate(`/projects/view/${project.projectId}`)}
                       >
                         <ProjectCard
                           projectId={project.projectId}
@@ -418,7 +418,7 @@ export default function CompanyProjectTabList() {
                 <div
                   key={project.projectId}
                   className="w-full cursor-pointer sm:w-[48%] md:w-[30%] lg:w-[25%] max-w-[360px]"
-                  onClick={() => navigate(`/dashboard/projects/view/${project.projectId}`)}
+                  onClick={() => navigate(`/projects/view/${project.projectId}`)}
                 >
                   <ProjectCard
                     projectId={project.projectId}

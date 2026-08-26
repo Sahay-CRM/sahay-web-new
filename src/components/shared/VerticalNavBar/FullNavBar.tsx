@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import DrawerAccordion from "../DrawerAccordion";
 
 import companyLogo from "@/assets/company-logo.jpeg";
@@ -14,6 +14,17 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
   const permissions = useSelector(getUserPermission);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const user = useSelector(getUserDetail);
+
+  const spanRef = useRef<HTMLSpanElement>(null);
+  const [showTooltip, setShowTooltip] = useState(false);
+
+  const handleMouseEnter = () => {
+    const el = spanRef.current;
+    if (el) {
+      const isTruncated = el.scrollHeight > el.clientHeight;
+      setShowTooltip(isTruncated);
+    }
+  };
 
   const handleAccordionToggle = (index: number) => {
     setActiveIndex((prevIndex) => (prevIndex === index ? -1 : index));
@@ -84,18 +95,21 @@ const FullNavBar = ({ data }: FullNavBarProps) => {
 
   return (
     <div className="flex flex-col w-[16.25rem] h-full bg-white border-r">
-      <Link to="/">
+      <Link to="/dashboard">
         <div className="flex items-center px-4 py-4 shadow-sm mt-auto cursor-pointer mb-4">
-          <div className="flex w-[4.375rem] h-[3.125rem] shrink-0">
+          <div className="flex w-[3.125rem] h-[3.125rem] shrink-0">
             <img
               src={user?.companyLogo ? user?.companyLogo : companyLogo}
               alt="profile"
-              className="w-full rounded-full object-cover"
-            />
+              className="w-full h-full rounded-full object-cover"
+            />  
           </div>
           <span
+            ref={spanRef}
             style={{ fontSize: "var(--fs-sidebar)" }}
-            className="ml-2 mr-1 font-semibold truncate"
+            className="ml-2 mr-1 font-semibold line-clamp-2"
+            onMouseEnter={handleMouseEnter}
+            title={showTooltip ? user?.companyName : undefined}
           >
             {user?.companyName}
           </span>

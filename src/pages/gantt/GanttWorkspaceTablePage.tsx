@@ -63,15 +63,15 @@ export default function GanttWorkspaceTablePage() {
   useEffect(() => {
     if (workspace) {
       setBreadcrumbs([
-        { label: "Gantt", href: "/dashboard/gantt/workspaces" },
-        { label: "Workspaces", href: "/dashboard/gantt/workspaces" },
+        { label: "Gantt", href: "/gantt/workspaces" },
+        { label: "Workspaces", href: "/gantt/workspaces" },
         {
           label: workspace.workspaceName,
-          href: `/dashboard/gantt/workspaces/${id}`,
+          href: `/gantt/workspaces/${id}`,
         },
         {
           label: "Table View",
-          href: `/dashboard/gantt/workspaces/${id}/table`,
+          href: `/gantt/workspaces/${id}/table`,
         },
       ]);
     }
@@ -162,7 +162,7 @@ export default function GanttWorkspaceTablePage() {
           Failed to load workspace. It may not exist or an error occurred.
         </p>
         <Button variant="outline" asChild>
-          <Link to="/dashboard/gantt/workspaces">Back to Workspaces</Link>
+          <Link to="/gantt/workspaces">Back to Workspaces</Link>
         </Button>
       </div>
     );
@@ -330,7 +330,7 @@ export default function GanttWorkspaceTablePage() {
             variant="ghost"
             size="icon"
             className="h-8 w-8 shrink-0"
-            onClick={() => navigate(`/dashboard/gantt/workspaces/${id}`)}
+            onClick={() => navigate(`/gantt/workspaces/${id}`)}
           >
             <ChevronLeft className="h-5 w-5" />
           </Button>
@@ -415,7 +415,7 @@ export default function GanttWorkspaceTablePage() {
             <Button
               variant="outline"
               size="sm"
-              onClick={() => navigate(`/dashboard/gantt/workspaces/${id}`)}
+              onClick={() => navigate(`/gantt/workspaces/${id}`)}
               className="h-9 px-4 text-sm font-semibold flex items-center gap-1.5"
             >
               <GanttChartSquare className="h-4 w-4" /> Gantt View

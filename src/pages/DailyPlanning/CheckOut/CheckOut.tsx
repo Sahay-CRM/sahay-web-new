@@ -1005,7 +1005,7 @@ export default function CheckOut() {
               </p>
 
               <Button
-                onClick={() => navigate("/dashboard/daily-planning/check-in")}
+                onClick={() => navigate("/daily-planning/check-in")}
                 className="w-full h-11 bg-primary hover:bg-primary/95 text-white font-bold rounded-xl flex items-center justify-center gap-1.5 transition-all shadow-md border-none cursor-pointer text-sm"
               >
                 <span>Go to Check-In Page</span>

@@ -172,10 +172,11 @@ const Blueprint = lazy(() => import("../pages/MenuBlueprint/MenuBlueprint"));
 export default function EmployeeRoutes() {
   return (
     <Routes>
-      <Route index element={<Navigate to="/dashboard" replace />} />
+      <Route index element={<Navigate to="/my-day" replace />} />
 
-      <Route path="/dashboard" element={<DashboardLayout />}>
-        <Route index element={<AddGraph />} />
+      <Route path="/" element={<DashboardLayout />}>
+        <Route index element={<Navigate to="/my-day" replace />} />
+        <Route path="dashboard" element={<AddGraph />} />
         <Route path="my-day" element={<MyDay />} />
 
         <Route path="notifications" Component={AllNotifications} />
@@ -357,7 +358,7 @@ export default function EmployeeRoutes() {
         />
       </Route>
 
-      <Route path="*" element={<Navigate to="/dashboard" replace />} />
+      <Route path="*" element={<Navigate to="/my-day" replace />} />
     </Routes>
   );
 }

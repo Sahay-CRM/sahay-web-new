@@ -57,7 +57,7 @@ export default function useKpiPermissionList() {
     };
 
     navigate({
-      pathname: `/dashboard/roles/kpi-permission/edit/${item.employeeId}`,
+      pathname: `/roles/kpi-permission/edit/${item.employeeId}`,
       search: createSearchParams(searchParams).toString(),
     });
   };

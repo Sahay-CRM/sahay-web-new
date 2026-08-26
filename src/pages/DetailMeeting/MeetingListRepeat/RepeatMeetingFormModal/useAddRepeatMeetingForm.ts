@@ -123,7 +123,7 @@ export default function useAddRepeatMeetingForm() {
       onSuccess: () => {
         queryClient.resetQueries({ queryKey: ["get-detail-meeting-list"] });
         handleModalClose();
-        navigate("/dashboard/repeat-meeting");
+        navigate("/repeat-meeting");
       },
       onError: (error: Error) => {
         const axiosError = error as AxiosError<{

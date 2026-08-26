@@ -98,7 +98,7 @@ export default function AddRepetitiveTask() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Repeat Tasks", href: "/dashboard/tasksrepeat" },
+      { label: "Company Repeat Tasks", href: "/tasksrepeat" },
       {
         label: repetitiveTaskId
           ? "Update Repetition Task"
@@ -109,7 +109,7 @@ export default function AddRepetitiveTask() {
         ? [
             {
               label: taskDataById?.data?.taskName || "",
-              href: `/dashboard/kpi/${repetitiveTaskId}`,
+              href: `/kpi/${repetitiveTaskId}`,
               isHighlight: true,
             },
           ]

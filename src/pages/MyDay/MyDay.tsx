@@ -15,6 +15,7 @@ import {
   CalendarClock,
   Search,
   ArrowUpRight,
+  ArrowDownLeft,
 } from "lucide-react";
 
 // Local Helper Formatting Functions
@@ -313,14 +314,14 @@ export default function MyDay() {
             {/* Box 5: Check In / Check Out Buttons */}
             <div className="bg-white px-4 py-3.5 flex flex-col justify-center gap-1.5">
               <Button
-                onClick={() => navigate("/dashboard/daily-planning/check-in")}
+                onClick={() => navigate("/daily-planning/check-in")}
                 type="button"
                 className="w-full bg-white border border-[#2E3090] hover:bg-[#E3E3F6] text-[#2E3090] rounded-lg text-sm font-semibold py-1.5 px-3 whitespace-nowrap flex items-center justify-center gap-1 h-8"
               >
-                Check In <ArrowUpRight size={12} />
+                Check In <ArrowDownLeft size={12} />
               </Button>
               <Button
-                onClick={() => navigate("/dashboard/daily-planning/check-out")}
+                onClick={() => navigate("/daily-planning/check-out")}
                 type="button"
                 className="w-full bg-[#2E3090] hover:bg-[#202270] text-white rounded-lg text-sm font-semibold py-1.5 px-3 border-0 whitespace-nowrap flex items-center justify-center gap-1 h-8"
               >
@@ -345,7 +346,7 @@ export default function MyDay() {
                 <div
                   key={m.meetingId}
                   className="relative pb-4 last:pb-0 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => navigate(m.isDetailMeeting ? `/dashboard/meeting/detail/${m.meetingId}` : `/dashboard/meeting/edit/${m.meetingId}`)}
+                  onClick={() => navigate(m.isDetailMeeting ? `/meeting/detail/${m.meetingId}` : `/meeting/edit/${m.meetingId}`)}
                 >
                   <span className="absolute -left-6 top-[3px] w-2.5 h-2.5 rounded-full bg-white border-2 border-[#2E3090]" />
                   <p className="text-sm text-[#2E3090] tracking-wide font-semibold">
@@ -368,7 +369,7 @@ export default function MyDay() {
                 <div
                   key={t.taskId}
                   className="flex items-center gap-2.5 py-2.5 border-b border-dashed border-[#D9D9F0] last:border-b-0 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => navigate(`/dashboard/tasks/edit/${t.taskId}`)}
+                  onClick={() => navigate(`/tasks/edit/${t.taskId}`)}
                 >
                   {t.status === "Completed"
                     ? <CheckCircle2 size={17} className="text-[#2F6B45] shrink-0" />
@@ -394,7 +395,7 @@ export default function MyDay() {
                 <div
                   key={p.projectId}
                   className="flex items-center gap-2.5 py-2.5 border-b border-dashed border-[#D9D9F0] last:border-b-0 cursor-pointer hover:opacity-80 transition-opacity"
-                  onClick={() => navigate(`/dashboard/projects/edit/${p.projectId}`)}
+                  onClick={() => navigate(`/projects/edit/${p.projectId}`)}
                 >
                   {p.status === "Completed"
                     ? <CheckCircle2 size={17} className="text-[#2F6B45] shrink-0" />
@@ -429,7 +430,7 @@ export default function MyDay() {
                     <tr
                       key={k.kpiId}
                       className="cursor-pointer hover:bg-slate-50"
-                      onClick={() => navigate(`/dashboard/kpi-dashboard?selectedType=${(k.frequency || "DAILY").toUpperCase()}`)}
+                      onClick={() => navigate(`/kpi-dashboard?selectedType=${(k.frequency || "DAILY").toUpperCase()}`)}
                     >
                       <TD>{k.kpiName}</TD>
                       <TD><span className="text-sm text-slate-500 font-medium">{k.frequency}</span></TD>
@@ -528,7 +529,7 @@ export default function MyDay() {
                       <tr
                         key={id}
                         className="cursor-pointer hover:bg-slate-50"
-                        onClick={() => navigate(tab === "tasks" ? `/dashboard/tasks/edit/${id}` : `/dashboard/projects/edit/${id}`)}
+                        onClick={() => navigate(tab === "tasks" ? `/tasks/view/${id}` : `/projects/view/${id}`)}
                       >
                         <TD>{name}</TD>
                         <TD><Stamp status={item.status} statusColor={item.statusColor} /></TD>
@@ -577,7 +578,7 @@ export default function MyDay() {
                   <tr
                     key={k.kpiId}
                     className="cursor-pointer hover:bg-slate-50"
-                    onClick={() => navigate(`/dashboard/kpi-dashboard?selectedType=${(k.frequency || "DAILY").toUpperCase()}`)}
+                    onClick={() => navigate(`/kpi-dashboard?selectedType=${(k.frequency || "DAILY").toUpperCase()}`)}
                   >
                     <TD>{k.kpiName}</TD>
                     <TD><span className="text-sm text-slate-500 font-medium">{k.frequency}</span></TD>

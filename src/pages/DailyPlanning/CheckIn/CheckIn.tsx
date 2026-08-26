@@ -269,7 +269,7 @@ export default function CheckIn() {
             </p>
           </div>
           {canEditCompanyProfile && (
-            <Button onClick={() => navigate("/dashboard/company-profile")}>
+            <Button onClick={() => navigate("/company-profile")}>
               Go to Company Profile
             </Button>
           )}

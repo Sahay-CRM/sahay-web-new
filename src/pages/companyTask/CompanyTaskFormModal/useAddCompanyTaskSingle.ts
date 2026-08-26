@@ -207,7 +207,7 @@ export const useAddCompanyTaskSingle = () => {
 
     addUpdateTask(payload, {
       onSuccess: () => {
-        navigate("/dashboard/tasks");
+        navigate("/tasks");
       },
       onError: (error: Error) => {
         const axiosError = error as AxiosError<{
@@ -245,7 +245,7 @@ export const useAddCompanyTaskSingle = () => {
     addUpdateTask(finalPayload, {
       onSuccess: () => {
         setIsConfModalOpen(false);
-        navigate("/dashboard/tasks");
+        navigate("/tasks");
       },
       onError: (error: Error) => {
         const axiosError = error as AxiosError<{

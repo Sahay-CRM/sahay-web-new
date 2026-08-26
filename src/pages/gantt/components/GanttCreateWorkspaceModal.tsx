@@ -63,7 +63,7 @@ export default function GanttCreateWorkspaceModal({
     });
     reset();
     onOpenChange(false);
-    navigate(`/dashboard/gantt/workspaces/${res.data.ganttWorkspaceId}`);
+    navigate(`/gantt/workspaces/${res.data.ganttWorkspaceId}`);
   });
 
   return (

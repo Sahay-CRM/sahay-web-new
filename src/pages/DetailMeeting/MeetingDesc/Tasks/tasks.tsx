@@ -283,9 +283,9 @@ export default function Tasks({
           const task = item as TaskGetPaging;
           return task.isExtra ? "bg-amber-50 hover:bg-amber-100/80 font-medium" : "";
         }}
-        // onEdit={navigate(`/dashboard/tasks/edit/${row.taskId}`)}
+        // onEdit={navigate(`/tasks/edit/${row.taskId}`)}
         // onViewButton={(row) => {
-        //   navigate(`/dashboard/tasks/view/${row.taskId}`);
+        //   navigate(`/tasks/view/${row.taskId}`);
         // }}
         onRowClick={(row) => {
           if (row) {

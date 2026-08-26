@@ -111,13 +111,13 @@ export default function AddProjectSingle() {
   // Set breadcrumbs
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Projects", href: "/dashboard/projects" },
+      { label: "Company Projects", href: "/projects" },
       { label: companyProjectId ? "Update Project" : "Add Project", href: "" },
       ...(companyProjectId && isAuthorized
         ? [
             {
               label: projectApiData?.data?.projectName || "",
-              href: `/dashboard/projects/view/${companyProjectId}`,
+              href: `/projects/view/${companyProjectId}`,
               isHighlight: true,
             },
           ]
@@ -817,7 +817,7 @@ export default function AddProjectSingle() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/dashboard/projects")}
+                  onClick={() => navigate("/projects")}
                   className="px-6 border-gray-300 text-gray-700"
                 >
                   Cancel

@@ -157,7 +157,7 @@ export default function MeetingDesc() {
   useEffect(() => {
     if (meetingTiming?.meetingName && isMeetingInCurrentCompany) {
       setBreadcrumbs([
-        { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
+        { label: "Detail Meeting", href: "/meeting/detail" },
         {
           label: `${meetingTiming?.meetingName} `,
           href: "",
@@ -166,7 +166,7 @@ export default function MeetingDesc() {
       ]);
     } else {
       setBreadcrumbs([
-        { label: "Detail Meeting", href: "/dashboard/meeting/detail" },
+        { label: "Detail Meeting", href: "/meeting/detail" },
       ]);
     }
   }, [meetingTiming?.meetingName, isMeetingInCurrentCompany, setBreadcrumbs]);
@@ -186,7 +186,7 @@ export default function MeetingDesc() {
     [meetingTiming?.joiners],
   );
   const sidebarItems = [
-    { key: "JOINERS", icon: UsersRound, label: " Joiners" },
+    { key: "JOINERS", icon: UsersRound, label: "  Attendees" },
     { key: "DOCUMENTS", icon: FileText, label: " Notes" },
     { key: "UPDATES", icon: RefreshCcw, label: " Updates" },
     { key: "APPRECIATION", icon: ThumbsUp, label: " Appreciation" },

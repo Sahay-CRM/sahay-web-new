@@ -257,7 +257,7 @@ export default function CompanyTaskList() {
               </TooltipProvider>
             )}
             {permission.Add && (
-              <Link to="/dashboard/kpi/add">
+              <Link to="/kpi/add">
                 <Button className="py-2 w-fit">Add KPI</Button>
               </Link>
             )}

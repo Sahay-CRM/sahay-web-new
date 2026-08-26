@@ -871,22 +871,22 @@ export default function UpdatedKpiTable() {
               target.closest("div");
             const textContent = clickElement?.textContent?.toLowerCase().trim();
             const routeMap: { [key: string]: string } = {
-              "company designation": "/dashboard/company-designation",
-              "company employee": "/dashboard/company-employee",
-              calendar: "/dashboard/calendar",
-              "meeting list": "/dashboard/meeting",
-              "company task list": "/dashboard/tasks",
-              "company project list": "/dashboard/projects",
-              "kpi list": "/dashboard/kpi",
-              "kpi dashboard": "/dashboard/kpi-dashboard",
-              "health weightage": "/dashboard/business/health-weightage",
-              "health score": "/dashboard/business/healthscore-achieve",
+              "company designation": "/company-designation",
+              "company employee": "/company-employee",
+              calendar: "/calendar",
+              "meeting list": "/meeting",
+              "company task list": "/tasks",
+              "company project list": "/projects",
+              "kpi list": "/kpi",
+              "kpi dashboard": "/kpi-dashboard",
+              "health weightage": "/business/health-weightage",
+              "health score": "/business/healthscore-achieve",
               "company level assign":
-                "/dashboard/business/company-level-assign",
-              "role & permission": "/dashboard/roles/user-permission",
-              brand: "/dashboard/brand",
-              product: "/dashboard/product",
-              "user log": "/dashboard/user-log",
+                "/business/company-level-assign",
+              "role & permission": "/roles/user-permission",
+              brand: "/brand",
+              product: "/product",
+              "user log": "/user-log",
             };
 
             if (textContent) {
@@ -2144,7 +2144,7 @@ export default function UpdatedKpiTable() {
               focus settings in the KPI List.
             </p>
             <Button
-              onClick={() => navigate("/dashboard/kpi")}
+              onClick={() => navigate("/kpi")}
               className="flex items-center gap-2 mx-auto"
             >
               Go to KPI List

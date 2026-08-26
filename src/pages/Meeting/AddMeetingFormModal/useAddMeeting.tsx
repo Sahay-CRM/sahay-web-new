@@ -138,16 +138,16 @@ export default function useAddMeeting() {
         const taskId = searchParams.get("taskId");
 
         // ✅ Decide base path
-        let basePath = "/dashboard/meeting";
+        let basePath = "/meeting";
 
         if (from === "task") {
-          basePath = taskId ? `/dashboard/tasks/edit/${taskId}` : "/dashboard/tasks/add";
+          basePath = taskId ? `/tasks/edit/${taskId}` : "/tasks/add";
         } else if (from === "tasksrepeat") {
-          basePath = taskId ? `/dashboard/tasksrepeat/edit/${taskId}` : "/dashboard/tasksrepeat/add";
+          basePath = taskId ? `/tasksrepeat/edit/${taskId}` : "/tasksrepeat/add";
         }
 
         // ✅ If it's meeting (no task path), go direct
-        if (basePath === "/dashboard/meeting") {
+        if (basePath === "/meeting") {
           navigate(basePath);
           return;
         }
@@ -381,16 +381,16 @@ export default function useAddMeeting() {
         const taskId = searchParams.get("taskId");
 
         // ✅ Decide base path
-        let basePath = "/dashboard/meeting";
+        let basePath = "/meeting";
 
         if (from === "task") {
-          basePath = taskId ? `/dashboard/tasks/edit/${taskId}` : "/dashboard/tasks/add";
+          basePath = taskId ? `/tasks/edit/${taskId}` : "/tasks/add";
         } else if (from === "tasksrepeat") {
-          basePath = taskId ? `/dashboard/tasksrepeat/edit/${taskId}` : "/dashboard/tasksrepeat/add";
+          basePath = taskId ? `/tasksrepeat/edit/${taskId}` : "/tasksrepeat/add";
         }
 
         // ✅ If it's meeting (no task path), go direct
-        if (basePath === "/dashboard/meeting") {
+        if (basePath === "/meeting") {
           navigate(basePath);
           return;
         }

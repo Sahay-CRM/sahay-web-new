@@ -68,8 +68,8 @@ export default function GanttTemplateDetailPage() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Gantt", href: "/dashboard/gantt/workspaces" },
-      { label: "Templates", href: "/dashboard/gantt/templates" },
+      { label: "Gantt", href: "/gantt/workspaces" },
+      { label: "Templates", href: "/gantt/templates" },
       { label: data?.template?.templateName ?? "Detail", href: "" },
     ]);
   }, [setBreadcrumbs, data?.template?.templateName]);
@@ -95,7 +95,7 @@ export default function GanttTemplateDetailPage() {
         <p className="text-muted-foreground text-sm">
           Template not found or could not be loaded.
         </p>
-        <Link to="/dashboard/gantt/templates">
+        <Link to="/gantt/templates">
           <Button variant="outline" size="sm">
             <ArrowLeft className="h-4 w-4 mr-1" /> Back to Templates
           </Button>
@@ -111,7 +111,7 @@ export default function GanttTemplateDetailPage() {
       {/* ── Light Header Banner ────────────────────────────────────────────────── */}
       <div className="bg-white border-b border-slate-200 px-6 py-5 shrink-0">
         {/* <Link
-          to="/dashboard/gantt/templates"
+          to="/gantt/templates"
           className="inline-flex items-center gap-1.5 text-xs text-slate-500 hover:text-slate-800 transition-colors mb-3"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Back to Templates

@@ -53,12 +53,12 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
 
   const handleEdit = () => {
     if (modalData?.projectId) {
-      navigate(`/dashboard/projects/edit/${modalData.projectId}`);
+      navigate(`/projects/edit/${modalData.projectId}`);
     }
   };
   const handleView = () => {
     if (modalData?.projectId) {
-      navigate(`/dashboard/projects/view/${modalData.projectId}`);
+      navigate(`/projects/view/${modalData.projectId}`);
     }
   };
   const { mutate: addProject } = useAddUpdateCompanyProject();

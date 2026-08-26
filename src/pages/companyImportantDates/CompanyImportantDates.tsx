@@ -104,7 +104,7 @@ function Calendar() {
               </Button>
             )}
             {permission.IMPORTANT_DATE.View && (
-              <Button onClick={() => navigate("/dashboard/importantdate")}>
+              <Button onClick={() => navigate("/importantdate")}>
                 View Important Date
               </Button>
             )}

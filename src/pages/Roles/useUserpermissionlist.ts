@@ -85,7 +85,7 @@ export default function useAdminUser() {
     };
 
     navigate({
-      pathname: "/dashboard/roles/userpermissionlist/edit",
+      pathname: "/roles/userpermissionlist/edit",
       search: createSearchParams(searchParams).toString(),
     });
   };

@@ -94,13 +94,13 @@ export default function AddCompanyTaskSingle() {
   // Set breadcrumbs
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Task", href: "/dashboard/tasks" },
+      { label: "Company Task", href: "/tasks" },
       { label: taskId ? "Update Task" : "Add Task", href: "" },
       ...(taskId && isAuthorized
         ? [
             {
               label: taskDataById?.data.taskName || "",
-              href: `/dashboard/kpi/${taskId}`,
+              href: `/kpi/${taskId}`,
               isHighlight: true,
             },
           ]
@@ -736,7 +736,7 @@ interface GroupedCompanyMeetings {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => navigate("/dashboard/tasks")}
+                  onClick={() => navigate("/tasks")}
                   className="px-6 border-gray-300 text-gray-700"
                 >
                   Cancel

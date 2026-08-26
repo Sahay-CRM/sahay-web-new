@@ -94,3 +94,32 @@ interface TipItem {
   title: string;
   description: string;
 }
+
+interface SummaryItemDetails {
+  status?: string;
+  deadline?: string;
+}
+
+interface SummaryAddedItem {
+  type: string;
+  name: string;
+  details?: SummaryItemDetails;
+}
+
+interface SummaryDiff {
+  field: string;
+  oldValue: string;
+  newValue: string;
+}
+
+interface SummaryUpdatedItem {
+  type: string;
+  name: string;
+  diff?: SummaryDiff[];
+}
+
+interface SummaryRemovedItem {
+  type: string;
+  name: string;
+}
+

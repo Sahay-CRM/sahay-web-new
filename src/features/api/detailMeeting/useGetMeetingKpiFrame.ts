@@ -2,17 +2,17 @@ import Api from "@/features/utils/api.utils";
 import Urls from "@/features/utils/urls.utils";
 import { useQuery } from "@tanstack/react-query";
 
-type DatePaging = CommonResponse<SelectedKpisData>;
+type FrameResponse = CommonResponse<SelectedKpisData>;
 
-export default function useGetMeetingSelectedKpis({
+export default function useGetMeetingKpiFrame({
   filter,
   enable,
 }: FilterDataProps) {
   const query = useQuery({
-    queryKey: ["get-detailMeeting-kpis-data", filter],
+    queryKey: ["get-detailMeeting-kpis-frame", filter],
     queryFn: async () => {
-      const { data: resData } = await Api.post<DatePaging>({
-        url: Urls.getMeetingSelectedKpisData(),
+      const { data: resData } = await Api.post<FrameResponse>({
+        url: Urls.getMeetingKpiFrame(),
         data: {
           ...filter,
         },

@@ -1,5 +1,5 @@
 import React, { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import logoImg from "@/assets/S_logo.png";
 import mainLogoImg from "@/assets/company-logo.jpeg";
 import {
@@ -185,9 +185,11 @@ const IconHoverVerticalNav: React.FC<IconHoverVerticalNavProps> = ({
     <div className="h-full text-primary w-[4rem] p-1 z-40 flex flex-col relative">
       {/* Top Company Logo with Tooltip */}
 
-      <Avatar className="mt-2 rounded-full w-[3.4375rem] h-[3.4375rem]">
-        <CompanyLogo />
-      </Avatar>
+      <Link to="/dashboard">
+        <Avatar className="mt-2 rounded-full w-[3.4375rem] h-[3.4375rem] cursor-pointer">
+          <CompanyLogo />
+        </Avatar>
+      </Link>
 
       {/* Scrollable Icon Menu */}
       <div className="flex-1 overflow-y-auto py-2">

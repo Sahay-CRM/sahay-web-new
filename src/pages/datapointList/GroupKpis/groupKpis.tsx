@@ -74,7 +74,7 @@ export default function GroupKpis() {
   }, [setBreadcrumbs]);
 
   const onEditClick = (groupId: string) => {
-    navigate(`/dashboard/kpi/group-kpis/edit/${groupId}`);
+    navigate(`/kpi/group-kpis/edit/${groupId}`);
   };
 
   const columnToggleOptions = [
@@ -176,7 +176,7 @@ export default function GroupKpis() {
       <div className="w-full text-right shrink-0">
         <Button
           className="py-2 w-fit mb-5"
-          onClick={() => navigate("/dashboard/kpi/group-kpis/add")}
+          onClick={() => navigate("/kpi/group-kpis/add")}
         >
           Create Group KPIs
         </Button>

@@ -85,7 +85,7 @@ export default function FormSettingsPage() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Forms", href: "/dashboard/forms" },
+      { label: "Forms", href: "/forms" },
       ...(isAuthorized && formName
         ? [{ label: `${formName} Form Settings`, href: "" }]
         : [{ label: `Form Settings`, href: "" }]),
@@ -205,7 +205,7 @@ export default function FormSettingsPage() {
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0 text-gray-500"
-            onClick={() => navigate(`/dashboard/form-builder?id=${id}`)}
+            onClick={() => navigate(`/form-builder?id=${id}`)}
           >
             <ArrowLeft className="w-4 h-4" />
           </Button> */}

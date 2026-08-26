@@ -19,12 +19,12 @@ const ViewMeetingModal: React.FC<ViewRepeatTaskModalProps> = ({
   // Edit handler
   const handleEdit = () => {
     if (modalData?.repetitiveTaskId) {
-      navigate(`/dashboard/tasksrepeat/edit/${modalData.repetitiveTaskId}`);
+      navigate(`/tasksrepeat/edit/${modalData.repetitiveTaskId}`);
     }
   };
   // const handleView = () => {
   //   if (modalData?.taskId) {
-  //     navigate(`/dashboard/tasks/view/${modalData.repetitiveTaskId}`);
+  //     navigate(`/tasks/view/${modalData.repetitiveTaskId}`);
   //   }
   // };
 

@@ -40,7 +40,7 @@ export default function AddEmployee() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Company Employee", href: "/dashboard/company-employee" },
+      { label: "Company Employee", href: "/company-employee" },
       {
         label: companyEmployeeId
           ? "Company Employee Update"
@@ -55,7 +55,7 @@ export default function AddEmployee() {
                   ? employeeData?.data?.employeeName
                   : ""
               }`,
-              href: `/dashboard/kpi/${companyEmployeeId}`,
+              href: `/kpi/${companyEmployeeId}`,
               isHighlight: true,
             },
           ]

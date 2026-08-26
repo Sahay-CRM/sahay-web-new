@@ -209,9 +209,9 @@ export default function useAddProject() {
     //     }
     //     handleModalClose();
     //     if (searchParams.get("from") === "task") {
-    //       navigate(`/dashboard/tasks/add?projectId=${projectId}`);
+    //       navigate(`/tasks/add?projectId=${projectId}`);
     //     } else {
-    //       navigate("/dashboard/projects");
+    //       navigate("/projects");
     //     }
     //   },
     // });
@@ -233,16 +233,16 @@ export default function useAddProject() {
         const taskId = searchParams.get("taskId");
 
         // ✅ Decide base path just like meeting
-        let basePath = "/dashboard/projects";
+        let basePath = "/projects";
 
         if (from === "task") {
-          basePath = taskId ? `/dashboard/tasks/edit/${taskId}` : "/dashboard/tasks/add";
+          basePath = taskId ? `/tasks/edit/${taskId}` : "/tasks/add";
         } else if (from === "tasksrepeat") {
-          basePath = taskId ? `/dashboard/tasksrepeat/edit/${taskId}` : "/dashboard/tasksrepeat/add";
+          basePath = taskId ? `/tasksrepeat/edit/${taskId}` : "/tasksrepeat/add";
         }
 
         // ✅ If normal project, just go project list
-        if (basePath === "/dashboard/projects") {
+        if (basePath === "/projects") {
           navigate(basePath);
           return;
         }
@@ -292,15 +292,15 @@ export default function useAddProject() {
 
         const from = searchParams.get("from");
         const taskId = searchParams.get("taskId");
-        let basePath = "/dashboard/projects";
+        let basePath = "/projects";
 
         if (from === "task") {
-          basePath = taskId ? `/dashboard/tasks/edit/${taskId}` : "/dashboard/tasks/add";
+          basePath = taskId ? `/tasks/edit/${taskId}` : "/tasks/add";
         } else if (from === "tasksrepeat") {
-          basePath = taskId ? `/dashboard/tasksrepeat/edit/${taskId}` : "/dashboard/tasksrepeat/add";
+          basePath = taskId ? `/tasksrepeat/edit/${taskId}` : "/tasksrepeat/add";
         }
 
-        if (basePath === "/dashboard/projects") {
+        if (basePath === "/projects") {
           navigate(basePath);
           return;
         }

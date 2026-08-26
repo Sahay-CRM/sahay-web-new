@@ -62,7 +62,7 @@ export default function SearchKpiModal({
         selectFrequency: selectedFreq,
       };
       dispatch(setKpiData(data));
-      navigate(`/dashboard/kpi-visualize`);
+      navigate(`/kpi-visualize`);
     }
   };
 

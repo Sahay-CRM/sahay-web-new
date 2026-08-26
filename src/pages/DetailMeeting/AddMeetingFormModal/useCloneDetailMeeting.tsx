@@ -66,7 +66,7 @@ export default function useCloneDetailMeeting() {
       {
         onSuccess: () => {
           handleModalClose();
-          navigate("/dashboard/meeting/detail");
+          navigate("/meeting/detail");
         },
       },
     );

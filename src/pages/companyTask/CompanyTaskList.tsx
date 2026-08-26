@@ -136,7 +136,7 @@ export default function CompanyTaskList() {
               setPaginationFilter={setPaginationFilter}
               className="w-80"
             />
-            <Link to="/dashboard/tasks/board">
+            <Link to="/tasks/board">
               <Button variant={"outline"} className="py-2 h-10 w-fit">
                 View as Column
               </Button>
@@ -217,7 +217,7 @@ export default function CompanyTaskList() {
                       </Tooltip>
                     </TooltipProvider>
                   )}
-                  <Link to="/dashboard/tasks/add">
+                  <Link to="/tasks/add">
                     <Button className="py-2 w-fit">Add Company Task</Button>
                   </Link>
                 </div>
@@ -258,7 +258,7 @@ export default function CompanyTaskList() {
             onEdit={
               permission.Edit
                 ? (row) => {
-                    navigate(`/dashboard/tasks/edit/${row.taskId}`);
+                    navigate(`/tasks/edit/${row.taskId}`);
                   }
                 : undefined
             }
@@ -266,7 +266,7 @@ export default function CompanyTaskList() {
               onDelete(row);
             }}
             onViewButton={(row) => {
-              navigate(`/dashboard/tasks/view/${row.taskId}`);
+              navigate(`/tasks/view/${row.taskId}`);
             }}
             paginationDetails={mapPaginationDetails(companyTaskData)}
             setPaginationFilter={setPaginationFilter}

@@ -257,7 +257,7 @@ export default function useCompanyLevel() {
     companyLevelMutation(payload, {
       onSuccess: () => {
         setIsSaving(false);
-        navigate("/dashboard/business/company-level-assign");
+        navigate("/business/company-level-assign");
         setCoreParameters("");
         setSelectedLevel("");
         isInitialized.current = false;

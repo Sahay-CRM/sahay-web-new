@@ -22,7 +22,7 @@ const DashboardBuilderPage: React.FC = () => {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Dashboard Report", href: "/dashboard/report-builder" },
+      { label: "Dashboard Report", href: "/report-builder" },
       { label: id ? "Edit Widget" : "Add Widget", href: "" },
     ]);
   }, [setBreadcrumbs, id]);
@@ -32,12 +32,12 @@ const DashboardBuilderPage: React.FC = () => {
       updateReport(
         { id, config },
         {
-          onSuccess: () => navigate("/dashboard/report-builder"),
+          onSuccess: () => navigate("/report-builder"),
         },
       );
     } else {
       createReport(config, {
-        onSuccess: () => navigate("/dashboard/report-builder"),
+        onSuccess: () => navigate("/report-builder"),
       });
     }
   };

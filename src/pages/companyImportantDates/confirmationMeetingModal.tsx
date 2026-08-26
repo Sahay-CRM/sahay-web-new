@@ -97,8 +97,8 @@ export default function ConfirmationMeetingModal({
           btnClick: () =>
             navigate(
               modalData.isDetailMeeting
-                ? `/dashboard/meeting/detail/update/${modalData.meetingId}`
-                : `/dashboard/meeting/edit/${modalData.meetingId}`
+                ? `/meeting/detail/update/${modalData.meetingId}`
+                : `/meeting/edit/${modalData.meetingId}`
             ),
         },
       ]}

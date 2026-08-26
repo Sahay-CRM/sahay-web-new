@@ -573,7 +573,7 @@ export default function UserPermissionTableMerged() {
     setBreadcrumbs([
       {
         label: "User Permissions",
-        href: "/dashboard/roles/user-permission",
+        href: "/roles/user-permission",
       },
       { label: "Edit Permissions" },
       ...(isAuthorized && userName

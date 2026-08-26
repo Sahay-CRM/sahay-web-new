@@ -27,6 +27,7 @@ import { queryClient } from "@/queryClient";
 import {
   addMeetingKpisDataMutation,
   updateKPIDataMutation,
+  useGetMeetingKpiFrame,
   useGetMeetingSelectedKpis,
 } from "@/features/api/detailMeeting";
 
@@ -131,7 +132,7 @@ interface KpiRowProps {
 function KpiRow({ kpi, getFormattedValue, onRowClick }: KpiRowProps) {
   return (
     <tr
-      className="border-b bg-gray-50 cursor-pointer"
+      className="border-b border-gray-200 bg-gray-50 cursor-pointer"
       onClick={() => onRowClick?.(kpi)}
     >
       <td className="p-3 border w-[60px] align-middle h-[59px]">
@@ -273,7 +274,25 @@ export default function KPITable({
 
   const { mutate: addUpdateKpiData } = updateKPIDataMutation();
 
-  const { data: selectedKpis, isLoading: meetingLoading } =
+  // Step 1: instant frame load — categories, metadata, photos, counts (no dataArray)
+  const { data: kpiFrame, isLoading: frameLoading } = useGetMeetingKpiFrame({
+    filter: {
+      meetingId: meetingId,
+      ...(ioType === "ISSUE" ? { issueId: ioId } : { objectiveId: ioId }),
+      ioType: ioType,
+      sortBy: sortConfig.key,
+      sortOrder: sortConfig.direction,
+    },
+    enable: !!meetingId && !!ioId && !!ioType,
+  });
+
+  const kpiFrameTyped = useMemo(
+    () => (Array.isArray(kpiFrame) ? kpiFrame : []),
+    [kpiFrame],
+  );
+
+  // Step 2: historical dataArray cycles for the active frequency tab
+  const { data: selectedKpis, isLoading: dataLoading } =
     useGetMeetingSelectedKpis({
       filter: {
         meetingId: meetingId,
@@ -282,8 +301,9 @@ export default function KPITable({
         selectDate: selectedDate ? format(selectedDate, "yyyy-MM-dd") : null,
         sortBy: sortConfig.key,
         sortOrder: sortConfig.direction,
+        frequencyType: selectedPeriod || undefined,
       },
-      enable: !!meetingId && !!ioId && !!ioType,
+      enable: !!meetingId && !!ioId && !!ioType && !!selectedPeriod,
     });
 
   const selectedKpisTyped = useMemo(
@@ -291,19 +311,51 @@ export default function KPITable({
     [selectedKpis],
   );
 
+  // Merge dataArray cycles (Step 2) into the frame's KPIs (Step 1) by kpiId, per frequency
+  const mergedKpis = useMemo(() => {
+    if (!kpiFrameTyped.length) return [];
+    if (!selectedKpisTyped.length) return kpiFrameTyped;
+
+    const dataArrayByFreqAndKpi = new Map<string, KpiDataCell[]>();
+    selectedKpisTyped.forEach((freqGroup) => {
+      (freqGroup.kpis || []).forEach((coreParam: KPICoreParameter) => {
+        (coreParam.kpis || []).forEach((kpi: KpiAllList) => {
+          dataArrayByFreqAndKpi.set(
+            `${freqGroup.frequencyType}/${kpi.kpiId}`,
+            kpi.dataArray || [],
+          );
+        });
+      });
+    });
+
+    return kpiFrameTyped.map((freqGroup) => ({
+      ...freqGroup,
+      kpis: (freqGroup.kpis || []).map((coreParam: KPICoreParameter) => ({
+        ...coreParam,
+        kpis: (coreParam.kpis || []).map((kpi: KpiAllList) => ({
+          ...kpi,
+          dataArray:
+            dataArrayByFreqAndKpi.get(
+              `${freqGroup.frequencyType}/${kpi.kpiId}`,
+            ) ?? kpi.dataArray,
+        })),
+      })),
+    }));
+  }, [kpiFrameTyped, selectedKpisTyped]);
+
   const unfollowed = Object.keys(meetingRes?.state?.unfollow || {});
   const isUnfollow = unfollowed.includes(userId);
 
-  // Tabs data
+  // Tabs data — driven by the frame response so counts render instantly
   const kpiStructure = useMemo(
     () => ({
-      data: selectedKpisTyped,
-      totalCount: selectedKpisTyped.length,
+      data: kpiFrameTyped,
+      totalCount: kpiFrameTyped.length,
       success: true,
       status: 200,
       message: "",
       currentPage: 1,
-      pageSize: selectedKpisTyped.length,
+      pageSize: kpiFrameTyped.length,
       totalPages: 1,
       hasNextPage: false,
       hasPreviousPage: false,
@@ -312,10 +364,11 @@ export default function KPITable({
       sortBy: "",
       sortOrder: "",
     }),
-    [selectedKpisTyped],
+    [kpiFrameTyped],
   );
 
-  const isLoading = meetingLoading;
+  const isLoading = frameLoading;
+  const isDataLoading = dataLoading;
   const [inputValues, setInputValues] = useState<{ [key: string]: string }>({});
   const [tempValues, setTempValues] = useState<{ [key: string]: string }>({});
   const [inputFocused, setInputFocused] = useState<{ [key: string]: boolean }>(
@@ -338,7 +391,12 @@ export default function KPITable({
     onValue(meetingRef, (snapshot) => {
       if (snapshot.exists()) {
         queryClient.resetQueries({ queryKey: ["get-kpi-dashboard-data"] });
-        queryClient.resetQueries({ queryKey: ["get-detailMeeting-kpis-res"] });
+        queryClient.resetQueries({
+          queryKey: ["get-detailMeeting-kpis-frame"],
+        });
+        queryClient.resetQueries({
+          queryKey: ["get-detailMeeting-kpis-data"],
+        });
       }
     });
 
@@ -478,7 +536,7 @@ export default function KPITable({
   }, [isSearchOpen]);
 
   const headers = useMemo(() => {
-    const periodGroup = selectedKpisTyped.find(
+    const periodGroup = mergedKpis.find(
       (item) => item.frequencyType === selectedPeriod,
     );
 
@@ -494,7 +552,7 @@ export default function KPITable({
 
     // If no data for selected period, try to use the first available period
     if (!periodGroup || !periodGroup.kpis || !periodGroup.kpis.length) {
-      const firstPeriod = selectedKpisTyped[0];
+      const firstPeriod = mergedKpis[0];
       if (firstPeriod && firstPeriod.kpis && firstPeriod.kpis.length) {
         const allDataArrays = firstPeriod.kpis.flatMap(
           (coreParam: KPICoreParameter) =>
@@ -524,20 +582,20 @@ export default function KPITable({
       return [];
     }
     return getKpiHeadersFromData([uniqueDataArrays], selectedPeriod);
-  }, [selectedKpisTyped, selectedPeriod]);
+  }, [mergedKpis, selectedPeriod]);
 
   const filteredData = useMemo(() => {
-    const dataForPeriod = selectedKpisTyped.filter(
+    const dataForPeriod = mergedKpis.filter(
       (item) => item.frequencyType === selectedPeriod,
     );
 
     // If no data for selected period, use the first available period
-    if (dataForPeriod.length === 0 && selectedKpisTyped.length > 0) {
-      return [selectedKpisTyped[0]];
+    if (dataForPeriod.length === 0 && mergedKpis.length > 0) {
+      return [mergedKpis[0]];
     }
 
     return dataForPeriod;
-  }, [selectedKpisTyped, selectedPeriod]);
+  }, [mergedKpis, selectedPeriod]);
 
   // Filter options derived from all KPIs currently loaded for this issue/objective
   const allKpisFlat = useMemo(
@@ -552,13 +610,13 @@ export default function KPITable({
 
   // KPIs already added to this issue/objective, across all frequency periods
   const addedKpiIds = useMemo(() => {
-    const ids = selectedKpisTyped.flatMap((item) =>
+    const ids = kpiFrameTyped.flatMap((item) =>
       (item.kpis || []).flatMap((coreParam: KPICoreParameter) =>
         (coreParam.kpis || []).map((kpi: KpiAllList) => kpi.kpiId),
       ),
     );
     return new Set(ids);
-  }, [selectedKpisTyped]);
+  }, [kpiFrameTyped]);
 
   const uniqueEmployeeOptions = useMemo(() => {
     const employeeOptions = allKpisFlat
@@ -677,10 +735,10 @@ export default function KPITable({
   }, [selectedPeriod, searchParams, setSearchParams]);
 
   useEffect(() => {
-    if (!selectedPeriod && selectedKpisTyped && selectedKpisTyped.length > 0) {
+    if (!selectedPeriod && kpiFrameTyped && kpiFrameTyped.length > 0) {
       // Use URL parameter if available, otherwise use the first frequency type
       const urlPeriod = searchParams.get("selectedType");
-      const initialPeriod = urlPeriod || selectedKpisTyped[0]?.frequencyType;
+      const initialPeriod = urlPeriod || kpiFrameTyped[0]?.frequencyType;
 
       if (initialPeriod) {
         setSelectedPeriod(initialPeriod);
@@ -693,7 +751,7 @@ export default function KPITable({
         }
       }
     }
-  }, [selectedKpisTyped, selectedPeriod, searchParams, setSearchParams]);
+  }, [kpiFrameTyped, selectedPeriod, searchParams, setSearchParams]);
 
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -710,9 +768,9 @@ export default function KPITable({
   }, [tempValues]);
 
   useEffect(() => {
-    if (isKpiDataCellArrayArray(selectedKpisTyped)) {
+    if (isKpiDataCellArrayArray(mergedKpis)) {
       const initialValues: { [key: string]: string } = {};
-      selectedKpisTyped.forEach((row: KpiDataCell[], rowIndex: number) => {
+      mergedKpis.forEach((row: KpiDataCell[], rowIndex: number) => {
         row.forEach((cell: KpiDataCell, colIndex: number) => {
           initialValues[`${rowIndex}-${colIndex}`] =
             cell?.data?.toString() ?? "";
@@ -722,11 +780,11 @@ export default function KPITable({
       setTempValues({});
       setIoKPIId("");
     }
-  }, [selectedKpisTyped]);
+  }, [mergedKpis]);
 
   useEffect(() => {
     setLocalNotes({});
-  }, [selectedKpisTyped]);
+  }, [mergedKpis]);
 
   const methods = useForm();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -974,7 +1032,7 @@ export default function KPITable({
               </Suspense>
             )}
         <div className="flex gap-3 items-center ml-auto flex-wrap">
-          {selectedKpisTyped && selectedKpisTyped.length > 0 && (
+          {kpiFrameTyped && kpiFrameTyped.length > 0 && (
             <>
               <div className="min-w-[100px]">
                 <FormSelect
@@ -1053,11 +1111,11 @@ export default function KPITable({
         </div>
       </div>
 
-      {selectedKpisTyped && selectedKpisTyped.length > 0 && (
+      {kpiFrameTyped && kpiFrameTyped.length > 0 && (
         <>
           <div className="sticky top-0 z-10 bg-white px-4 m-0">
             <div className="flex justify-between">
-              <div className="flex justify-between items-center">
+              <div className="flex justify-between items-center gap-3">
                 <Suspense fallback={<TabsSectionFallback />}>
                   <TabsSection
                     selectedPeriod={selectedPeriod}
@@ -1067,6 +1125,11 @@ export default function KPITable({
                     isUnfollow={isUnfollow}
                   />
                 </Suspense>
+                {isDataLoading && (
+                  <span className="text-xs text-muted-foreground animate-pulse">
+                    Loading data...
+                  </span>
+                )}
               </div>
               <div className="flex gap-4 items-center justify-end">
                 {Object.keys(tempValues).length > 0 && (
@@ -1137,7 +1200,7 @@ export default function KPITable({
                           onClick={() => handleSort("employeeName")}
                         >
                           <div className="flex items-center">
-                            <span>Who</span>
+                            <span>user</span>
                           </div>
                         </th>
                         <th
@@ -1237,7 +1300,10 @@ export default function KPITable({
                             {group.kpis.map((kpi) => {
                               const dataArray = kpi.dataArray || [];
                               return (
-                                <tr key={kpi.kpiId} className="h-[59px]">
+                                <tr
+                                  key={kpi.kpiId}
+                                  className="h-[59px] border-b border-gray-200"
+                                >
                                   {headers.map((_, colIdx) => {
                                     const cell = dataArray[colIdx] || null;
                                     const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
@@ -1270,7 +1336,7 @@ export default function KPITable({
                                         <td
                                           key={colIdx}
                                           className={clsx(
-                                            "px-2 py-1 border text-center w-[80px] h-[42px] relative",
+                                            "p-2 text-center w-[80px] h-[42px] relative",
                                             headers[colIdx].isSunday &&
                                               "bg-gray-100",
                                           )}
@@ -1280,12 +1346,12 @@ export default function KPITable({
                                               <TooltipTrigger asChild>
                                                 <div
                                                   className={clsx(
-                                                    "px-2 py-1 border text-center w-[80px] h-[42px] relative",
+                                                    "border border-gray-300 rounded-sm p-2 text-center w-full h-full relative bg-white flex items-center justify-center",
                                                     inputVal !== "" &&
                                                       inputVal !== "3" &&
                                                       (isValid
-                                                        ? "bg-green-100 border border-green-500"
-                                                        : "bg-red-100 border border-red-500"),
+                                                        ? "bg-green-100 border-green-500"
+                                                        : "bg-red-100 border-red-500"),
                                                     isVisualized &&
                                                       "opacity-60",
                                                   )}
@@ -1336,7 +1402,7 @@ export default function KPITable({
                                                     options={selectOptions}
                                                     placeholder="Select"
                                                     disabled={!canInput}
-                                                    triggerClassName="text-sm px-1 text-center justify-center"
+                                                    triggerClassName="!w-full !h-full !p-0 !m-0 !gap-1 !border-0 !rounded-none !shadow-none !bg-transparent text-sm text-center justify-center"
                                                   />
                                                   <span
                                                     className={clsx(
@@ -1364,7 +1430,7 @@ export default function KPITable({
                                       <td
                                         key={colIdx}
                                         className={clsx(
-                                          "p-2 border text-center w-[80px] h-[42px] relative",
+                                          "p-2 text-center w-[80px] h-[42px] relative",
                                           headers[colIdx].isSunday &&
                                             "bg-gray-100",
                                         )}
@@ -1438,7 +1504,7 @@ export default function KPITable({
                                                   }
                                                   className={twMerge(
                                                     "kpi-input",
-                                                    "border p-2 rounded-sm text-center text-sm w-[80px] h-[42px] transition-all bg-white",
+                                                    "border border-gray-300 p-2 rounded-sm text-center text-sm w-full h-full transition-all bg-white",
 
                                                     cell?.data !== "-" &&
                                                       inputVal !== "" &&

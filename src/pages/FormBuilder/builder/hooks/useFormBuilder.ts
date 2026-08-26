@@ -183,7 +183,7 @@ export default function useFormBuilder() {
           setTriedSaving(false);
           const newId = res?.data?.id;
           if (newId)
-            navigate(`/dashboard/form-builder?id=${newId}`, { replace: true });
+            navigate(`/form-builder?id=${newId}`, { replace: true });
         },
       });
     }

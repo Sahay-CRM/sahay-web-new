@@ -65,7 +65,7 @@ export default function CompanyReportsList() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Tasks", href: "/dashboard/tasks" },
+      { label: "Tasks", href: "/tasks" },
       { label: "Reports Library", href: "" }
     ]);
   }, [setBreadcrumbs]);
@@ -218,7 +218,7 @@ export default function CompanyReportsList() {
                     {/* Run Action */}
                     <div className="bg-gray-50 px-5 py-3 border-t border-gray-100 flex gap-2 items-center">
                       <button
-                        onClick={() => navigate(`/dashboard/company-reports/run/${report.reportId}`)}
+                        onClick={() => navigate(`/company-reports/run/${report.reportId}`)}
                         className="flex-1 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold inline-flex items-center justify-center gap-1.5 shadow-sm transition-all"
                       >
                         <Play className="w-3.5 h-3.5 fill-current" /> Run Report

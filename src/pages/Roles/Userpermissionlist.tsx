@@ -141,7 +141,7 @@ export default function MeetingList() {
             isPermissionIcon={(item) => !item.isSuperAdmin}
             onAdditionButton={(data) => {
               navigate(
-                `/dashboard/roles/user-permission/edit/${data.employeeId}`,
+                `/roles/user-permission/edit/${data.employeeId}`,
                 { state: { userName: data.employeeName } },
               );
             }}

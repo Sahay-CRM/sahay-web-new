@@ -130,7 +130,7 @@ export default function CompanyTaskListRe() {
               </TooltipProvider>
             )}
             {permission.Add && (
-              <Link to="/dashboard/tasksrepeat/add">
+              <Link to="/tasksrepeat/add">
                 <Button className="py-2 w-fit">Add Company Repeat Task</Button>
               </Link>
             )}
@@ -159,7 +159,7 @@ export default function CompanyTaskListRe() {
               permission.Edit
                 ? (row) => {
                     navigate(
-                      `/dashboard/tasksrepeat/edit/${row.repetitiveTaskId}`,
+                      `/tasksrepeat/edit/${row.repetitiveTaskId}`,
                     );
                   }
                 : undefined
@@ -168,7 +168,7 @@ export default function CompanyTaskListRe() {
               onDelete(row);
             }}
             // onViewButton={(row) => {
-            //   navigate(`/dashboard/tasksrepeat/view/${row.repetitiveTaskId}`);
+            //   navigate(`/tasksrepeat/view/${row.repetitiveTaskId}`);
             // }}
             // customActions={(row) => {
             //   return (

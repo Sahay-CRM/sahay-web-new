@@ -88,8 +88,8 @@ export default function CompanyReportRunView() {
 
   useEffect(() => {
     setBreadcrumbs([
-      { label: "Tasks", href: "/dashboard/tasks" },
-      { label: "Reports Library", href: "/dashboard/company-reports" },
+      { label: "Tasks", href: "/tasks" },
+      { label: "Reports Library", href: "/company-reports" },
       { label: "Run Report", href: "" }
     ]);
   }, [setBreadcrumbs]);
@@ -303,7 +303,7 @@ export default function CompanyReportRunView() {
           <span className="text-sm font-medium">Failed to run report. Verify the report configuration and try again.</span>
         </div>
         <button
-          onClick={() => navigate("/dashboard/company-reports")}
+          onClick={() => navigate("/company-reports")}
           className="px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-semibold hover:bg-indigo-700 transition-all inline-flex items-center gap-2"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Reports
@@ -319,7 +319,7 @@ export default function CompanyReportRunView() {
       {/* Top action bar */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => navigate("/dashboard/company-reports")}
+          onClick={() => navigate("/company-reports")}
           className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-indigo-600 font-semibold transition-all"
         >
           <ArrowLeft className="w-4 h-4" /> Back to Reports

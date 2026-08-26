@@ -76,7 +76,7 @@ export default function GanttTemplatePage() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link to="/dashboard/gantt/workspaces">
+          <Link to="/gantt/workspaces">
             <Button variant="outline">Workspaces</Button>
           </Link>
 
@@ -114,7 +114,7 @@ export default function GanttTemplatePage() {
               Templates are created by the Admin. Once published, they will
               appear here and you can use them to generate workspaces.
             </p>
-            <Link to="/dashboard/gantt/workspaces" className="mt-2">
+            <Link to="/gantt/workspaces" className="mt-2">
               <Button variant="outline" size="sm">
                 Go to Workspaces
               </Button>

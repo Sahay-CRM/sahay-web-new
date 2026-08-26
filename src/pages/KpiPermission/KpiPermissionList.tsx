@@ -132,7 +132,7 @@ export default function KpiPermissionList() {
             isPermissionIcon={(item) => !item.isSuperAdmin}
             onAdditionButton={(data) => {
               navigate(
-                `/dashboard/roles/kpi-permission/edit/${data.employeeId}`,
+                `/roles/kpi-permission/edit/${data.employeeId}`,
                 { state: { userName: data.employeeName } },
               );
             }}
