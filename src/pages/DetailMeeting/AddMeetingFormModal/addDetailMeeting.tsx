@@ -67,6 +67,7 @@ export default function AddDetailMeeting() {
     control,
     setValue,
     watch,
+    trigger,
     formState: { errors },
   } = methods;
 
@@ -468,145 +469,234 @@ export default function AddDetailMeeting() {
                   </div>
                 </div>
 
-                {/* Joiners / Attendees */}
-                <div>
-                  <label className="block text-md font-semibold text-gray-900 mb-1.5">
-                    Attendees / Joiners <span className="text-red-500">*</span>
-                  </label>
-                  <Controller
-                    control={control}
-                    name="employeeId"
-                    rules={{
-                      validate: (value) => {
-                        if (!value || value.length === 0) {
-                          return "Please select at least one joiner";
-                        }
-                        const hasTeamLeader = value.some(
-                          (emp: EmployeeDetails) => emp.isTeamLeader,
+                {/* Timing & Attendees Row */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Joiners / Attendees */}
+                  <div>
+                    <label className="block text-md font-semibold text-gray-900 mb-1.5">
+                      Attendees / Joiners <span className="text-red-500">*</span>
+                    </label>
+                    <Controller
+                      control={control}
+                      name="employeeId"
+                      rules={{
+                        validate: (value) => {
+                          if (!value || value.length === 0) {
+                            return "Please select at least one joiner";
+                          }
+                          const hasTeamLeader = value.some(
+                            (emp: EmployeeDetails) => emp.isTeamLeader,
+                          );
+                          if (!hasTeamLeader) {
+                            return "At least one joiner must be marked as Team Leader";
+                          }
+
+                          return true;
+                        },
+                      }}
+                      render={({ field }) => {
+                        const selectedIds = (field.value || []).map(
+                          (v: EmployeeDetails) => v.employeeId,
                         );
-                        if (!hasTeamLeader) {
-                          return "At least one joiner must be marked as Team Leader";
-                        }
-
-                        return true;
-                      },
-                    }}
-                    render={({ field }) => {
-                      const selectedIds = (field.value || []).map(
-                        (v: EmployeeDetails) => v.employeeId,
-                      );
-                      return (
-                        <SearchDropdown
-                          className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
-                          placeholder="Search attendees..."
-                          options={employeeOptions}
-                          selectedValues={selectedIds}
-                          multiSelect={true}
-                          onSelect={(item) => {
-                            const currentVals: EmployeeDetails[] =
-                              Array.isArray(field.value) ? field.value : [];
-                            const isAlreadySelected = currentVals.some(
-                              (v) => v.employeeId === item.value,
-                            );
-                            if (isAlreadySelected) {
-                              field.onChange(
-                                currentVals.filter(
-                                  (v) => v.employeeId !== item.value,
-                                ),
+                        return (
+                          <SearchDropdown
+                            className="w-full border-gray-200 text-base py-2.5 h-auto font-normal"
+                            placeholder="Search attendees..."
+                            options={employeeOptions}
+                            selectedValues={selectedIds}
+                            multiSelect={true}
+                            onSelect={(item) => {
+                              const currentVals: EmployeeDetails[] =
+                                Array.isArray(field.value) ? field.value : [];
+                              const isAlreadySelected = currentVals.some(
+                                (v) => v.employeeId === item.value,
                               );
-                            } else {
-                              const rawEmp = employeeOptions.find(
-                                (o) => o.value === item.value,
-                              )?.raw;
-                              if (rawEmp) {
-                                field.onChange([
-                                  ...currentVals,
-                                  {
-                                    employeeId: rawEmp.employeeId,
-                                    employeeName: rawEmp.employeeName,
-                                    employeeMobile:
-                                      rawEmp.employeeMobile || null,
-                                    employeeType: rawEmp.employeeType || null,
-                                    designationName:
-                                      rawEmp.designationName || null,
-                                    isTeamLeader: false,
-                                  },
-                                ]);
+                              if (isAlreadySelected) {
+                                field.onChange(
+                                  currentVals.filter(
+                                    (v) => v.employeeId !== item.value,
+                                  ),
+                                );
+                              } else {
+                                const rawEmp = employeeOptions.find(
+                                  (o) => o.value === item.value,
+                                )?.raw;
+                                if (rawEmp) {
+                                  field.onChange([
+                                    ...currentVals,
+                                    {
+                                      employeeId: rawEmp.employeeId,
+                                      employeeName: rawEmp.employeeName,
+                                      employeeMobile:
+                                        rawEmp.employeeMobile || null,
+                                      employeeType: rawEmp.employeeType || null,
+                                      designationName:
+                                        rawEmp.designationName || null,
+                                      isTeamLeader: false,
+                                    },
+                                  ]);
+                                }
                               }
-                            }
-                          }}
-                          onSearchChange={setEmployeeSearch}
-                          error={errors.employeeId}
-                          isCrossShow={false}
-                          onActionClick={(empId) => {
-                            const currentVals: EmployeeDetails[] =
-                              Array.isArray(field.value) ? field.value : [];
-                            const updated = currentVals.map((item) => ({
-                              ...item,
-                              isTeamLeader:
-                                item.employeeId === empId
-                                  ? !item.isTeamLeader
-                                  : item.isTeamLeader,
-                            }));
-                            field.onChange(updated);
-                          }}
-                          actionText="Set as Team Leader"
-                          activeActionText="Team Leader"
-                          actionActiveValues={(field.value || [])
-                            .filter((e: EmployeeDetails) => e.isTeamLeader)
-                            .map((e: EmployeeDetails) => e.employeeId)}
-                        />
-                      );
-                    }}
-                  />
+                            }}
+                            onSearchChange={setEmployeeSearch}
+                            error={errors.employeeId}
+                            isCrossShow={false}
+                            onActionClick={(empId) => {
+                              const currentVals: EmployeeDetails[] =
+                                Array.isArray(field.value) ? field.value : [];
+                              const updated = currentVals.map((item) => ({
+                                ...item,
+                                isTeamLeader:
+                                  item.employeeId === empId
+                                    ? !item.isTeamLeader
+                                    : item.isTeamLeader,
+                              }));
+                              field.onChange(updated);
+                            }}
+                            actionText="Set as Team Leader"
+                            activeActionText="Team Leader"
+                            actionActiveValues={(field.value || [])
+                              .filter((e: EmployeeDetails) => e.isTeamLeader)
+                              .map((e: EmployeeDetails) => e.employeeId)}
+                          />
+                        );
+                      }}
+                    />
 
-                  {/* Selected Employees Pills */}
-                  {employeeVal.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-3 items-center">
-                      {employeeVal.slice(0, 8).map((emp) => (
-                        <div
-                          key={emp.employeeId}
-                          className={cn(
-                            "flex items-center space-x-2 border px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
-                            emp.isTeamLeader
-                              ? "bg-slate-50 border-[#2f328e]/20 text-slate-800"
-                              : "bg-gray-50 border-gray-150 text-gray-700",
-                          )}
-                        >
-                          <div className="relative pt-1 select-none">
-                            <div className="w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[10px] font-bold shadow-sm text-slate-700">
-                              {getInitials(emp.employeeName)}
+                    {/* Selected Employees Pills */}
+                    {employeeVal.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-3 items-center">
+                        {employeeVal.slice(0, 8).map((emp) => (
+                          <div
+                            key={emp.employeeId}
+                            className={cn(
+                              "flex items-center space-x-2 border px-2.5 py-1 rounded-full text-xs font-medium transition-colors",
+                              emp.isTeamLeader
+                                ? "bg-slate-50 border-[#2f328e]/20 text-slate-800"
+                                : "bg-gray-50 border-gray-150 text-gray-700",
+                            )}
+                          >
+                            <div className="relative pt-1 select-none">
+                              <div className="w-6 h-6 rounded-full bg-white border border-gray-200 flex items-center justify-center text-[10px] font-bold shadow-sm text-slate-700">
+                                {getInitials(emp.employeeName)}
+                              </div>
+                              {emp.isTeamLeader && (
+                                <Crown className="w-3.5 h-3.5 text-[#2f328e] fill-none absolute -top-1.5 left-1/2 -translate-x-1/2 stroke-[2.5]" />
+                              )}
                             </div>
-                            {emp.isTeamLeader && (
-                              <Crown className="w-3.5 h-3.5 text-[#2f328e] fill-none absolute -top-1.5 left-1/2 -translate-x-1/2 stroke-[2.5]" />
+                            <span>{emp.employeeName}</span>
+
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setValue(
+                                  "employeeId",
+                                  employeeVal.filter(
+                                    (v) => v.employeeId !== emp.employeeId,
+                                  ),
+                                  { shouldValidate: true },
+                                );
+                              }}
+                              className="text-gray-400 hover:text-red-500 rounded-full focus:outline-none"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                        {employeeVal.length > 8 && (
+                          <div className="px-2.5 py-1 rounded-full text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors border border-primary/20">
+                            +{employeeVal.length - 8} more
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Per Agenda Time */}
+                  <div>
+                    <label className="block text-md font-semibold mt-2 text-gray-900 mb-2.5">
+                      Per Agenda Time
+                    </label>
+                    <Controller
+                      control={control}
+                      name="perAgendaTime"
+                      rules={{
+                        validate: (value) => {
+                          const planned = Number(watch("meetingTimePlanned")) || 0;
+                          if (planned > 0 && Number(value) > planned) {
+                            return "Per Agenda Time cannot exceed Meeting Planned Duration";
+                          }
+                          return true;
+                        },
+                      }}
+                      render={({ field, fieldState }) => {
+                        const totalMinutes = Number(field.value) || 0;
+                        const hours = Math.floor(totalMinutes / 60);
+                        const minutes = totalMinutes % 60;
+
+                        const handleHourChange = (newHour: string) => {
+                          if (newHour !== "" && (Number(newHour) < 0 || newHour.includes("."))) {
+                            return;
+                          }
+                          const h = Number(newHour) || 0;
+                          const newTotal = h * 60 + minutes;
+                          field.onChange(newTotal);
+                          setTimeout(() => trigger("meetingTimePlanned"), 0);
+                        };
+
+                        const handleMinuteChange = (newMin: string) => {
+                          if (newMin !== "" && (Number(newMin) < 0 || Number(newMin) > 59 || newMin.includes("."))) {
+                            return;
+                          }
+                          const m = Number(newMin) || 0;
+                          const newTotal = hours * 60 + m;
+                          field.onChange(newTotal);
+                          setTimeout(() => trigger("meetingTimePlanned"), 0);
+                        };
+
+                        return (
+                          <div className="flex flex-col select-none">
+                            <div className="flex items-end gap-1.5 h-11 w-full pb-1">
+                              {/* Hours */}
+                              <div className="flex items-baseline gap-1">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  placeholder="0"
+                                  value={hours === 0 ? "" : hours}
+                                  onChange={(e) => handleHourChange(e.target.value)}
+                                  className="w-12 h-8 text-center text-lg font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-[#2f328e] focus:outline-none placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                                <span className="text-slate-500 font-medium text-xs">hr</span>
+                              </div>
+
+                              {/* Separator */}
+                              <span className="text-slate-300 text-lg font-light pb-0.5 mx-1">:</span>
+
+                              {/* Minutes */}
+                              <div className="flex items-baseline gap-1">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={59}
+                                  placeholder="00"
+                                  value={minutes === 0 ? "" : String(minutes).padStart(2, "0")}
+                                  onChange={(e) => handleMinuteChange(e.target.value)}
+                                  className="w-12 h-8 text-center text-lg font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-[#2f328e] focus:outline-none placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                />
+                                <span className="text-slate-500 font-medium text-xs">min</span>
+                              </div>
+                            </div>
+                            {fieldState.error?.message && (
+                              <span className="text-red-500 text-xs mt-1 block">
+                                {fieldState.error.message}
+                              </span>
                             )}
                           </div>
-                          <span>{emp.employeeName}</span>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setValue(
-                                "employeeId",
-                                employeeVal.filter(
-                                  (v) => v.employeeId !== emp.employeeId,
-                                ),
-                                { shouldValidate: true },
-                              );
-                            }}
-                            className="text-gray-400 hover:text-red-500 rounded-full focus:outline-none"
-                          >
-                            <X className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      ))}
-                      {employeeVal.length > 8 && (
-                        <div className="px-2.5 py-1 rounded-full text-xs font-semibold text-primary bg-primary/10 hover:bg-primary/20 transition-colors border border-primary/20">
-                          +{employeeVal.length - 8} more
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        );
+                      }}
+                    />
+                  </div>
                 </div>
 
                 {/* Upload Documents */}

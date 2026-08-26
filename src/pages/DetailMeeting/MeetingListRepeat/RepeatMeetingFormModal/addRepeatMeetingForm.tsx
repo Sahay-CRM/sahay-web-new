@@ -155,6 +155,7 @@ const MeetingInfo = () => {
     control,
     watch,
     setValue,
+    trigger,
   } = useFormContext();
 
   const { id: repetitiveMeetingId } = useParams();
@@ -276,83 +277,9 @@ const MeetingInfo = () => {
           isMandatory
         />
 
-        {/* Left Column of Row 2: Meeting Time + Per Agenda Time */}
-        <div className="col-span-1 flex gap-6 items-start">
-           <div className="shrink-0">
-            {/* ⏱️ Per Agenda Time Picker */}
-            <Controller
-              control={control}
-              name="perAgendaTime"
-              render={({ field, fieldState }) => {
-                const totalMinutes = Number(field.value) || 0;
-                const hours = Math.floor(totalMinutes / 60);
-                const minutes = totalMinutes % 60;
-
-                const handleHourChange = (newHour: string) => {
-                  if (newHour !== "" && (Number(newHour) < 0 || newHour.includes("."))) {
-                    return;
-                  }
-                  const h = Number(newHour) || 0;
-                  const newTotal = h * 60 + minutes;
-                  field.onChange(newTotal);
-                };
-
-                const handleMinuteChange = (newMin: string) => {
-                  if (newMin !== "" && (Number(newMin) < 0 || Number(newMin) > 59 || newMin.includes("."))) {
-                    return;
-                  }
-                  const m = Number(newMin) || 0;
-                  const newTotal = hours * 60 + m;
-                  field.onChange(newTotal);
-                };
-
-                return (
-                  <div className="flex items-center gap-3 pt-6 select-none">
-                    <FormLabel className="flex items-center select-none whitespace-nowrap mb-0">
-                      Per Agenda Time
-                    </FormLabel>
-                    <div className="flex items-center gap-2">
-                      {/* Hours */}
-                      <div className="flex items-baseline gap-1">
-                        <input
-                          type="number"
-                          min={0}
-                          placeholder="0"
-                          value={hours === 0 ? "" : hours}
-                          onChange={(e) => handleHourChange(e.target.value)}
-                          className="w-10 text-center text-sm font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-primary focus:outline-none pb-0.5 placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <span className="text-slate-500 font-medium text-xs">hr</span>
-                      </div>
-
-                      {/* Separator */}
-                      <span className="text-slate-300 text-sm font-light pb-0.5">:</span>
-
-                      {/* Minutes */}
-                      <div className="flex items-baseline gap-1">
-                        <input
-                          type="number"
-                          min={0}
-                          max={59}
-                          placeholder="00"
-                          value={minutes === 0 ? "" : String(minutes).padStart(2, "0")}
-                          onChange={(e) => handleMinuteChange(e.target.value)}
-                          className="w-10 text-center text-sm font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-primary focus:outline-none pb-0.5 placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                        <span className="text-slate-500 font-medium text-xs">min</span>
-                      </div>
-                    </div>
-                    {fieldState.error?.message && (
-                      <span className="text-red-600 text-[calc(1em-1px)] tb:text-[calc(1em-2px)] before:content-['*'] block mt-1">
-                        {fieldState.error.message}
-                      </span>
-                    )}
-                  </div>
-                );
-              }}
-            />
-          </div>
-          <div className="flex-1">
+        {/* Left Column of Row 2: Meeting Time, Planned Duration, Per Agenda Time */}
+        <div className="col-span-1 grid grid-cols-3 gap-4 items-start">
+          <div className="w-full">
             {/* ⏰ Time Picker */}
             <Controller
               control={control}
@@ -369,7 +296,185 @@ const MeetingInfo = () => {
               )}
             />
           </div>
-        
+
+          <div className="w-full">
+            {/* ⏱️ Planned Duration Picker */}
+            <Controller
+              control={control}
+              name="meetingTimePlanned"
+              rules={{
+                validate: (value) => {
+                  const valNum = Number(value) || 0;
+                  if (valNum === 0 || value === "") {
+                    return true;
+                  }
+                  if (valNum < 0) {
+                    return "Planned time must be greater than or equal to 0";
+                  }
+                  const perAgenda = Number(watch("perAgendaTime")) || 0;
+                  if (valNum < perAgenda) {
+                    return "Planned Duration cannot be less than Per Agenda Time";
+                  }
+                  return true;
+                },
+              }}
+              render={({ field, fieldState }) => {
+                const totalMinutes = Number(field.value) || 0;
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+
+                const handleHourChange = (newHour: string) => {
+                  if (newHour !== "" && (Number(newHour) < 0 || newHour.includes("."))) {
+                    return;
+                  }
+                  const h = Number(newHour) || 0;
+                  const newTotal = h * 60 + minutes;
+                  field.onChange(String(newTotal));
+                  setTimeout(() => trigger("perAgendaTime"), 0);
+                };
+
+                const handleMinuteChange = (newMin: string) => {
+                  if (newMin !== "" && (Number(newMin) < 0 || Number(newMin) > 59 || newMin.includes("."))) {
+                    return;
+                  }
+                  const m = Number(newMin) || 0;
+                  const newTotal = hours * 60 + m;
+                  field.onChange(String(newTotal));
+                  setTimeout(() => trigger("perAgendaTime"), 0);
+                };
+
+                return (
+                  <div className="flex flex-col gap-1 select-none">
+                    <FormLabel className="flex items-center select-none whitespace-nowrap mb-1">
+                      Meeting Planned Duration
+                    </FormLabel>
+                    <div className="flex items-center gap-1.5 h-10 w-full">
+                      {/* Hours */}
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="00"
+                          value={hours === 0 ? "00" : String(hours).padStart(2, "0")}
+                          onChange={(e) => handleHourChange(e.target.value)}
+                          className="w-12 h-8 text-center text-lg font-bold text-[#2E3090] bg-transparent border-b border-slate-300 focus:border-[#2E3090] focus:outline-none placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="text-xs text-[#2E3090] font-semibold">h</span>
+                      </div>
+
+                      {/* Separator */}
+                      <span className="text-slate-300 text-lg font-light mx-1">:</span>
+
+                      {/* Minutes */}
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          max={59}
+                          placeholder="00"
+                          value={String(minutes).padStart(2, "0")}
+                          onChange={(e) => handleMinuteChange(e.target.value)}
+                          className="w-12 h-8 text-center text-lg font-bold text-[#2E3090] bg-transparent border-b border-slate-300 focus:border-[#2E3090] focus:outline-none placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="text-xs text-[#2E3090] font-semibold">m</span>
+                      </div>
+                    </div>
+                    {fieldState.error?.message && (
+                      <span className="text-red-600 text-sm before:content-['*'] block mt-1">
+                        {fieldState.error.message}
+                      </span>
+                    )}
+                  </div>
+                );
+              }}
+            />
+          </div>
+
+          <div className="w-full">
+            {/* ⏱️ Per Agenda Time Picker */}
+            <Controller
+              control={control}
+              name="perAgendaTime"
+              rules={{
+                validate: (value) => {
+                  const planned = Number(watch("meetingTimePlanned")) || 0;
+                  if (planned > 0 && Number(value) > planned) {
+                    return "Per Agenda Time cannot exceed Meeting Planned Duration";
+                  }
+                  return true;
+                },
+              }}
+              render={({ field, fieldState }) => {
+                const totalMinutes = Number(field.value) || 0;
+                const hours = Math.floor(totalMinutes / 60);
+                const minutes = totalMinutes % 60;
+
+                const handleHourChange = (newHour: string) => {
+                  if (newHour !== "" && (Number(newHour) < 0 || newHour.includes("."))) {
+                    return;
+                  }
+                  const h = Number(newHour) || 0;
+                  const newTotal = h * 60 + minutes;
+                  field.onChange(newTotal);
+                  setTimeout(() => trigger("meetingTimePlanned"), 0);
+                };
+
+                const handleMinuteChange = (newMin: string) => {
+                  if (newMin !== "" && (Number(newMin) < 0 || Number(newMin) > 59 || newMin.includes("."))) {
+                    return;
+                  }
+                  const m = Number(newMin) || 0;
+                  const newTotal = hours * 60 + m;
+                  field.onChange(newTotal);
+                  setTimeout(() => trigger("meetingTimePlanned"), 0);
+                };
+
+                return (
+                  <div className="flex flex-col gap-1 select-none">
+                    <FormLabel className="flex items-center select-none whitespace-nowrap mb-1">
+                      Per Agenda Time
+                    </FormLabel>
+                    <div className="flex items-center gap-1.5 h-10 w-full">
+                      {/* Hours */}
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          placeholder="0"
+                          value={hours === 0 ? "" : hours}
+                          onChange={(e) => handleHourChange(e.target.value)}
+                          className="w-12 h-8 text-center text-lg font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-primary focus:outline-none placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="text-slate-500 font-medium text-xs">hr</span>
+                      </div>
+
+                      {/* Separator */}
+                      <span className="text-slate-300 text-lg font-light mx-1">:</span>
+
+                      {/* Minutes */}
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min={0}
+                          max={59}
+                          placeholder="00"
+                          value={minutes === 0 ? "" : String(minutes).padStart(2, "0")}
+                          onChange={(e) => handleMinuteChange(e.target.value)}
+                          className="w-12 h-8 text-center text-lg font-bold text-slate-800 bg-transparent border-b border-slate-300 focus:border-primary focus:outline-none placeholder:text-slate-300 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                        />
+                        <span className="text-slate-500 font-medium text-xs">min</span>
+                      </div>
+                    </div>
+                    {fieldState.error?.message && (
+                      <span className="text-red-600 text-sm before:content-['*'] block mt-1">
+                        {fieldState.error.message}
+                      </span>
+                    )}
+                  </div>
+                );
+              }}
+            />
+          </div>
         </div>
 
         {/* Right Column of Row 2: Repetition */}

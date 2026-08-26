@@ -6,10 +6,9 @@ import {
   Bell,
   Calendar,
   CheckSquare,
-  ChevronDown,
-  ChevronUp,
   Clock,
   CornerDownLeft,
+  Copy,
   Crown,
   FileText,
   Layers,
@@ -201,6 +200,24 @@ function MaxAgendaModal({
   );
 }
 
+interface ExtendedDetails {
+  status?: string;
+  deadline?: string;
+  unit?: string;
+  kpiType?: string;
+  frequency?: string;
+  ownerName?: string;
+}
+
+interface SummaryData {
+  meetingName?: string;
+  date?: string;
+  summary: {
+    added: SummaryAddedItem[];
+    updated: SummaryUpdatedItem[];
+    removed: SummaryRemovedItem[];
+  };
+}
 
 interface AgendaProps {
   meetingName: string;
@@ -303,7 +320,8 @@ export default function Agenda({
     stopRecording,
   });
 
-  const summary = meetingSummary?.data?.summary;
+  const summaryData = meetingSummary?.data as SummaryData | undefined;
+  const summary = summaryData?.summary;
   const hasSummary = !!(
     summary &&
     ((summary.added && summary.added.length > 0) ||
@@ -323,6 +341,80 @@ export default function Agenda({
     } catch  {
       return dateStr.split("T")[0];
     }
+  };
+
+  const formatSummaryDateTime = (dateStr?: string) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      const datePart = d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      const timePart = d.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      return `${datePart}, ${timePart.toLowerCase()}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const getDetailsText = (item: SummaryAddedItem) => {
+    const parts: string[] = [];
+    const details = item.details as ExtendedDetails | undefined;
+    if (details?.status) {
+      parts.push(`Status: ${details.status}`);
+    }
+    if (details?.deadline) {
+      parts.push(`Deadline: ${formatSummaryDate(details.deadline)}`);
+    }
+    if (details?.unit) {
+      parts.push(`Unit: ${details.unit}`);
+    }
+    if (details?.kpiType) {
+      parts.push(`KPI Type: ${details.kpiType}`);
+    }
+    if (details?.frequency) {
+      parts.push(`Frequency: ${details.frequency}`);
+    }
+    if (details?.ownerName) {
+      parts.push(`Owner: ${details.ownerName}`);
+    }
+    return parts.length > 0 ? ` (${parts.join(", ")})` : "";
+  };
+
+  const getUpdateSentence = (item: SummaryUpdatedItem) => {
+    const category = getCategory(item.type);
+    const typeLabel = category === "agenda" ? "objective" : category === "kpi" ? "KPI" : category || "item";
+    const capitalizedType = typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1);
+
+    if (!item.diff || item.diff.length === 0) {
+      return `${capitalizedType} "${item.name}" was updated.`;
+    }
+
+    const diffSentences = item.diff.map((df) => {
+      const fieldName = df.field === "deadline" ? "deadline" : df.field;
+      const oldVal = df.field === "deadline" ? formatSummaryDate(df.oldValue) : df.oldValue;
+      const newVal = df.field === "deadline" ? formatSummaryDate(df.newValue) : df.newValue;
+      
+      return `${fieldName} was changed from "${oldVal || 'None'}" to "${newVal}"`;
+    });
+
+    const sentence = diffSentences.join(" and ");
+    return `${capitalizedType} "${item.name}" ${sentence}.`;
+  };
+
+  const getRemovedText = (item: SummaryRemovedItem) => {
+    const type = getCategory(item.type);
+    if (type === "agenda") return `Objective "${item.name}" was unlinked.`;
+    if (type === "task") return `Task "${item.name}" was unlinked.`;
+    if (type === "project") return `Project "${item.name}" was unlinked.`;
+    if (type === "kpi") return `KPI "${item.name}" was unlinked.`;
+    return `"${item.name}" was unlinked.`;
   };
 
   const getCategory = (type?: string): "agenda" | "kpi" | "task" | "project" | null => {
@@ -358,10 +450,7 @@ export default function Agenda({
     },
   };
 
-  const getCategoryCount = (cat: "agenda" | "kpi" | "task" | "project") => {
-    const changes = categoryChanges[cat];
-    return changes.added.length + changes.updated.length + changes.removed.length;
-  };
+
 
 
 
@@ -383,12 +472,8 @@ export default function Agenda({
   ).length;
 
   const [showMaxAgendaModal, setShowMaxAgendaModal] = useState(false);
-  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
-    agenda: true,
-    kpi: true,
-    task: true,
-    project: true,
-  });
+  const [copied, setCopied] = useState(false);
+
   const [startAnywayFlow, setStartAnywayFlow] = useState<"meeting" | "discussion" | null>(null);
   const [isSetPriorityMode, setIsSetPriorityMode] = useState(false);
 
@@ -1478,141 +1563,166 @@ export default function Agenda({
           >
             {meetingStatus === "NOT_STARTED" ? (
               hasSummary ? (
-                <div className="max-w-3xl w-full border border-slate-200 rounded-2xl bg-white shadow-sm overflow-y-auto max-h-[calc(var(--vh,100vh)-180px)]">
-                  <div className="p-6">
-                    <div className="text-center border-b pb-4 mb-4">
-                      <h2 className="text-2xl font-bold text-slate-800">
-                        Last Meeting Summary
-                      </h2>
-                      <p className="text-sm text-slate-500 mt-1">
-                        Updates and changes from the previous session
-                      </p>
-                    </div>
+                (() => {
+                  const sectionsList: { title: string; items: string[] }[] = [];
 
-                    <div className="divide-y divide-slate-100">
-                      {(
-                        [
-                          { id: "agenda", label: "Agenda" },
-                          { id: "kpi", label: "KPI" },
-                          { id: "task", label: "Task" },
-                          { id: "project", label: "Project" },
-                        ] as const
-                      ).map((cat) => {
-                        const count = getCategoryCount(cat.id);
-                        if (count === 0) return null;
-                        const isOpen = openSections[cat.id];
-                        const changes = categoryChanges[cat.id];
+                   if (categoryChanges.agenda.added.length > 0) {
+                    sectionsList.push({
+                      title: "Objectives Added",
+                      items: categoryChanges.agenda.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                    });
+                  }
 
-                        return (
-                          <div key={cat.id} className="border-b border-slate-100">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                setOpenSections((prev) => ({
-                                  ...prev,
-                                  [cat.id]: !prev[cat.id],
-                                }))
+                  if (categoryChanges.task.added.length > 0) {
+                    sectionsList.push({
+                      title: "Tasks Added",
+                      items: categoryChanges.task.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                    });
+                  }
+
+                  if (categoryChanges.project.added.length > 0) {
+                    sectionsList.push({
+                      title: "Projects Added",
+                      items: categoryChanges.project.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                    });
+                  }
+
+                  if (categoryChanges.kpi.added.length > 0) {
+                    sectionsList.push({
+                      title: "KPI Added",
+                      items: categoryChanges.kpi.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                    });
+                  }
+
+                  if (categoryChanges.project.updated.length > 0) {
+                    sectionsList.push({
+                      title: "Projects Updated",
+                      items: categoryChanges.project.updated.map(getUpdateSentence),
+                    });
+                  }
+
+                  if (categoryChanges.task.updated.length > 0) {
+                    sectionsList.push({
+                      title: "Tasks Updated",
+                      items: categoryChanges.task.updated.map(getUpdateSentence),
+                    });
+                  }
+
+                  if (categoryChanges.kpi.updated.length > 0) {
+                    sectionsList.push({
+                      title: "KPIs Updated",
+                      items: categoryChanges.kpi.updated.map(getUpdateSentence),
+                    });
+                  }
+
+                  if (categoryChanges.agenda.updated.length > 0) {
+                    sectionsList.push({
+                      title: "Objectives Updated",
+                      items: categoryChanges.agenda.updated.map(getUpdateSentence),
+                    });
+                  }
+
+                  const allRemoved = [
+                    ...categoryChanges.agenda.removed,
+                    ...categoryChanges.task.removed,
+                    ...categoryChanges.project.removed,
+                    ...categoryChanges.kpi.removed,
+                  ];
+
+                  if (allRemoved.length > 0) {
+                    sectionsList.push({
+                      title: "Unlinked",
+                      items: allRemoved.map(getRemovedText),
+                    });
+                  }
+
+                  return (
+                    <div className="max-w-3xl w-full border border-slate-200 rounded-2xl bg-white shadow-sm max-h-full flex flex-col overflow-hidden">
+                        {/* Header: Title and Copy Button (Sticky at the top) */}
+                        <div className="bg-[#2E3090] text-white p-4 rounded-t-2xl flex justify-between items-center shadow-sm shrink-0">
+                          <h2 className="text-base sm:text-lg font-bold">
+                            Meeting Summary – {summaryData?.meetingName || "Changes Recorded"}
+                          </h2>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const lines = [];
+                              lines.push(`MEETING SUMMARY – ${summaryData?.meetingName?.toUpperCase() || "CHANGES RECORDED"}`);
+                              lines.push("");
+                              if (summaryData?.meetingName && summaryData?.date) {
+                                lines.push(`The following changes were recorded in the last meeting "${summaryData.meetingName}" held on ${formatSummaryDateTime(summaryData.date)}:`);
+                              } else {
+                                lines.push("The following changes were recorded in the last meeting:");
                               }
-                              className="w-full flex items-center justify-between py-2 text-left font-bold text-[#2E3090] hover:text-[#2E3090]/80 transition-colors focus:outline-none border-none bg-transparent"
-                            >
-                              <span className="flex items-center gap-1.5 text-sm">
-                                {cat.label} ({count})
-                              </span>
-                              <span className="text-slate-400 font-normal">
-                                {isOpen ? (
-                                  <ChevronUp className="w-3.5 h-3.5" />
-                                ) : (
-                                  <ChevronDown className="w-3.5 h-3.5" />
-                                )}
-                              </span>
-                            </button>
+                              lines.push("");
+                              
+                              sectionsList.forEach((section) => {
+                                lines.push(section.title);
+                                section.items.forEach((itemText: string) => {
+                                  lines.push(`  • ${itemText}`);
+                                });
+                                lines.push("");
+                              });
 
-                            {isOpen && (
-                              <div className="pl-2 pb-3 space-y-1.5 text-sm">
-                                {/* Added items */}
-                                {changes.added.map((item: SummaryAddedItem, i: number) => (
-                                  <div
-                                    key={`added-${i}`}
-                                    className="flex items-center justify-between py-1 text-black"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-green-600 font-semibold text-xs tracking-wider">
-                                        [Added]
-                                      </span>
-                                      <span>{item.name}</span>
-                                    </div>
-                                    {item.details && (
-                                      <div className="flex items-center gap-2 text-xs text-slate-400">
-                                        {item.details.status && (
-                                          <span>({item.details.status})</span>
-                                        )}
-                                        {item.details.deadline && (
-                                          <span>
-                                            Deadline: {formatSummaryDate(item.details.deadline)}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-                                  </div>
-                                ))}
-
-                                {/* Updated items */}
-                                {changes.updated.map((item: SummaryUpdatedItem, i: number) => (
-                                  <div key={`updated-${i}`} className="py-1 text-black">
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-amber-600 font-semibold text-xs tracking-wider">
-                                        [Updated]
-                                      </span>
-                                      <span>{item.name}</span>
-                                    </div>
-                                    <div className="space-y-0.5 pl-6 mt-0.5">
-                                      {item.diff &&
-                                        item.diff.map((df: SummaryDiff, j: number) => (
-                                          <div
-                                            key={j}
-                                            className="text-xs text-slate-500 flex items-center gap-1.5"
-                                          >
-                                            <span className="capitalize">{df.field}:</span>
-                                            <span className="line-through">
-                                              {df.field === "deadline"
-                                                ? formatSummaryDate(df.oldValue)
-                                                : df.oldValue}
-                                            </span>
-                                            <span>→</span>
-                                            <span className="text-black font-medium">
-                                              {df.field === "deadline"
-                                                ? formatSummaryDate(df.newValue)
-                                                : df.newValue}
-                                            </span>
-                                          </div>
-                                        ))}
-                                    </div>
-                                  </div>
-                                ))}
-
-                                {/* Removed items */}
-                                {changes.removed.map((item: SummaryRemovedItem, i: number) => (
-                                  <div
-                                    key={`removed-${i}`}
-                                    className="flex items-center justify-between py-1 text-black"
-                                  >
-                                    <div className="flex items-center gap-2">
-                                      <span className="text-rose-600 font-semibold text-xs tracking-wider">
-                                        [Removed]
-                                      </span>
-                                      <span>{item.name}</span>
-                                    </div>
-                                    <span className="text-xs text-slate-400">(Unlinked)</span>
-                                  </div>
-                                ))}
-                              </div>
+                              const textToCopy = lines.join("\n");
+                              navigator.clipboard.writeText(textToCopy);
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 2000);
+                            }}
+                            className="px-3 py-1.5 hover:bg-white/10 active:bg-white/20 rounded-lg transition-all flex items-center gap-1.5 text-xs text-white focus:outline-none border border-white/20 shrink-0"
+                            title="Copy to Clipboard"
+                          >
+                            {copied ? (
+                              <>
+                                <span className="text-green-300 font-bold text-sm">✓</span>
+                                <span className="opacity-95">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5 text-white" />
+                                <span className="opacity-90">Copy Summary</span>
+                              </>
                             )}
+                          </button>
+                        </div>
+
+                        {/* Scrollable Content Wrapper */}
+                        <div className="flex-1 overflow-y-auto p-6">
+                          <p className="text-sm text-black mb-6 font-medium">
+                            {summaryData?.meetingName && summaryData?.date ? (
+                              <>
+                                The following changes were recorded in the last meeting <strong className="font-semibold">"{summaryData.meetingName}"</strong> held on <span className="font-medium text-slate-800">{formatSummaryDateTime(summaryData.date)}</span>:
+                              </>
+                            ) : (
+                              "The following changes were recorded in the last meeting:"
+                            )}
+                          </p>
+
+                        {sectionsList.length === 0 ? (
+                          <p className="text-sm text-black italic">No changes recorded during this meeting.</p>
+                        ) : (
+                          <div className="space-y-6">
+                            {sectionsList.map((section, sIdx) => (
+                              <div key={sIdx} className="space-y-2">
+                                <h3 className="text-sm font-bold text-black">
+                                  {section.title}
+                                </h3>
+                                <ul className="space-y-1.5 pl-4">
+                                  {section.items.map((itemText, iIdx) => (
+                                    <li key={iIdx} className="text-sm text-black leading-relaxed flex items-start gap-2">
+                                      <span className="text-black shrink-0 select-none">•</span>
+                                      <span>{itemText}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
                           </div>
-                        );
-                      })}
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })()
               ) : (
                 <div className="max-w-3xl border rounded-sm overflow-y-scroll h-fit">
                   <div className="p-6">

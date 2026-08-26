@@ -69,11 +69,29 @@ const FormQuestions = ({
           {(form.fields || []).map((question: Question) => {
             const options: string[] = (() => {
               const raw = question.options as unknown;
-              if (typeof raw === "string")
-                return (raw as string)
-                  .split(",")
-                  .map((o) => o.trim())
-                  .filter(Boolean);
+              if (typeof raw === "string") {
+                const result: string[] = [];
+                let current = "";
+                let inQuotes = false;
+                for (let i = 0; i < raw.length; i++) {
+                  const char = raw[i];
+                  if (char === '"') {
+                    if (inQuotes && raw[i + 1] === '"') {
+                      current += '"';
+                      i++; // skip next quote
+                    } else {
+                      inQuotes = !inQuotes;
+                    }
+                  } else if (char === ',' && !inQuotes) {
+                    result.push(current.trim());
+                    current = "";
+                  } else {
+                    current += char;
+                  }
+                }
+                result.push(current.trim());
+                return result.filter(Boolean);
+              }
               if (Array.isArray(raw))
                 return (raw as Option[]).map((o) => o.text).filter(Boolean);
               return [];
