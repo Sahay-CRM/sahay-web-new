@@ -6,6 +6,8 @@ import {
   Bell,
   Calendar,
   CheckSquare,
+  ChevronDown,
+  ChevronUp,
   Clock,
   CornerDownLeft,
   Crown,
@@ -145,56 +147,60 @@ function MaxAgendaModal({
   open,
   onClose,
   onStartAnyway,
+  perAgendaTime,
+  meetingTime,
+  priorityCount,
+  hasPriorityAgenda,
 }: {
   open: boolean;
   onClose: () => void;
   onStartAnyway: () => void;
+  perAgendaTime?: number;
+  meetingTime?: string;
+  priorityCount?: number;
+  hasPriorityAgenda?: boolean;
 }) {
-  if (!open) return null;
+  const meetingTimeMinutes = Math.floor(Number(meetingTime || 0) / 60);
+  const durationPerAgenda = hasPriorityAgenda && perAgendaTime && perAgendaTime > 0
+    ? perAgendaTime
+    : Number(import.meta.env.VITE_DETAILMEETINGAGENDADURATION || 5);
+
+  const isPriorityWarning = hasPriorityAgenda && perAgendaTime && perAgendaTime > 0;
+
+  const modalButtons = [
+    {
+      btnText: "Cancel",
+      btnClick: onClose,
+      buttonCss: "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 h-10 px-5 rounded-lg font-semibold",
+    },
+    {
+      btnText: "Start AnyWay",
+      btnClick: onStartAnyway,
+      buttonCss: "bg-red-600 hover:bg-red-700 text-white border-red-600 h-10 px-5 rounded-lg font-semibold hover:text-white",
+    },
+  ];
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
+    <ModalData
+      isModalOpen={open}
+      modalClose={onClose}
+      modalTitle="Max Agenda Reached"
+      containerClass="max-w-md w-full min-h-0"
+      buttons={modalButtons}
     >
-      <div className="bg-white p-6 rounded-md shadow-2xl max-w-sm text-center relative border-2">
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition"
-        >
-          <X className="w-5 h-5" />
-        </button>
-        <h3 className="text-lg font-semibold text-red-600 mb-2">
-          Max Agenda Reached
-        </h3>
-        <p className="text-gray-700 mb-4 text-sm mt-3">
-          You have added max agenda in this meeting. First move this to resolved
-          or parked.
-        </p>
-        <div className="flex justify-center gap-3 mt-4">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={onStartAnyway}
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
-            Start AnyWay
-          </Button>
-        </div>
-      </div>
-    </div>
+      <p className="text-gray-700 text-md  text-center py-2">
+        {isPriorityWarning ? (
+          <>
+            Average time per agenda is <strong className="text-gray-900">{durationPerAgenda} min</strong> for <strong className="text-gray-900">{priorityCount} agendas</strong>. The meeting duration (<strong className="text-gray-900">{meetingTimeMinutes} min</strong>) is insufficient. Please reduce priority agendas.
+          </>
+        ) : (
+          "You have added max agenda in this meeting. First move this to resolved or parked."
+        )}
+      </p>
+    </ModalData>
   );
 }
+
 
 interface AgendaProps {
   meetingName: string;
@@ -284,6 +290,7 @@ export default function Agenda({
     createIssueLoading,
     layoutMode,
     handleLayoutModeChange,
+    meetingSummary,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -295,6 +302,69 @@ export default function Agenda({
     follow,
     stopRecording,
   });
+
+  const summary = meetingSummary?.data?.summary;
+  const hasSummary = !!(
+    summary &&
+    ((summary.added && summary.added.length > 0) ||
+      (summary.removed && summary.removed.length > 0) ||
+      (summary.updated && summary.updated.length > 0))
+  );
+
+  const formatSummaryDate = (dateStr?: string) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch  {
+      return dateStr.split("T")[0];
+    }
+  };
+
+  const getCategory = (type?: string): "agenda" | "kpi" | "task" | "project" | null => {
+    if (!type) return null;
+    const upperType = type.toUpperCase();
+    if (upperType === "ISSUE" || upperType === "OBJECTIVE" || upperType === "AGENDA") return "agenda";
+    if (upperType === "KPI") return "kpi";
+    if (upperType === "TASK") return "task";
+    if (upperType === "PROJECT") return "project";
+    return null;
+  };
+
+  const categoryChanges = {
+    agenda: {
+      added: summary?.added?.filter((item: SummaryAddedItem) => getCategory(item.type) === "agenda") || [],
+      updated: summary?.updated?.filter((item: SummaryUpdatedItem) => getCategory(item.type) === "agenda") || [],
+      removed: summary?.removed?.filter((item: SummaryRemovedItem) => getCategory(item.type) === "agenda") || [],
+    },
+    kpi: {
+      added: summary?.added?.filter((item: SummaryAddedItem) => getCategory(item.type) === "kpi") || [],
+      updated: summary?.updated?.filter((item: SummaryUpdatedItem) => getCategory(item.type) === "kpi") || [],
+      removed: summary?.removed?.filter((item: SummaryRemovedItem) => getCategory(item.type) === "kpi") || [],
+    },
+    task: {
+      added: summary?.added?.filter((item: SummaryAddedItem) => getCategory(item.type) === "task") || [],
+      updated: summary?.updated?.filter((item: SummaryUpdatedItem) => getCategory(item.type) === "task") || [],
+      removed: summary?.removed?.filter((item: SummaryRemovedItem) => getCategory(item.type) === "task") || [],
+    },
+    project: {
+      added: summary?.added?.filter((item: SummaryAddedItem) => getCategory(item.type) === "project") || [],
+      updated: summary?.updated?.filter((item: SummaryUpdatedItem) => getCategory(item.type) === "project") || [],
+      removed: summary?.removed?.filter((item: SummaryRemovedItem) => getCategory(item.type) === "project") || [],
+    },
+  };
+
+  const getCategoryCount = (cat: "agenda" | "kpi" | "task" | "project") => {
+    const changes = categoryChanges[cat];
+    return changes.added.length + changes.updated.length + changes.removed.length;
+  };
+
+
+
 
   const unresolvedCount = agendaList?.filter(
     (item) => item.type === "UNRESOLVED",
@@ -313,6 +383,12 @@ export default function Agenda({
   ).length;
 
   const [showMaxAgendaModal, setShowMaxAgendaModal] = useState(false);
+  const [openSections, setOpenSections] = useState<Record<string, boolean>>({
+    agenda: true,
+    kpi: true,
+    task: true,
+    project: true,
+  });
   const [startAnywayFlow, setStartAnywayFlow] = useState<"meeting" | "discussion" | null>(null);
   const [isSetPriorityMode, setIsSetPriorityMode] = useState(false);
 
@@ -612,28 +688,22 @@ export default function Agenda({
       <MaxAgendaModal
         open={showMaxAgendaModal}
         onClose={() => setShowMaxAgendaModal(false)}
+        perAgendaTime={perAgendaTime}
+        meetingTime={meetingTime}
+        priorityCount={
+          hasPriorityAgenda
+            ? (agendaList?.filter(
+                (item) => item.isPriority === true && item.type === "UNRESOLVED"
+              ).length || 0)
+            : unresolvedCount
+        }
+        hasPriorityAgenda={hasPriorityAgenda}
         onStartAnyway={() => {
           setShowMaxAgendaModal(false);
           if (startAnywayFlow === "discussion") {
-            setConfirmModal({
-              open: true,
-              title: "Start Discussion",
-              description: "Are you sure you want to start the discussion anyway?",
-              onConfirm: () => {
-                handleDesc();
-                setConfirmModal((prev) => ({ ...prev, open: false }));
-              },
-            });
+            handleDesc();
           } else {
-            setConfirmModal({
-              open: true,
-              title: "Start Meeting",
-              description: "Are you sure you want to start the meeting anyway?",
-              onConfirm: () => {
-                handleStartMeeting();
-                setConfirmModal((prev) => ({ ...prev, open: false }));
-              },
-            });
+            handleStartMeeting();
           }
         }}
       />
@@ -1407,45 +1477,183 @@ export default function Agenda({
   `}
           >
             {meetingStatus === "NOT_STARTED" ? (
-              <div className="max-w-3xl border rounded-sm overflow-y-scroll h-fit">
-                <div className="p-6">
-                  <div className="text-center mb-6">
-                    <h1
-                      className="text-2xl font-bold text-navy-900 mb-2"
-                      style={{ color: "#1e3a8a" }}
-                    >
-                      TIPS FOR WRITING A CLEAR & EFFECTIVE
-                    </h1>
-                    <h3
-                      className="text-2xl font-bold text-navy-900 mb-2"
-                      style={{ color: "#1e3a8a" }}
-                    >
-                      MEETING AGENDA
-                    </h3>
-                    <div className="w-20 h-1 bg-orange-400 mx-auto"></div>
-                  </div>
+              hasSummary ? (
+                <div className="max-w-3xl w-full border border-slate-200 rounded-2xl bg-white shadow-sm overflow-y-auto max-h-[calc(var(--vh,100vh)-180px)]">
+                  <div className="p-6">
+                    <div className="text-center border-b pb-4 mb-4">
+                      <h2 className="text-2xl font-bold text-slate-800">
+                        Last Meeting Summary
+                      </h2>
+                      <p className="text-sm text-slate-500 mt-1">
+                        Updates and changes from the previous session
+                      </p>
+                    </div>
 
-                  <div className="space-y-6">
-                    {tips.map((tip, index) => (
-                      <div key={index} className="flex items-start space-x-6">
-                        <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                          {tip.icon}
-                        </div>
+                    <div className="divide-y divide-slate-100">
+                      {(
+                        [
+                          { id: "agenda", label: "Agenda" },
+                          { id: "kpi", label: "KPI" },
+                          { id: "task", label: "Task" },
+                          { id: "project", label: "Project" },
+                        ] as const
+                      ).map((cat) => {
+                        const count = getCategoryCount(cat.id);
+                        if (count === 0) return null;
+                        const isOpen = openSections[cat.id];
+                        const changes = categoryChanges[cat.id];
 
-                        {/* Content */}
-                        <div className="flex-1">
-                          <h4 className="text-lg font-bold text-gray-900 mb-2 leading-tight">
-                            {tip.title}
-                          </h4>
-                          <p className="text-gray-600 text-base leading-relaxed">
-                            {tip.description}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+                        return (
+                          <div key={cat.id} className="border-b border-slate-100">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setOpenSections((prev) => ({
+                                  ...prev,
+                                  [cat.id]: !prev[cat.id],
+                                }))
+                              }
+                              className="w-full flex items-center justify-between py-2 text-left font-bold text-[#2E3090] hover:text-[#2E3090]/80 transition-colors focus:outline-none border-none bg-transparent"
+                            >
+                              <span className="flex items-center gap-1.5 text-sm">
+                                {cat.label} ({count})
+                              </span>
+                              <span className="text-slate-400 font-normal">
+                                {isOpen ? (
+                                  <ChevronUp className="w-3.5 h-3.5" />
+                                ) : (
+                                  <ChevronDown className="w-3.5 h-3.5" />
+                                )}
+                              </span>
+                            </button>
+
+                            {isOpen && (
+                              <div className="pl-2 pb-3 space-y-1.5 text-sm">
+                                {/* Added items */}
+                                {changes.added.map((item: SummaryAddedItem, i: number) => (
+                                  <div
+                                    key={`added-${i}`}
+                                    className="flex items-center justify-between py-1 text-black"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-green-600 font-semibold text-xs tracking-wider">
+                                        [Added]
+                                      </span>
+                                      <span>{item.name}</span>
+                                    </div>
+                                    {item.details && (
+                                      <div className="flex items-center gap-2 text-xs text-slate-400">
+                                        {item.details.status && (
+                                          <span>({item.details.status})</span>
+                                        )}
+                                        {item.details.deadline && (
+                                          <span>
+                                            Deadline: {formatSummaryDate(item.details.deadline)}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+
+                                {/* Updated items */}
+                                {changes.updated.map((item: SummaryUpdatedItem, i: number) => (
+                                  <div key={`updated-${i}`} className="py-1 text-black">
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-amber-600 font-semibold text-xs tracking-wider">
+                                        [Updated]
+                                      </span>
+                                      <span>{item.name}</span>
+                                    </div>
+                                    <div className="space-y-0.5 pl-6 mt-0.5">
+                                      {item.diff &&
+                                        item.diff.map((df: SummaryDiff, j: number) => (
+                                          <div
+                                            key={j}
+                                            className="text-xs text-slate-500 flex items-center gap-1.5"
+                                          >
+                                            <span className="capitalize">{df.field}:</span>
+                                            <span className="line-through">
+                                              {df.field === "deadline"
+                                                ? formatSummaryDate(df.oldValue)
+                                                : df.oldValue}
+                                            </span>
+                                            <span>→</span>
+                                            <span className="text-black font-medium">
+                                              {df.field === "deadline"
+                                                ? formatSummaryDate(df.newValue)
+                                                : df.newValue}
+                                            </span>
+                                          </div>
+                                        ))}
+                                    </div>
+                                  </div>
+                                ))}
+
+                                {/* Removed items */}
+                                {changes.removed.map((item: SummaryRemovedItem, i: number) => (
+                                  <div
+                                    key={`removed-${i}`}
+                                    className="flex items-center justify-between py-1 text-black"
+                                  >
+                                    <div className="flex items-center gap-2">
+                                      <span className="text-rose-600 font-semibold text-xs tracking-wider">
+                                        [Removed]
+                                      </span>
+                                      <span>{item.name}</span>
+                                    </div>
+                                    <span className="text-xs text-slate-400">(Unlinked)</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
-              </div>
+              ) : (
+                <div className="max-w-3xl border rounded-sm overflow-y-scroll h-fit">
+                  <div className="p-6">
+                    <div className="text-center mb-6">
+                      <h1
+                        className="text-2xl font-bold text-navy-900 mb-2"
+                        style={{ color: "#1e3a8a" }}
+                      >
+                        TIPS FOR WRITING A CLEAR & EFFECTIVE
+                      </h1>
+                      <h3
+                        className="text-2xl font-bold text-navy-900 mb-2"
+                        style={{ color: "#1e3a8a" }}
+                      >
+                        MEETING AGENDA
+                      </h3>
+                      <div className="w-20 h-1 bg-orange-400 mx-auto"></div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {tips.map((tip, index) => (
+                        <div key={index} className="flex items-start space-x-6">
+                          <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                            {tip.icon}
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1">
+                            <h4 className="text-lg font-bold text-gray-900 mb-2 leading-tight">
+                              {tip.title}
+                            </h4>
+                            <p className="text-gray-600 text-base leading-relaxed">
+                              {tip.description}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )
             ) : meetingStatus === "STARTED" ? (
               <div className="h-full w-full overflow-y-auto pr-1">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mx-auto py-2 justify-items-center">

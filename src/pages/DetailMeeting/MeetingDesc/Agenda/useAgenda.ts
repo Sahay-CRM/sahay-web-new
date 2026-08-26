@@ -23,6 +23,7 @@ import {
   useGetDetailMeetingAgendaIssue,
   useGetDetailMeetingObj,
   useGetMeetingConclusionTime,
+  useGetMeetingSummary,
 } from "@/features/api/detailMeeting";
 import { getUserId } from "@/features/selectors/auth.selector";
 import { DragEndEvent } from "@dnd-kit/core";
@@ -115,9 +116,12 @@ export const useAgenda = ({
   });
 
   useEffect(() => {
+    const isMeetingOver =
+      meetingStatus === "ENDED" || meetingStatus === "CONCLUSION";
     if (
       meetingResponse &&
       !unFollowByUser &&
+      !(isMeetingOver && isSelectedAgenda) &&
       meetingResponse.state.currentAgendaItemId !== isSelectedAgenda
     ) {
       const io = agendaList?.find(
@@ -129,7 +133,13 @@ export const useAgenda = ({
         setIoType(io);
       }
     }
-  }, [isSelectedAgenda, meetingResponse, agendaList, unFollowByUser]);
+  }, [
+    isSelectedAgenda,
+    meetingResponse,
+    agendaList,
+    unFollowByUser,
+    meetingStatus,
+  ]);
 
   // API hooks
 
@@ -254,7 +264,7 @@ export const useAgenda = ({
       meetingResponse?.state.activeTab === "CONCLUSION" ||
       (meetingStatus === "ENDED" && !!meetingId),
   });
-
+ const { data: meetingSummary } = useGetMeetingSummary(meetingStatus === "NOT_STARTED" ? meetingId : undefined);
   // Mutations
   const { mutate: deleteObjective } = deleteMeetingObjectiveMutation();
   const { mutate: addIssueAgenda } = addMeetingAgendaMutation();
@@ -291,7 +301,7 @@ export const useAgenda = ({
     const payload = {
       detailMeetingAgendaIssueId: issueObjectiveId,
       ioType: agendaItem.ioType,
-      isPriority: !agendaItem.isPriority,
+     isPriority: agendaItem.isPriority,
     };
 
     addIssueAgenda(payload, {
@@ -501,6 +511,7 @@ export const useAgenda = ({
     name: item.name,
     id: item.id,
     ioType: item.ioType,
+    isPriority: item.isPriority,
   }));
 
   const handleUpdateSelectedObjective = (data: DetailMeetingObjectives) => {
@@ -508,6 +519,7 @@ export const useAgenda = ({
       meetingId: meetingId,
       id: data.id,
       ioType: data.ioType,
+      isPriority: data.isPriority === true,
     };
     addIssueAgenda(payload, {
       onSuccess: async () => {
@@ -976,7 +988,7 @@ export const useAgenda = ({
   };
 
   const kpisFireBase = () => {
-    queryClient.invalidateQueries({ queryKey: ["get-detailMeeting-kpis-data"] });
+    queryClient.invalidateQueries({ queryKey: ["get-detailMeeting-kpis-data "] });
     queryClient.invalidateQueries({ queryKey: ["get-detailMeetingAgendaIssue"] });
 
     if (
@@ -1426,5 +1438,6 @@ export const useAgenda = ({
     createIssueLoading,
     layoutMode,
     handleLayoutModeChange,
+    meetingSummary,
   };
 };

@@ -132,10 +132,10 @@ interface KpiRowProps {
 function KpiRow({ kpi, getFormattedValue, onRowClick }: KpiRowProps) {
   return (
     <tr
-      className="border-b border-gray-200 bg-gray-50 cursor-pointer"
+      className="border-b border-gray-200 bg-gray-50 cursor-pointer h-[53px]"
       onClick={() => onRowClick?.(kpi)}
     >
-      <td className="p-3 border w-[60px] align-middle h-[59px]">
+      <td className="p-3 border w-[60px] align-middle h-[49px]">
         <Avatar className="h-6 w-6">
           <TooltipProvider>
             <Tooltip>
@@ -161,7 +161,7 @@ function KpiRow({ kpi, getFormattedValue, onRowClick }: KpiRowProps) {
           </TooltipProvider>
         </Avatar>
       </td>
-      <td className="px-3 border w-[180px] text-left h-[59px] align-middle">
+      <td className="px-3 border w-[180px] text-left h-[46px] align-middle">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -175,7 +175,7 @@ function KpiRow({ kpi, getFormattedValue, onRowClick }: KpiRowProps) {
           </Tooltip>
         </TooltipProvider>
       </td>
-      <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+      <td className="px-3 border w-[130px] text-left h-[46px] align-middle">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -189,7 +189,7 @@ function KpiRow({ kpi, getFormattedValue, onRowClick }: KpiRowProps) {
           </Tooltip>
         </TooltipProvider>
       </td>
-      <td className="px-3 border w-[130px] text-left h-[59px] align-middle">
+      <td className="px-3 border w-[130px] text-left h-[46px] align-middle">
         <TooltipProvider>
           <Tooltip>
             <TooltipTrigger asChild>
@@ -1018,19 +1018,19 @@ export default function KPITable({
     <FormProvider {...methods}>
       <div className="flex gap-5 justify-between mb-3 shrink-0 items-center w-full flex-wrap">
         <div className="flex items-center">{headerLeft}</div>
-          {isTeamLeader &&
-            meetingStatus !== "CONCLUSION" &&
-            meetingStatus !== "ENDED" && (
-              <Suspense fallback={<KpisSearchDropdownFallback />}>
-                <KpisSearchDropdown
-                  onAdd={handleAddKpis}
-                  minSearchLength={2}
-                  filterProps={{ pageSize: 20 }}
-                  placeholder="Add kpis in meeting"
-                  addedKpiIds={addedKpiIds}
-                />
-              </Suspense>
-            )}
+        {isTeamLeader &&
+          meetingStatus !== "CONCLUSION" &&
+          meetingStatus !== "ENDED" && (
+            <Suspense fallback={<KpisSearchDropdownFallback />}>
+              <KpisSearchDropdown
+                onAdd={handleAddKpis}
+                minSearchLength={2}
+                filterProps={{ pageSize: 20 }}
+                placeholder="Add kpis in meeting"
+                addedKpiIds={addedKpiIds}
+              />
+            </Suspense>
+          )}
         <div className="flex gap-3 items-center ml-auto flex-wrap">
           {kpiFrameTyped && kpiFrameTyped.length > 0 && (
             <>
@@ -1121,7 +1121,10 @@ export default function KPITable({
                     selectedPeriod={selectedPeriod}
                     onSelectPeriod={handlePeriodChange}
                     kpiStructure={kpiStructure}
-                    isDisabled={!follow && !isUnfollow}
+                    // isDisabled={!follow && !isUnfollow}
+                    isDisabled={
+                      meetingStatus !== "ENDED" && !follow && !isUnfollow
+                    }
                     isUnfollow={isUnfollow}
                   />
                 </Suspense>
@@ -1259,7 +1262,10 @@ export default function KPITable({
                     ref={rightScrollRef}
                     className="max-h-[78vh] overflow-y-auto"
                   >
-                    <table className="min-w-max border-collapse text-sm table-fixed">
+                    <table
+                      className="border-collapse text-sm table-fixed"
+                      style={{ width: `${headers.length * 80}px` }}
+                    >
                       <thead className="sticky top-0 z-20 bg-white h-[51px]">
                         <tr className="">
                           {headers.map((header, idx) => {
@@ -1267,7 +1273,7 @@ export default function KPITable({
                               <th
                                 key={idx}
                                 className={clsx(
-                                  "border p-2 min-w-[80px] font-semibold text-gray text-center h-[51px]",
+                                  "border p-2 w-[90px] font-semibold text-gray text-center h-[51px]",
                                   header.isSunday && "bg-gray-100",
                                 )}
                               >
@@ -1302,14 +1308,14 @@ export default function KPITable({
                               return (
                                 <tr
                                   key={kpi.kpiId}
-                                  className="h-[59px] border-b border-gray-200"
+                                  className="h-[46px] border-b border-gray-200"
                                 >
                                   {headers.map((_, colIdx) => {
                                     const cell = dataArray[colIdx] || null;
                                     const key = `${kpi.kpiId}/${cell?.startDate}/${cell?.endDate}`;
                                     const validationType = kpi?.validationType;
-                                    const value1 = kpi?.value1;
-                                    const value2 = kpi?.value2;
+                                    const value1 = cell?.value1 ?? kpi?.value1;
+                                    const value2 = cell?.value2 ?? kpi?.value2;
                                     const inputVal =
                                       inputValues[key] ??
                                       cell?.data?.toString() ??
@@ -1336,7 +1342,7 @@ export default function KPITable({
                                         <td
                                           key={colIdx}
                                           className={clsx(
-                                            "p-2 text-center w-[80px] h-[42px] relative",
+                                            "p-2 text-center w-[90px] h-[42px] relative",
                                             headers[colIdx].isSunday &&
                                               "bg-gray-100",
                                           )}
@@ -1345,8 +1351,8 @@ export default function KPITable({
                                             <Tooltip>
                                               <TooltipTrigger asChild>
                                                 <div
-                                                  className={clsx(
-                                                    "border border-gray-300 rounded-sm p-2 text-center w-full h-full relative bg-white flex items-center justify-center",
+                                                  className={twMerge(
+                                                    "border border-gray-300 rounded-sm text-center w-full h-full relative bg-white flex items-center justify-center group",
                                                     inputVal !== "" &&
                                                       inputVal !== "3" &&
                                                       (isValid
@@ -1356,54 +1362,65 @@ export default function KPITable({
                                                       "opacity-60",
                                                   )}
                                                 >
-                                                  <FormSelect
-                                                    value={inputVal}
-                                                    onChange={
-                                                      canInput
-                                                        ? (val) => {
-                                                            setInputValues(
-                                                              (prev) => ({
-                                                                ...prev,
-                                                                [key]:
-                                                                  Array.isArray(
-                                                                    val,
-                                                                  )
-                                                                    ? val.join(
-                                                                        ", ",
-                                                                      )
-                                                                    : String(
-                                                                        val,
-                                                                      ),
-                                                              }),
-                                                            );
-                                                            setTempValues(
-                                                              (prev) => ({
-                                                                ...prev,
-                                                                [key]:
-                                                                  Array.isArray(
-                                                                    val,
-                                                                  )
-                                                                    ? val.join(
-                                                                        ", ",
-                                                                      )
-                                                                    : String(
-                                                                        val,
-                                                                      ),
-                                                              }),
-                                                            );
-                                                            if (kpi.ioKPIId) {
-                                                              setIoKPIId(
-                                                                kpi.ioKPIId,
+                                                  {!isVisualized ? (
+                                                    <FormSelect
+                                                      value={inputVal}
+                                                      className="h-10 px-2 cursor-pointer"
+                                                      onChange={
+                                                        canInput
+                                                          ? (val) => {
+                                                              setInputValues(
+                                                                (prev) => ({
+                                                                  ...prev,
+                                                                  [key]:
+                                                                    Array.isArray(
+                                                                      val,
+                                                                    )
+                                                                      ? val.join(
+                                                                          ", ",
+                                                                        )
+                                                                      : String(
+                                                                          val,
+                                                                        ),
+                                                                }),
                                                               );
+                                                              setTempValues(
+                                                                (prev) => ({
+                                                                  ...prev,
+                                                                  [key]:
+                                                                    Array.isArray(
+                                                                      val,
+                                                                    )
+                                                                      ? val.join(
+                                                                          ", ",
+                                                                        )
+                                                                      : String(
+                                                                          val,
+                                                                        ),
+                                                                }),
+                                                              );
+                                                              if (kpi.ioKPIId) {
+                                                                setIoKPIId(
+                                                                  kpi.ioKPIId,
+                                                                );
+                                                              }
                                                             }
-                                                          }
-                                                        : () => {}
-                                                    }
-                                                    options={selectOptions}
-                                                    placeholder="Select"
-                                                    disabled={!canInput}
-                                                    triggerClassName="!w-full !h-full !p-0 !m-0 !gap-1 !border-0 !rounded-none !shadow-none !bg-transparent text-sm text-center justify-center"
-                                                  />
+                                                          : () => {}
+                                                      }
+                                                      options={selectOptions}
+                                                      placeholder="Select"
+                                                      disabled={!canInput}
+                                                      triggerClassName="!w-full !h-full !p-0 !m-0 !gap-1 !border-0 !rounded-none !shadow-none !bg-transparent text-sm text-center justify-center"
+                                                    />
+                                                  ) : (
+                                                    <div className="flex flex-col items-center justify-center h-[37px] w-full cursor-not-allowed">
+                                                      <span className="text-black">
+                                                        {formatCompactNumber(
+                                                          cell?.data,
+                                                        )}
+                                                      </span>
+                                                    </div>
+                                                  )}
                                                   <span
                                                     className={clsx(
                                                       "absolute border-l border-b border-gray-300 top-[1px] right-[1px] w-4 h-4 cursor-pointer flex items-center justify-center rounded-bl-md text-[10px] font-bold transition-opacity",
@@ -1430,7 +1447,7 @@ export default function KPITable({
                                       <td
                                         key={colIdx}
                                         className={clsx(
-                                          "p-2 text-center w-[80px] h-[42px] relative",
+                                          "p-2 text-center w-[90px] h-[42px] relative",
                                           headers[colIdx].isSunday &&
                                             "bg-gray-100",
                                         )}
@@ -1504,7 +1521,7 @@ export default function KPITable({
                                                   }
                                                   className={twMerge(
                                                     "kpi-input",
-                                                    "border border-gray-300 p-2 rounded-sm text-center text-sm w-full h-full transition-all bg-white",
+                                                    "border border-gray-300 p-2 rounded-sm text-center text-sm w-full h-[37px] transition-all bg-white",
 
                                                     cell?.data !== "-" &&
                                                       inputVal !== "" &&
