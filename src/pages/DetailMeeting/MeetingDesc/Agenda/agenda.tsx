@@ -2111,10 +2111,10 @@ export default function Agenda({
                 };
 
                 return (
-                  <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-y-auto overflow-x-hidden mt-5 px-2 w-full">
+                  <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-y-auto overflow-x-hidden mt-0 p-4 bg-gray-200 rounded-xl w-full">
                     <Suspense fallback={<div>Loading...</div>}>
                       {!isStacked ? (
-                        <div className="w-full">
+                        <div className="w-full bg-white p-5 rounded-xl border border-gray-300 shadow-sm">
                           {activeTab === "kpis" && agendaSections["kpis"]}
                           {activeTab === "projects" &&
                             agendaSections["projects"]}
@@ -2122,13 +2122,10 @@ export default function Agenda({
                         </div>
                       ) : (
                         <div className="flex flex-col gap-6 w-full">
-                          {sectionOrder.map((key: string, idx: number) => (
-                            <React.Fragment key={key}>
-                              {idx > 0 && (
-                                <div className="border-t-4 border-gray-500 w-full my-1" />
-                              )}
-                              <div>{agendaSections[key]}</div>
-                            </React.Fragment>
+                          {sectionOrder.map((key: string) => (
+                            <div key={key} className="bg-white p-5 rounded-xl border border-gray-300 shadow-sm">
+                              {agendaSections[key]}
+                            </div>
                           ))}
                         </div>
                       )}

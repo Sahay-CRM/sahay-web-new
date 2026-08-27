@@ -127,6 +127,7 @@ interface TableProps<T extends Record<string, unknown>> {
   indexColumnWidth?: string;
   tableHeightClass?: string;
   rowClassName?: (item: T) => string;
+  headerBgClass?: string;
 }
 
 const renderTimeFormat = (time: unknown) => {
@@ -204,6 +205,7 @@ const TableData = <T extends Record<string, unknown>>({
   dotsAnchorKey,
   tableHeightClass,
   rowClassName,
+  headerBgClass,
 }: TableProps<T>) => {
   const columnKeys = Object.keys(columns ?? {});
   // Only show checkboxes if explicitly enabled with multiSelect OR if both selectedValue and handleChange are provided
@@ -341,12 +343,18 @@ const TableData = <T extends Record<string, unknown>>({
         )}
       >
         <Table className="min-w-full h-full table-fixed">
-          <TableHeader className="sticky top-0 z-10 bg-primary shadow-sm">
+          <TableHeader
+            className={twMerge(
+              "sticky top-0 z-10 shadow-sm",
+              headerBgClass ?? "bg-primary",
+            )}
+          >
             <TableRow>
               {showCheckboxes && (
                 <TableHead
                   className={twMerge(
                     "w-[40px] bg-transparent sticky left-0 z-20 text-center",
+                    headerBgClass,
                   )}
                 >
                   <FormCheckbox
@@ -367,6 +375,7 @@ const TableData = <T extends Record<string, unknown>>({
                     "bg-transparent sticky z-20 text-center",
                     showCheckboxes ? "left-[40px]" : "left-0",
                     indexColumnWidth,
+                    headerBgClass,
                   )}
                 ></TableHead>
               )}
@@ -386,6 +395,7 @@ const TableData = <T extends Record<string, unknown>>({
                       sortableColumns.includes(clm)
                         ? "cursor-pointer select-none"
                         : "",
+                      headerBgClass,
                     )}
                     onClick={() => handleSort(clm)}
                   >
@@ -409,7 +419,11 @@ const TableData = <T extends Record<string, unknown>>({
                 extraColumns.map((col, idx) => (
                   <TableHead
                     key={`extra-head-${idx}`}
-                    className={twMerge("truncate text-left px-4", col.width)}
+                    className={twMerge(
+                      "truncate text-left px-4",
+                      col.width,
+                      headerBgClass,
+                    )}
                   >
                     <TableTooltip text={col.label} />
                   </TableHead>
@@ -417,12 +431,16 @@ const TableData = <T extends Record<string, unknown>>({
 
               {showActionsColumn ? (
                 <TableHead
-                  className={`w-fit sticky right-0 z-50 bg-transparent text-left pr-2 ${actionColumnWidth}`}
+                  className={twMerge(
+                    "w-fit sticky right-0 z-50 bg-transparent text-left pr-2",
+                    actionColumnWidth,
+                    headerBgClass,
+                  )}
                 >
                   Actions
                 </TableHead>
               ) : (
-                <TableHead className="w-1" />
+                <TableHead className={twMerge("w-1", headerBgClass)} />
               )}
             </TableRow>
           </TableHeader>

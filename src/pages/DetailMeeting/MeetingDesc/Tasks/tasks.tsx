@@ -144,7 +144,7 @@ export default function Tasks({
     return cols;
   }, [columnToggleOptions]);
 
-  const canToggleColumns = columnToggleOptions.length > 3;
+  const canToggleColumns = columnToggleOptions.length > 3 && !!selectedTask && selectedTask.length > 0;
 
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
@@ -205,11 +205,11 @@ export default function Tasks({
     [deleteTaskById, ioType, meetingId, tasksFireBase],
   );
 
-  const handleAddTask = () => {
-    setInitialTaskName("");
-    setDrawerOpen(true);
-    setSelected(null);
-  };
+  // const handleAddTask = () => {
+  //   setInitialTaskName("");
+  //   setDrawerOpen(true);
+  //   setSelected(null);
+  // };
 
   if (isTaskLoading) {
     return <Loader />;
@@ -232,9 +232,9 @@ export default function Tasks({
                   setDrawerOpen(true);
                 }}
               />
-              <Button className="py-2 w-fit" onClick={handleAddTask}>
+              {/* <Button className="py-2 w-fit" onClick={handleAddTask}>
                 Add Company Task
-              </Button>
+              </Button> */}
             </>
           )}
         </div>
@@ -259,88 +259,95 @@ export default function Tasks({
           )}
         </div>
       </div>
-      <TableData
-        tableData={(selectedTask ?? []).map((task) => ({
-          ...task,
-          status: task.taskStatusId,
-          assigneeNames: task.assignUsers
-            ? task.assignUsers
-                .map((j) => j.employeeName)
-                .filter(Boolean)
-                .join(", ")
-            : "",
-          taskDeadline: task.taskDeadline
-            ? formatToLocalDateTime(task.taskDeadline)
-            : "",
-          rawTaskDeadline: task.taskDeadline,
-          showDoth: task.deadlineRequest === "PENDING",
-        }))}
-        dotsKey="showDoth"
-        dotsAnchorKey="taskName"
-        columns={tableColumns}
-        primaryKey="taskId"
-        rowClassName={(item) => {
-          const task = item as TaskGetPaging;
-          return task.isExtra ? "bg-amber-50 hover:bg-amber-100/80 font-medium" : "";
-        }}
-        // onEdit={navigate(`/tasks/edit/${row.taskId}`)}
-        // onViewButton={(row) => {
-        //   navigate(`/tasks/view/${row.taskId}`);
-        // }}
-        onRowClick={(row) => {
-          if (row) {
-            setInitialTaskName("");
-            setSelected(row);
-            setDrawerOpen(true);
-          }
-        }}
-        showIndexColumn={false}
-        // viewButton={true}
-        permissionKey="users"
-        onDelete={(row) => {
-          conformDelete(row as unknown as TaskGetPaging);
-        }}
-        customActions={(row) => {
-          return (
-            <>
-              {isTeamLeader && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
-                        onClick={() => {
-                          conformDelete(row as unknown as TaskGetPaging);
-                        }}
-                      >
-                        <Unlink className="w-4 h-4 text-red-700" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Unlink from this Meeting</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </>
-          );
-        }}
-        // showActionsColumn={false}
-        isEditDeleteShow={false}
-        dropdownColumns={{
-          taskStatus: {
-            options: (taskStatus?.data ?? []).map((opt) => ({
-              label: opt.taskStatus,
-              value: opt.taskStatusId,
-              color: opt.color || "#2e3195",
-            })),
-            onChange: (row, value) => handleStatusChange(value, row),
-          },
-        }}
-        actionColumnWidth="w-22"
-        sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
-        tableHeightClass="flex-1"
-      />
+      {!selectedTask || selectedTask.length === 0 ? (
+        <div className="text-center py-2 text-gray-500 font-medium">
+          No Tasks Available
+        </div>
+      ) : (
+        <TableData
+          tableData={(selectedTask ?? []).map((task) => ({
+            ...task,
+            status: task.taskStatusId,
+            assigneeNames: task.assignUsers
+              ? task.assignUsers
+                  .map((j) => j.employeeName)
+                  .filter(Boolean)
+                  .join(", ")
+              : "",
+            taskDeadline: task.taskDeadline
+              ? formatToLocalDateTime(task.taskDeadline)
+              : "",
+            rawTaskDeadline: task.taskDeadline,
+            showDoth: task.deadlineRequest === "PENDING",
+          }))}
+          dotsKey="showDoth"
+          dotsAnchorKey="taskName"
+          headerBgClass="bg-gray-50 text-primary"
+          columns={tableColumns}
+          primaryKey="taskId"
+          rowClassName={(item) => {
+            const task = item as TaskGetPaging;
+            return task.isExtra ? "bg-amber-50 hover:bg-amber-100/80 font-medium" : "";
+          }}
+          // onEdit={navigate(`/tasks/edit/${row.taskId}`)}
+          // onViewButton={(row) => {
+          //   navigate(`/tasks/view/${row.taskId}`);
+          // }}
+          onRowClick={(row) => {
+            if (row) {
+              setInitialTaskName("");
+              setSelected(row);
+              setDrawerOpen(true);
+            }
+          }}
+          showIndexColumn={false}
+          // viewButton={true}
+          permissionKey="users"
+          onDelete={(row) => {
+            conformDelete(row as unknown as TaskGetPaging);
+          }}
+          customActions={(row) => {
+            return (
+              <>
+                {isTeamLeader && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
+                          onClick={() => {
+                            conformDelete(row as unknown as TaskGetPaging);
+                          }}
+                        >
+                          <Unlink className="w-4 h-4 text-red-700" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Unlink from this Meeting</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </>
+            );
+          }}
+          // showActionsColumn={false}
+          isEditDeleteShow={false}
+          dropdownColumns={{
+            taskStatus: {
+              options: (taskStatus?.data ?? []).map((opt) => ({
+                label: opt.taskStatus,
+                value: opt.taskStatusId,
+                color: opt.color || "#2e3195",
+              })),
+              onChange: (row, value) => handleStatusChange(value, row),
+            },
+          }}
+          actionColumnWidth="w-22"
+          sortableColumns={["taskName", "taskDeadline", "taskStatus"]}
+          tableHeightClass="flex-1"
+        />
+      )}
       {drawerOpen && (
         <TaskDrawer
           open={drawerOpen}

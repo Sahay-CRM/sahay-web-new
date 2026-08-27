@@ -156,7 +156,7 @@ export default function Projects({
     return cols;
   }, [columnToggleOptions]);
 
-  const canToggleColumns = columnToggleOptions.length > 3;
+  const canToggleColumns = columnToggleOptions.length > 3 && !!selectedProjects && selectedProjects.length > 0;
 
   const onToggleColumn = (key: string) => {
     setColumnToggleOptions((prev) =>
@@ -234,11 +234,11 @@ export default function Projects({
     };
   }, [selectedIssueId, meetingId]);
 
-  const handleAddProject = () => {
-    setDefaultProjectName("");
-    setDrawerOpen(true);
-    setSelected(null);
-  };
+  // const handleAddProject = () => {
+  //   setDefaultProjectName("");
+  //   setDrawerOpen(true);
+  //   setSelected(null);
+  // };
 
   if (isProjectLoading) {
     return <Loader />;
@@ -261,9 +261,9 @@ export default function Projects({
                   setDrawerOpen(true);
                 }}
               />
-              <Button className="py-2 w-fit" onClick={handleAddProject}>
+              {/* <Button className="py-2 w-fit" onClick={handleAddProject}>
                 Add Company Project
-              </Button>
+              </Button> */}
             </>
           )}
         </div>
@@ -288,77 +288,84 @@ export default function Projects({
           )}
         </div>
       </div>
-      <TableData
-        tableData={
-          selectedProjects?.map((item) => ({
-            ...item,
-            projectDeadline: item.projectDeadline
-              ? formatToLocalDateTime(item.projectDeadline)
-              : "",
-            rawProjectDeadline: item.projectDeadline,
-            status: item.projectStatusId,
-            showDoth: item.deadlineRequest === "PENDING",
-          })) ?? []
-        }
-        dotsKey="showDoth"
-        dotsAnchorKey="projectName"
-        columns={tableColumns}
-        primaryKey="projectId"
-        rowClassName={(item) => {
-          const project = item as CompanyProjectDataProps;
-          return project.isExtra ? "bg-amber-50 hover:bg-amber-100/80 font-medium" : "";
-        }}
-        showIndexColumn={false}
-        isActionButton={() => true}
-        isEditDelete={() => false}
-        isEditDeleteShow={false}
-        onRowClick={(row) => {
-          if (row) {
-            setDefaultProjectName("");
-            setSelected(row);
-            setDrawerOpen(true);
+      {!selectedProjects || selectedProjects.length === 0 ? (
+        <div className="text-center py-2 text-gray-500 font-medium">
+          No Projects Available
+        </div>
+      ) : (
+        <TableData
+          tableData={
+            selectedProjects?.map((item) => ({
+              ...item,
+              projectDeadline: item.projectDeadline
+                ? formatToLocalDateTime(item.projectDeadline)
+                : "",
+              rawProjectDeadline: item.projectDeadline,
+              status: item.projectStatusId,
+              showDoth: item.deadlineRequest === "PENDING",
+            })) ?? []
           }
-        }}
-        permissionKey="users"
-        actionColumnWidth="w-22"
-        dropdownColumns={{
-          projectStatus: {
-            options: (projectStatusList?.data ?? []).map((opt) => ({
-              label: opt.projectStatus,
-              value: opt.projectStatusId,
-              color: opt.color || "#2e3195",
-            })),
-            onChange: (row, value) => handleStatusChange(value, row),
-          },
-        }}
-        customActions={(row) => {
-          return (
-            <>
-              {isTeamLeader && (
-                <TooltipProvider>
-                  <Tooltip>
-                    <TooltipTrigger asChild>
-                      <Button
-                        className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
-                        onClick={() => {
-                          conformDelete(row as unknown as IProjectFormData);
-                        }}
-                      >
-                        <Unlink className="w-4 h-4 text-red-700" />
-                      </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                      <p>Unlink from this Meeting</p>
-                    </TooltipContent>
-                  </Tooltip>
-                </TooltipProvider>
-              )}
-            </>
-          );
-        }}
-        sortableColumns={["projectName", "projectDeadline"]}
-        tableHeightClass="flex-1"
-      />
+          dotsKey="showDoth"
+          dotsAnchorKey="projectName"
+          headerBgClass="bg-gray-50 text-primary"
+          columns={tableColumns}
+          primaryKey="projectId"
+          rowClassName={(item) => {
+            const project = item as CompanyProjectDataProps;
+            return project.isExtra ? "bg-amber-50 hover:bg-amber-100/80 font-medium" : "";
+          }}
+          showIndexColumn={false}
+          isActionButton={() => true}
+          isEditDelete={() => false}
+          isEditDeleteShow={false}
+          onRowClick={(row) => {
+            if (row) {
+              setDefaultProjectName("");
+              setSelected(row);
+              setDrawerOpen(true);
+            }
+          }}
+          permissionKey="users"
+          actionColumnWidth="w-22"
+          dropdownColumns={{
+            projectStatus: {
+              options: (projectStatusList?.data ?? []).map((opt) => ({
+                label: opt.projectStatus,
+                value: opt.projectStatusId,
+                color: opt.color || "#2e3195",
+              })),
+              onChange: (row, value) => handleStatusChange(value, row),
+            },
+          }}
+          customActions={(row) => {
+            return (
+              <>
+                {isTeamLeader && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button
+                          className="py-1 px-3 bg-transparent cursor-pointer hover:bg-transparent"
+                          onClick={() => {
+                            conformDelete(row as unknown as IProjectFormData);
+                          }}
+                        >
+                          <Unlink className="w-4 h-4 text-red-700" />
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>Unlink from this Meeting</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </>
+            );
+          }}
+          sortableColumns={["projectName", "projectDeadline"]}
+          tableHeightClass="flex-1"
+        />
+      )}
 
       {drawerOpen && (
         <ProjectDrawer
