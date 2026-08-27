@@ -73,23 +73,23 @@ export default function AgendaList({
   const itemRef = useRef<HTMLLIElement | null>(null);
 
   const textRef = useRef<HTMLDivElement>(null);
-  const [isTruncated, setIsTruncated] = useState(false);
+  const [tooltipOpen, setTooltipOpen] = useState(false);
 
   const checkTruncation = () => {
     const el = textRef.current;
     if (el) {
-      setIsTruncated(el.scrollHeight > el.clientHeight);
+      return el.scrollHeight > el.clientHeight;
     }
+    return false;
   };
 
-  useEffect(() => {
-    const timer = setTimeout(checkTruncation, 100);
-    window.addEventListener("resize", checkTruncation);
-    return () => {
-      clearTimeout(timer);
-      window.removeEventListener("resize", checkTruncation);
-    };
-  }, [item?.name, meetingStatus]);
+  const handleTooltipOpenChange = (isOpen: boolean) => {
+    if (isOpen) {
+      setTooltipOpen(checkTruncation());
+    } else {
+      setTooltipOpen(false);
+    }
+  };
 
   const setRefs = (node: HTMLLIElement | null) => {
     setNodeRef(node);
@@ -314,7 +314,7 @@ export default function AgendaList({
           </span>
 
           {/* Priority Checkbox (only visible in Set Priority mode) */}
-          {isSetPriorityMode && (
+         {isSetPriorityMode && (meetingStatus === "NOT_STARTED" || meetingStatus === "STARTED") && (isTeamLeader || userData?.isSuperAdmin) && (
             <div onClick={(e) => e.stopPropagation()} className="mr-2 shrink-0 flex items-center">
               <FormCheckbox
                 id={`${item.issueObjectiveId}-priority-checkbox`}
@@ -326,10 +326,10 @@ export default function AgendaList({
                     handleTogglePriority(item.issueObjectiveId);
                   }
                 }}
-                disabled={
-                  !(meetingStatus === "NOT_STARTED" || meetingStatus === "STARTED") ||
-                  !(isTeamLeader || userData?.isSuperAdmin)
-                }
+                // disabled={
+                //   !(meetingStatus === "NOT_STARTED" || meetingStatus === "STARTED") ||
+                //   !(isTeamLeader || userData?.isSuperAdmin)
+                // }
               />
             </div>
           )}
@@ -362,41 +362,35 @@ export default function AgendaList({
             </div>
           ) : (
             <div className="w-full flex items-center">
-              {(() => {
-                const textContent = (
-                  <div
-                    ref={textRef}
-                    className={`text-sm ${
-                      meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED"
-                        ? "w-full pr-2 h-14 flex items-center"
-                        : "w-full min-w-48"
-                    } overflow-hidden line-clamp-3 ${
-                      meetingStatus !== "STARTED" &&
-                      meetingStatus !== "NOT_STARTED" &&
-                      isSelectedAgenda === item.issueObjectiveId
-                        ? "text-white"
-                        : "text-black"
-                    }`}
-                  >
-                    {item.name}
-                  </div>
-                );
-
-                return isTruncated ? (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        {textContent}
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs break-words  text-white border border-primary/20 shadow-md">
-                        <p>{item.name}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                ) : (
-                  textContent
-                );
-              })()}
+              <TooltipProvider>
+                <Tooltip open={tooltipOpen} onOpenChange={handleTooltipOpenChange}>
+                  <TooltipTrigger asChild>
+                    <div
+                      className={`text-sm ${
+                        meetingStatus === "STARTED" || meetingStatus === "NOT_STARTED"
+                          ? "w-full pr-2 h-14 flex items-center"
+                          : "w-full min-w-48"
+                      } ${
+                        meetingStatus !== "STARTED" &&
+                        meetingStatus !== "NOT_STARTED" &&
+                        isSelectedAgenda === item.issueObjectiveId
+                          ? "text-white"
+                          : "text-black"
+                      }`}
+                    >
+                      <div
+                        ref={textRef}
+                        className="line-clamp-3 overflow-hidden w-full"
+                      >
+                        {item.name}
+                      </div>
+                    </div>
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs break-words text-white border border-primary/20 shadow-md">
+                    <p>{item.name}</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </div>
           )}
         </div>
@@ -413,7 +407,13 @@ export default function AgendaList({
               // meetingStatus !== "STARTED" &&
               //   meetingStatus !== "NOT_STARTED" &&
               item.issueObjectiveId && (
-                <div className="text-sm text-center ml-2 font-medium text-primary">
+                <div
+                  className={`text-sm text-center ml-2 font-medium text-primary ${
+                    meetingStatus !== "STARTED" && meetingStatus !== "NOT_STARTED"
+                      ? "w-[72px] shrink-0 flex justify-center items-center tabular-nums"
+                      : ""
+                  }`}
+                >
                   {/* <div className="text-xs text-center w-20 text-gray-500">
                     <Badge variant="secondary" className="mb-1 mt-1">
                       {item.ioType}
@@ -429,7 +429,7 @@ export default function AgendaList({
                             defaultTime={Number(timerData.actualTime)}
                             lastSwitchTimestamp={timerData.lastSwitchTimestamp}
                             isActive={timerData.isActive}
-                            className={`text-xl ${
+                            className={`text-xl tabular-nums ${
                               isSelectedAgenda === item.issueObjectiveId
                                 ? "text-white"
                                 : ""
@@ -440,7 +440,7 @@ export default function AgendaList({
                           />
                         ) : (
                           <div
-                            className={`text-xl ${
+                            className={`text-xl tabular-nums ${
                               isSelectedAgenda === item.issueObjectiveId
                                 ? "text-white"
                                 : ""

@@ -40,8 +40,10 @@ export {
 export { default as useCloneMeetingAgenda } from "./useCloneMeetingAgenda";
 export { default as useGetDetailMeetingAll } from "./useGetDetailMeetingAll";
 export { default as useGetallIssues } from "./useGetallIssues";
+export { default as useGetMeetingSummary } from "./useGetMeetingSummary";
 export { default as useGetallObjectives } from "./useGetallObjectives";
 export { default as useExecuteAgendaMerge, type ExecuteAgendaMergePayload } from "./useExecuteAgendaMerge";
 export { default as useGetAgendaLinkedData, type AgendaLinkedData } from "./useGetAgendaLinkedData";
+
 
 

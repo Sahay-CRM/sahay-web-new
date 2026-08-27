@@ -123,3 +123,16 @@ interface SummaryRemovedItem {
   name: string;
 }
 
+interface MeetingSummaryResponse {
+  data: {
+    meetingName?:string;
+    date?:string;
+    summary: {
+      added: SummaryAddedItem[];
+      updated: SummaryUpdatedItem[];
+      removed: SummaryRemovedItem[];
+    };
+  };
+  success?: boolean;
+  message?: string;
+}

@@ -57,6 +57,7 @@ export default function useAddRepeatMeetingForm() {
         isActive: data.isActive,
         nextDate: data.nextDate,
         perAgendaTime: data.perAgendaTime ? Number(data.perAgendaTime) : 0,
+        meetingTimePlanned: data.meetingTimePlanned ? String(Math.floor(Number(data.meetingTimePlanned) / 60)) : "",
       });
       if (data.customObj) {
         setCustomRepeatData(data.customObj);
@@ -98,6 +99,7 @@ export default function useAddRepeatMeetingForm() {
           isChildDataKey: data.additionalKey,
           isActive: data.isActive,
           perAgendaTime: data.perAgendaTime ? Number(data.perAgendaTime) : 0,
+          meetingTimePlanned: data.meetingTimePlanned ? String(Number(data.meetingTimePlanned) * 60) : undefined,
         }
       : {
           meetingName: data?.meetingName,
@@ -117,6 +119,7 @@ export default function useAddRepeatMeetingForm() {
           customObj: data.customObj,
           isActive: true,
           perAgendaTime: data.perAgendaTime ? Number(data.perAgendaTime) : 0,
+          meetingTimePlanned: data.meetingTimePlanned ? String(Number(data.meetingTimePlanned) * 60) : undefined,
         };
 
     addDetailMeeting(payload, {
@@ -173,6 +176,7 @@ export default function useAddRepeatMeetingForm() {
     watchedCustomObj,
     watchedJoiners,
     watchedPerAgendaTime,
+    watchedMeetingTimePlanned,
   ] = watch([
     "meetingName",
     "meetingDescription",
@@ -182,6 +186,7 @@ export default function useAddRepeatMeetingForm() {
     "customObj",
     "employeeId",
     "perAgendaTime",
+    "meetingTimePlanned",
   ]);
 
   const isFormDirty = (() => {
@@ -248,6 +253,11 @@ export default function useAddRepeatMeetingForm() {
     const perAgendaTimeChanged =
       Number(watchedPerAgendaTime || 0) !== Number(meetingApiData.perAgendaTime || 0);
 
+    const originalPlannedMin = meetingApiData.meetingTimePlanned
+      ? String(Math.floor(Number(meetingApiData.meetingTimePlanned) / 60))
+      : "";
+    const plannedTimeChanged = (watchedMeetingTimePlanned || "") !== originalPlannedMin;
+
     return (
       nameChanged ||
       descChanged ||
@@ -257,7 +267,8 @@ export default function useAddRepeatMeetingForm() {
       customObjChanged ||
       joinersListChanged ||
       teamLeadersChanged ||
-      perAgendaTimeChanged
+      perAgendaTimeChanged ||
+      plannedTimeChanged
     );
   })();
 

@@ -52,6 +52,7 @@ export default function useAddDetailMeeting() {
             }))
           : [],
         removedFileIdsArray: [],
+        perAgendaTime: data.perAgendaTime ? Number(data.perAgendaTime) : 0,
       });
     } else {
       if (!companyMeetingId) {
@@ -71,6 +72,7 @@ export default function useAddDetailMeeting() {
             : [],
           meetingDocuments: [],
           removedFileIdsArray: [],
+          perAgendaTime: 0,
         });
       }
     }
@@ -107,6 +109,7 @@ export default function useAddDetailMeeting() {
                 .map((emp: EmployeeDetails) => emp.employeeId)
             : [],
           isDetailMeeting: true,
+          perAgendaTime: data.perAgendaTime ? Number(data.perAgendaTime) : 0,
         }
       : {
           meetingName: data?.meetingName,
@@ -125,6 +128,7 @@ export default function useAddDetailMeeting() {
                 .map((emp: EmployeeDetails) => emp.employeeId)
             : [],
           isDetailMeeting: true,
+          perAgendaTime: data.perAgendaTime ? Number(data.perAgendaTime) : 0,
         };
 
     addDetailMeeting(payload, {

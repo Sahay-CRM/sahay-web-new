@@ -4,14 +4,35 @@ import { useCreateForm, useGetForm, useUpdateForm } from "@/features/api/Form";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { queryClient } from "@/queryClient";
 
+function parseCSVLine(text: string): string[] {
+  const result: string[] = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === '"') {
+      if (inQuotes && text[i + 1] === '"') {
+        current += '"';
+        i++; // skip next quote
+      } else {
+        inQuotes = !inQuotes;
+      }
+    } else if (char === ',' && !inQuotes) {
+      result.push(current.trim());
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  result.push(current.trim());
+  return result.filter(Boolean);
+}
+
 // Helper: parse options from API string → Option[]
 function parseOptions(raw: unknown): Option[] {
   if (Array.isArray(raw)) return raw;
   if (typeof raw === "string") {
-    return raw
-      .split(",")
-      .filter((s) => s.trim())
-      .map((s, i) => ({ id: `opt-${i}`, text: s.trim() }));
+    return parseCSVLine(raw).map((s, i) => ({ id: `opt-${i}`, text: s }));
   }
   return [];
 }
@@ -137,7 +158,15 @@ export default function useFormBuilder() {
         ...f,
         isMcq: f.fieldType === "QUESTION",
         options: Array.isArray(f.options)
-          ? f.options.map((o: Option) => o.text).join(",")
+          ? f.options
+              .map((o: Option) => {
+                const text = o.text.trim();
+                if (text.includes(",") || text.includes('"')) {
+                  return `"${text.replace(/"/g, '""')}"`;
+                }
+                return text;
+              })
+              .join(",")
           : f.options || "",
       })),
     };

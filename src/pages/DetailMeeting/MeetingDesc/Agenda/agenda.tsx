@@ -8,6 +8,7 @@ import {
   CheckSquare,
   Clock,
   CornerDownLeft,
+  Copy,
   Crown,
   FileText,
   Layers,
@@ -145,55 +146,77 @@ function MaxAgendaModal({
   open,
   onClose,
   onStartAnyway,
+  perAgendaTime,
+  meetingTime,
+  priorityCount,
+  hasPriorityAgenda,
 }: {
   open: boolean;
   onClose: () => void;
   onStartAnyway: () => void;
+  perAgendaTime?: number;
+  meetingTime?: string;
+  priorityCount?: number;
+  hasPriorityAgenda?: boolean;
 }) {
-  if (!open) return null;
+  const meetingTimeMinutes = Math.floor(Number(meetingTime || 0) / 60);
+  const durationPerAgenda = hasPriorityAgenda && perAgendaTime && perAgendaTime > 0
+    ? perAgendaTime
+    : Number(import.meta.env.VITE_DETAILMEETINGAGENDADURATION || 5);
+
+  const isPriorityWarning = hasPriorityAgenda && perAgendaTime && perAgendaTime > 0;
+
+  const modalButtons = [
+    {
+      btnText: "Cancel",
+      btnClick: onClose,
+      buttonCss: "bg-white text-gray-700 border-gray-300 hover:bg-gray-50 h-10 px-5 rounded-lg font-semibold",
+    },
+    {
+      btnText: "Start AnyWay",
+      btnClick: onStartAnyway,
+      buttonCss: "bg-red-600 hover:bg-red-700 text-white border-red-600 h-10 px-5 rounded-lg font-semibold hover:text-white",
+    },
+  ];
+
   return (
-    <div
-      style={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        background: "rgba(0,0,0,0.5)",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        zIndex: 1000,
-      }}
+    <ModalData
+      isModalOpen={open}
+      modalClose={onClose}
+      modalTitle="Max Agenda Reached"
+      containerClass="max-w-md w-full min-h-0"
+      buttons={modalButtons}
     >
-      <div className="bg-white p-6 rounded-md shadow-2xl max-w-sm text-center relative border-2">
-        <button
-          onClick={onClose}
-          className="absolute top-3 right-3 text-gray-500 hover:text-gray-800 transition"
-        >
-          <X className="w-5 h-5" />
-        </button>
-        <h3 className="text-lg font-semibold text-red-600 mb-2">
-          Max Agenda Reached
-        </h3>
-        <p className="text-gray-700 mb-4 text-sm mt-3">
-          You have added max agenda in this meeting. First move this to resolved
-          or parked.
-        </p>
-        <div className="flex justify-center gap-3 mt-4">
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={onStartAnyway}
-            className="bg-red-600 hover:bg-red-700 text-white"
-          >
-            Start AnyWay
-          </Button>
-        </div>
-      </div>
-    </div>
+      <p className="text-gray-700 text-md  text-center py-2">
+        {isPriorityWarning ? (
+          <>
+            Average time per agenda is <strong className="text-gray-900">{durationPerAgenda} min</strong> for <strong className="text-gray-900">{priorityCount} agendas</strong>. The meeting duration (<strong className="text-gray-900">{meetingTimeMinutes} min</strong>) is insufficient. Please reduce priority agendas.
+          </>
+        ) : (
+          "You have added max agenda in this meeting. First move this to resolved or parked."
+        )}
+      </p>
+    </ModalData>
   );
+}
+
+interface ExtendedDetails {
+  status?: string;
+  deadline?: string;
+  unit?: string;
+  kpiType?: string;
+  frequency?: string;
+  ownerName?: string;
+}
+
+interface SummaryData {
+  meetingName?: string;
+  date?: string;
+  summary: {
+    added: SummaryAddedItem[];
+    updated: SummaryUpdatedItem[];
+    removed: SummaryRemovedItem[];
+  };
 }
 
 interface AgendaProps {
@@ -284,6 +307,7 @@ export default function Agenda({
     createIssueLoading,
     layoutMode,
     handleLayoutModeChange,
+    meetingSummary,
   } = useAgenda({
     meetingId,
     meetingStatus,
@@ -295,6 +319,141 @@ export default function Agenda({
     follow,
     stopRecording,
   });
+
+  const summaryData = meetingSummary?.data as SummaryData | undefined;
+  const summary = summaryData?.summary;
+  const hasSummary = !!(
+    summary &&
+    ((summary.added && summary.added.length > 0) ||
+      (summary.removed && summary.removed.length > 0) ||
+      (summary.updated && summary.updated.length > 0))
+  );
+
+  const formatSummaryDate = (dateStr?: string) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+    } catch  {
+      return dateStr.split("T")[0];
+    }
+  };
+
+  const formatSummaryDateTime = (dateStr?: string) => {
+    if (!dateStr) return "";
+    try {
+      const d = new Date(dateStr);
+      const datePart = d.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      });
+      const timePart = d.toLocaleTimeString("en-US", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: true,
+      });
+      return `${datePart}, ${timePart.toLowerCase()}`;
+    } catch {
+      return dateStr;
+    }
+  };
+
+  const getDetailsText = (item: SummaryAddedItem) => {
+    const parts: string[] = [];
+    const details = item.details as ExtendedDetails | undefined;
+    if (details?.status) {
+      parts.push(`Status: ${details.status}`);
+    }
+    if (details?.deadline) {
+      parts.push(`Deadline: ${formatSummaryDate(details.deadline)}`);
+    }
+    if (details?.unit) {
+      parts.push(`Unit: ${details.unit}`);
+    }
+    if (details?.kpiType) {
+      parts.push(`KPI Type: ${details.kpiType}`);
+    }
+    if (details?.frequency) {
+      parts.push(`Frequency: ${details.frequency}`);
+    }
+    if (details?.ownerName) {
+      parts.push(`Owner: ${details.ownerName}`);
+    }
+    return parts.length > 0 ? ` (${parts.join(", ")})` : "";
+  };
+
+  const getUpdateSentence = (item: SummaryUpdatedItem) => {
+    const category = getCategory(item.type);
+    const typeLabel = category === "agenda" ? "objective" : category === "kpi" ? "KPI" : category || "item";
+    const capitalizedType = typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1);
+
+    if (!item.diff || item.diff.length === 0) {
+      return `${capitalizedType} "${item.name}" was updated.`;
+    }
+
+    const diffSentences = item.diff.map((df) => {
+      const fieldName = df.field === "deadline" ? "deadline" : df.field;
+      const oldVal = df.field === "deadline" ? formatSummaryDate(df.oldValue) : df.oldValue;
+      const newVal = df.field === "deadline" ? formatSummaryDate(df.newValue) : df.newValue;
+      
+      return `${fieldName} was changed from "${oldVal || 'None'}" to "${newVal}"`;
+    });
+
+    const sentence = diffSentences.join(" and ");
+    return `${capitalizedType} "${item.name}" ${sentence}.`;
+  };
+
+  const getRemovedText = (item: SummaryRemovedItem) => {
+    const type = getCategory(item.type);
+    if (type === "agenda") return `Objective "${item.name}" was unlinked.`;
+    if (type === "task") return `Task "${item.name}" was unlinked.`;
+    if (type === "project") return `Project "${item.name}" was unlinked.`;
+    if (type === "kpi") return `KPI "${item.name}" was unlinked.`;
+    return `"${item.name}" was unlinked.`;
+  };
+
+  const getCategory = (type?: string): "agenda" | "kpi" | "task" | "project" | null => {
+    if (!type) return null;
+    const upperType = type.toUpperCase();
+    if (upperType === "ISSUE" || upperType === "OBJECTIVE" || upperType === "AGENDA") return "agenda";
+    if (upperType === "KPI") return "kpi";
+    if (upperType === "TASK") return "task";
+    if (upperType === "PROJECT") return "project";
+    return null;
+  };
+
+  const categoryChanges = {
+    agenda: {
+      added: summary?.added?.filter((item: SummaryAddedItem) => getCategory(item.type) === "agenda") || [],
+      updated: summary?.updated?.filter((item: SummaryUpdatedItem) => getCategory(item.type) === "agenda") || [],
+      removed: summary?.removed?.filter((item: SummaryRemovedItem) => getCategory(item.type) === "agenda") || [],
+    },
+    kpi: {
+      added: summary?.added?.filter((item: SummaryAddedItem) => getCategory(item.type) === "kpi") || [],
+      updated: summary?.updated?.filter((item: SummaryUpdatedItem) => getCategory(item.type) === "kpi") || [],
+      removed: summary?.removed?.filter((item: SummaryRemovedItem) => getCategory(item.type) === "kpi") || [],
+    },
+    task: {
+      added: summary?.added?.filter((item: SummaryAddedItem) => getCategory(item.type) === "task") || [],
+      updated: summary?.updated?.filter((item: SummaryUpdatedItem) => getCategory(item.type) === "task") || [],
+      removed: summary?.removed?.filter((item: SummaryRemovedItem) => getCategory(item.type) === "task") || [],
+    },
+    project: {
+      added: summary?.added?.filter((item: SummaryAddedItem) => getCategory(item.type) === "project") || [],
+      updated: summary?.updated?.filter((item: SummaryUpdatedItem) => getCategory(item.type) === "project") || [],
+      removed: summary?.removed?.filter((item: SummaryRemovedItem) => getCategory(item.type) === "project") || [],
+    },
+  };
+
+
+
+
+
 
   const unresolvedCount = agendaList?.filter(
     (item) => item.type === "UNRESOLVED",
@@ -313,6 +472,8 @@ export default function Agenda({
   ).length;
 
   const [showMaxAgendaModal, setShowMaxAgendaModal] = useState(false);
+  const [copied, setCopied] = useState(false);
+
   const [startAnywayFlow, setStartAnywayFlow] = useState<"meeting" | "discussion" | null>(null);
   const [isSetPriorityMode, setIsSetPriorityMode] = useState(false);
 
@@ -612,28 +773,22 @@ export default function Agenda({
       <MaxAgendaModal
         open={showMaxAgendaModal}
         onClose={() => setShowMaxAgendaModal(false)}
+        perAgendaTime={perAgendaTime}
+        meetingTime={meetingTime}
+        priorityCount={
+          hasPriorityAgenda
+            ? (agendaList?.filter(
+                (item) => item.isPriority === true && item.type === "UNRESOLVED"
+              ).length || 0)
+            : unresolvedCount
+        }
+        hasPriorityAgenda={hasPriorityAgenda}
         onStartAnyway={() => {
           setShowMaxAgendaModal(false);
           if (startAnywayFlow === "discussion") {
-            setConfirmModal({
-              open: true,
-              title: "Start Discussion",
-              description: "Are you sure you want to start the discussion anyway?",
-              onConfirm: () => {
-                handleDesc();
-                setConfirmModal((prev) => ({ ...prev, open: false }));
-              },
-            });
+            handleDesc();
           } else {
-            setConfirmModal({
-              open: true,
-              title: "Start Meeting",
-              description: "Are you sure you want to start the meeting anyway?",
-              onConfirm: () => {
-                handleStartMeeting();
-                setConfirmModal((prev) => ({ ...prev, open: false }));
-              },
-            });
+            handleStartMeeting();
           }
         }}
       />
@@ -1407,45 +1562,208 @@ export default function Agenda({
   `}
           >
             {meetingStatus === "NOT_STARTED" ? (
-              <div className="max-w-3xl border rounded-sm overflow-y-scroll h-fit">
-                <div className="p-6">
-                  <div className="text-center mb-6">
-                    <h1
-                      className="text-2xl font-bold text-navy-900 mb-2"
-                      style={{ color: "#1e3a8a" }}
-                    >
-                      TIPS FOR WRITING A CLEAR & EFFECTIVE
-                    </h1>
-                    <h3
-                      className="text-2xl font-bold text-navy-900 mb-2"
-                      style={{ color: "#1e3a8a" }}
-                    >
-                      MEETING AGENDA
-                    </h3>
-                    <div className="w-20 h-1 bg-orange-400 mx-auto"></div>
-                  </div>
+              hasSummary ? (
+                (() => {
+                  const sectionsList: { title: string; items: string[] }[] = [];
 
-                  <div className="space-y-6">
-                    {tips.map((tip, index) => (
-                      <div key={index} className="flex items-start space-x-6">
-                        <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
-                          {tip.icon}
+                   if (categoryChanges.agenda.added.length > 0) {
+                    sectionsList.push({
+                      title: "Objectives Added",
+                      items: categoryChanges.agenda.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                    });
+                  }
+
+                  if (categoryChanges.task.added.length > 0) {
+                    sectionsList.push({
+                      title: "Tasks Added",
+                      items: categoryChanges.task.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                    });
+                  }
+
+                  if (categoryChanges.project.added.length > 0) {
+                    sectionsList.push({
+                      title: "Projects Added",
+                      items: categoryChanges.project.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                    });
+                  }
+
+                  if (categoryChanges.kpi.added.length > 0) {
+                    sectionsList.push({
+                      title: "KPI Added",
+                      items: categoryChanges.kpi.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                    });
+                  }
+
+                  if (categoryChanges.project.updated.length > 0) {
+                    sectionsList.push({
+                      title: "Projects Updated",
+                      items: categoryChanges.project.updated.map(getUpdateSentence),
+                    });
+                  }
+
+                  if (categoryChanges.task.updated.length > 0) {
+                    sectionsList.push({
+                      title: "Tasks Updated",
+                      items: categoryChanges.task.updated.map(getUpdateSentence),
+                    });
+                  }
+
+                  if (categoryChanges.kpi.updated.length > 0) {
+                    sectionsList.push({
+                      title: "KPIs Updated",
+                      items: categoryChanges.kpi.updated.map(getUpdateSentence),
+                    });
+                  }
+
+                  if (categoryChanges.agenda.updated.length > 0) {
+                    sectionsList.push({
+                      title: "Objectives Updated",
+                      items: categoryChanges.agenda.updated.map(getUpdateSentence),
+                    });
+                  }
+
+                  const allRemoved = [
+                    ...categoryChanges.agenda.removed,
+                    ...categoryChanges.task.removed,
+                    ...categoryChanges.project.removed,
+                    ...categoryChanges.kpi.removed,
+                  ];
+
+                  if (allRemoved.length > 0) {
+                    sectionsList.push({
+                      title: "Unlinked",
+                      items: allRemoved.map(getRemovedText),
+                    });
+                  }
+
+                  return (
+                    <div className="max-w-3xl w-full border border-slate-200 rounded-2xl bg-white shadow-sm max-h-full flex flex-col overflow-hidden">
+                        {/* Header: Title and Copy Button (Sticky at the top) */}
+                        <div className="bg-[#2E3090] text-white p-4 rounded-t-2xl flex justify-between items-center shadow-sm shrink-0">
+                          <h2 className="text-base sm:text-lg font-bold">
+                            Meeting Summary – {summaryData?.meetingName || "Changes Recorded"}
+                          </h2>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const lines = [];
+                              lines.push(`MEETING SUMMARY – ${summaryData?.meetingName?.toUpperCase() || "CHANGES RECORDED"}`);
+                              lines.push("");
+                              if (summaryData?.meetingName && summaryData?.date) {
+                                lines.push(`The following changes were recorded in the last meeting "${summaryData.meetingName}" held on ${formatSummaryDateTime(summaryData.date)}:`);
+                              } else {
+                                lines.push("The following changes were recorded in the last meeting:");
+                              }
+                              lines.push("");
+                              
+                              sectionsList.forEach((section) => {
+                                lines.push(section.title);
+                                section.items.forEach((itemText: string) => {
+                                  lines.push(`  • ${itemText}`);
+                                });
+                                lines.push("");
+                              });
+
+                              const textToCopy = lines.join("\n");
+                              navigator.clipboard.writeText(textToCopy);
+                              setCopied(true);
+                              setTimeout(() => setCopied(false), 2000);
+                            }}
+                            className="px-3 py-1.5 hover:bg-white/10 active:bg-white/20 rounded-lg transition-all flex items-center gap-1.5 text-xs text-white focus:outline-none border border-white/20 shrink-0"
+                            title="Copy to Clipboard"
+                          >
+                            {copied ? (
+                              <>
+                                <span className="text-green-300 font-bold text-sm">✓</span>
+                                <span className="opacity-95">Copied!</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5 text-white" />
+                                <span className="opacity-90">Copy Summary</span>
+                              </>
+                            )}
+                          </button>
                         </div>
 
-                        {/* Content */}
-                        <div className="flex-1">
-                          <h4 className="text-lg font-bold text-gray-900 mb-2 leading-tight">
-                            {tip.title}
-                          </h4>
-                          <p className="text-gray-600 text-base leading-relaxed">
-                            {tip.description}
+                        {/* Scrollable Content Wrapper */}
+                        <div className="flex-1 overflow-y-auto p-6">
+                          <p className="text-sm text-black mb-6 font-medium">
+                            {summaryData?.meetingName && summaryData?.date ? (
+                              <>
+                                The following changes were recorded in the last meeting <strong className="font-semibold">"{summaryData.meetingName}"</strong> held on <span className="font-medium text-slate-800">{formatSummaryDateTime(summaryData.date)}</span>:
+                              </>
+                            ) : (
+                              "The following changes were recorded in the last meeting:"
+                            )}
                           </p>
-                        </div>
+
+                        {sectionsList.length === 0 ? (
+                          <p className="text-sm text-black italic">No changes recorded during this meeting.</p>
+                        ) : (
+                          <div className="space-y-6">
+                            {sectionsList.map((section, sIdx) => (
+                              <div key={sIdx} className="space-y-2">
+                                <h3 className="text-sm font-bold text-black">
+                                  {section.title}
+                                </h3>
+                                <ul className="space-y-1.5 pl-4">
+                                  {section.items.map((itemText, iIdx) => (
+                                    <li key={iIdx} className="text-sm text-black leading-relaxed flex items-start gap-2">
+                                      <span className="text-black shrink-0 select-none">•</span>
+                                      <span>{itemText}</span>
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
-                    ))}
+                    </div>
+                  );
+                })()
+              ) : (
+                <div className="max-w-3xl border rounded-sm overflow-y-scroll h-fit">
+                  <div className="p-6">
+                    <div className="text-center mb-6">
+                      <h1
+                        className="text-2xl font-bold text-navy-900 mb-2"
+                        style={{ color: "#1e3a8a" }}
+                      >
+                        TIPS FOR WRITING A CLEAR & EFFECTIVE
+                      </h1>
+                      <h3
+                        className="text-2xl font-bold text-navy-900 mb-2"
+                        style={{ color: "#1e3a8a" }}
+                      >
+                        MEETING AGENDA
+                      </h3>
+                      <div className="w-20 h-1 bg-orange-400 mx-auto"></div>
+                    </div>
+
+                    <div className="space-y-6">
+                      {tips.map((tip, index) => (
+                        <div key={index} className="flex items-start space-x-6">
+                          <div className="flex-shrink-0 w-12 h-12 bg-blue-50 rounded-lg flex items-center justify-center">
+                            {tip.icon}
+                          </div>
+
+                          {/* Content */}
+                          <div className="flex-1">
+                            <h4 className="text-lg font-bold text-gray-900 mb-2 leading-tight">
+                              {tip.title}
+                            </h4>
+                            <p className="text-gray-600 text-base leading-relaxed">
+                              {tip.description}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )
             ) : meetingStatus === "STARTED" ? (
               <div className="h-full w-full overflow-y-auto pr-1">
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl mx-auto py-2 justify-items-center">
