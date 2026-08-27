@@ -110,6 +110,8 @@ interface SummaryDiff {
   field: string;
   oldValue: string;
   newValue: string;
+  oldColor?: string;
+  newColor?: string;
 }
 
 interface SummaryUpdatedItem {

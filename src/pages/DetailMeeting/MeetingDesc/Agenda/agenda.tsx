@@ -39,6 +39,7 @@ import { useAgenda } from "./useAgenda";
 
 import { SpinnerIcon } from "@/components/shared/Icons";
 import { formatDate, getInitials } from "@/features/utils/app.utils";
+import { adjustColorForText } from "@/features/utils/color.utils";
 
 import {
   Tooltip,
@@ -416,6 +417,157 @@ export default function Agenda({
     if (type === "kpi") return `KPI "${item.name}" was unlinked.`;
     return `"${item.name}" was unlinked.`;
   };
+
+
+
+
+  const renderDetailsElement = (item: SummaryAddedItem) => {
+    const details = item.details as ExtendedDetails | undefined;
+    if (!details) return null;
+
+    const elements: React.ReactNode[] = [];
+    if (details.status) {
+      elements.push(
+        <span key="status">
+          Status: {details.status}
+        </span>
+      );
+    }
+    if (details.deadline) {
+      elements.push(
+        <span key="deadline">
+          <strong>Deadline: {formatSummaryDate(details.deadline)}</strong>
+        </span>
+      );
+    }
+    if (details.unit) {
+      elements.push(<span key="unit">Unit: {details.unit}</span>);
+    }
+    if (details.kpiType) {
+      elements.push(<span key="kpiType">KPI Type: {details.kpiType}</span>);
+    }
+    if (details.frequency) {
+      elements.push(<span key="frequency">Frequency: {details.frequency}</span>);
+    }
+    if (details.ownerName) {
+      elements.push(<span key="owner">Owner: {details.ownerName}</span>);
+    }
+
+    if (elements.length === 0) return null;
+
+    return (
+      <>
+        {" ("}
+        {elements.map((el, index) => (
+          <React.Fragment key={index}>
+            {index > 0 && ", "}
+            {el}
+          </React.Fragment>
+        ))}
+        {")"}
+      </>
+    );
+  };
+
+  const renderAddedElement = (item: SummaryAddedItem) => {
+    const nameElement = <strong>{item.name}</strong>;
+    return (
+      <span>
+        {nameElement}
+        {renderDetailsElement(item)}
+      </span>
+    );
+  };
+
+  const renderUpdateElement = (item: SummaryUpdatedItem) => {
+    const category = getCategory(item.type);
+    const typeLabel = category === "agenda" ? "objective" : category === "kpi" ? "KPI" : category || "item";
+    const capitalizedType = typeLabel.charAt(0).toUpperCase() + typeLabel.slice(1);
+
+    const nameElement = <strong>{item.name}</strong>;
+
+    if (!item.diff || item.diff.length === 0) {
+      return (
+        <span>
+          {capitalizedType} {nameElement} was updated.
+        </span>
+      );
+    }
+
+    const diffElements = item.diff.map((df, index) => {
+      const fieldName = df.field === "deadline" ? "deadline" : df.field;
+      const oldVal = df.field === "deadline" ? formatSummaryDate(df.oldValue) : df.oldValue;
+      const newVal = df.field === "deadline" ? formatSummaryDate(df.newValue) : df.newValue;
+
+      const isDeadline = df.field === "deadline";
+      const isStatus = df.field === "status";
+
+      if (isDeadline) {
+        return (
+          <span key={index}>
+            <strong>{fieldName}</strong> was changed from <strong>{oldVal || "None"}</strong> to <strong>{newVal}</strong>
+          </span>
+        );
+      }
+
+      if (isStatus) {
+        const oldColor = adjustColorForText(df.oldColor) || undefined;
+        const newColor = adjustColorForText(df.newColor) || undefined;
+        return (
+          <span key={index}>
+            {fieldName} was changed from{" "}
+            <span style={oldColor ? { color: oldColor, fontWeight: "600" } : undefined}>
+              {oldVal || "None"}
+            </span>{" "}
+            to{" "}
+            <span style={newColor ? { color: newColor, fontWeight: "600" } : undefined}>
+              {newVal}
+            </span>
+          </span>
+        );
+      }
+
+      return (
+        <span key={index}>
+          {fieldName} was changed from {oldVal || "None"} to {newVal}
+        </span>
+      );
+    });
+
+    const joinedDiffs: React.ReactNode[] = [];
+    diffElements.forEach((el, index) => {
+      if (index > 0) {
+        joinedDiffs.push(" and ");
+      }
+      joinedDiffs.push(el);
+    });
+
+    return (
+      <span>
+        {capitalizedType} {nameElement} {joinedDiffs}.
+      </span>
+    );
+  };
+
+  const renderRemovedElement = (item: SummaryRemovedItem) => {
+    const type = getCategory(item.type);
+    const nameElement = <strong>{item.name}</strong>;
+
+    if (type === "agenda") {
+      return <span>Objective {nameElement} was unlinked.</span>;
+    }
+    if (type === "task") {
+      return <span>Task {nameElement} was unlinked.</span>;
+    }
+    if (type === "project") {
+      return <span>Project {nameElement} was unlinked.</span>;
+    }
+    if (type === "kpi") {
+      return <span>KPI {nameElement} was unlinked.</span>;
+    }
+    return <span>{nameElement} was unlinked.</span>;
+  };
+
 
   const getCategory = (type?: string): "agenda" | "kpi" | "task" | "project" | null => {
     if (!type) return null;
@@ -1564,61 +1716,88 @@ export default function Agenda({
             {meetingStatus === "NOT_STARTED" ? (
               hasSummary ? (
                 (() => {
-                  const sectionsList: { title: string; items: string[] }[] = [];
+                  const sectionsList: {
+                    title: string;
+                    items: { text: string; element: React.ReactNode }[];
+                  }[] = [];
 
                    if (categoryChanges.agenda.added.length > 0) {
                     sectionsList.push({
                       title: "Objectives Added",
-                      items: categoryChanges.agenda.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                      items: categoryChanges.agenda.added.map((item: SummaryAddedItem) => ({
+                        text: `${item.name}${getDetailsText(item)}`,
+                        element: renderAddedElement(item),
+                      })),
                     });
                   }
 
                   if (categoryChanges.task.added.length > 0) {
                     sectionsList.push({
                       title: "Tasks Added",
-                      items: categoryChanges.task.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                      items: categoryChanges.task.added.map((item: SummaryAddedItem) => ({
+                        text: `${item.name}${getDetailsText(item)}`,
+                        element: renderAddedElement(item),
+                      })),
                     });
                   }
 
                   if (categoryChanges.project.added.length > 0) {
                     sectionsList.push({
                       title: "Projects Added",
-                      items: categoryChanges.project.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                      items: categoryChanges.project.added.map((item: SummaryAddedItem) => ({
+                        text: `${item.name}${getDetailsText(item)}`,
+                        element: renderAddedElement(item),
+                      })),
                     });
                   }
 
                   if (categoryChanges.kpi.added.length > 0) {
                     sectionsList.push({
                       title: "KPI Added",
-                      items: categoryChanges.kpi.added.map((item: SummaryAddedItem) => `${item.name}${getDetailsText(item)}`),
+                      items: categoryChanges.kpi.added.map((item: SummaryAddedItem) => ({
+                        text: `${item.name}${getDetailsText(item)}`,
+                        element: renderAddedElement(item),
+                      })),
                     });
                   }
 
                   if (categoryChanges.project.updated.length > 0) {
                     sectionsList.push({
                       title: "Projects Updated",
-                      items: categoryChanges.project.updated.map(getUpdateSentence),
+                      items: categoryChanges.project.updated.map((item: SummaryUpdatedItem) => ({
+                        text: getUpdateSentence(item),
+                        element: renderUpdateElement(item),
+                      })),
                     });
                   }
 
                   if (categoryChanges.task.updated.length > 0) {
                     sectionsList.push({
                       title: "Tasks Updated",
-                      items: categoryChanges.task.updated.map(getUpdateSentence),
+                      items: categoryChanges.task.updated.map((item: SummaryUpdatedItem) => ({
+                        text: getUpdateSentence(item),
+                        element: renderUpdateElement(item),
+                      })),
                     });
                   }
 
                   if (categoryChanges.kpi.updated.length > 0) {
                     sectionsList.push({
                       title: "KPIs Updated",
-                      items: categoryChanges.kpi.updated.map(getUpdateSentence),
+                      items: categoryChanges.kpi.updated.map((item: SummaryUpdatedItem) => ({
+                        text: getUpdateSentence(item),
+                        element: renderUpdateElement(item),
+                      })),
                     });
                   }
 
                   if (categoryChanges.agenda.updated.length > 0) {
                     sectionsList.push({
                       title: "Objectives Updated",
-                      items: categoryChanges.agenda.updated.map(getUpdateSentence),
+                      items: categoryChanges.agenda.updated.map((item: SummaryUpdatedItem) => ({
+                        text: getUpdateSentence(item),
+                        element: renderUpdateElement(item),
+                      })),
                     });
                   }
 
@@ -1632,7 +1811,10 @@ export default function Agenda({
                   if (allRemoved.length > 0) {
                     sectionsList.push({
                       title: "Unlinked",
-                      items: allRemoved.map(getRemovedText),
+                      items: allRemoved.map((item: SummaryRemovedItem) => ({
+                        text: getRemovedText(item),
+                        element: renderRemovedElement(item),
+                      })),
                     });
                   }
 
@@ -1658,8 +1840,8 @@ export default function Agenda({
                               
                               sectionsList.forEach((section) => {
                                 lines.push(section.title);
-                                section.items.forEach((itemText: string) => {
-                                  lines.push(`  • ${itemText}`);
+                                section.items.forEach((item) => {
+                                  lines.push(`  • ${item.text}`);
                                 });
                                 lines.push("");
                               });
@@ -1708,10 +1890,10 @@ export default function Agenda({
                                   {section.title}
                                 </h3>
                                 <ul className="space-y-1.5 pl-4">
-                                  {section.items.map((itemText, iIdx) => (
+                                  {section.items.map((item, iIdx) => (
                                     <li key={iIdx} className="text-sm text-black leading-relaxed flex items-start gap-2">
                                       <span className="text-black shrink-0 select-none">•</span>
-                                      <span>{itemText}</span>
+                                      <span>{item.element}</span>
                                     </li>
                                   ))}
                                 </ul>
@@ -1929,10 +2111,10 @@ export default function Agenda({
                 };
 
                 return (
-                  <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-y-auto overflow-x-hidden mt-5 px-2 w-full">
+                  <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-y-auto overflow-x-hidden mt-0 p-4 bg-gray-200 rounded-xl w-full">
                     <Suspense fallback={<div>Loading...</div>}>
                       {!isStacked ? (
-                        <div className="w-full">
+                        <div className="w-full bg-white p-5 rounded-xl border border-gray-300 shadow-sm">
                           {activeTab === "kpis" && agendaSections["kpis"]}
                           {activeTab === "projects" &&
                             agendaSections["projects"]}
@@ -1940,13 +2122,10 @@ export default function Agenda({
                         </div>
                       ) : (
                         <div className="flex flex-col gap-6 w-full">
-                          {sectionOrder.map((key: string, idx: number) => (
-                            <React.Fragment key={key}>
-                              {idx > 0 && (
-                                <div className="border-t-4 border-gray-500 w-full my-1" />
-                              )}
-                              <div>{agendaSections[key]}</div>
-                            </React.Fragment>
+                          {sectionOrder.map((key: string) => (
+                            <div key={key} className="bg-white p-5 rounded-xl border border-gray-300 shadow-sm">
+                              {agendaSections[key]}
+                            </div>
                           ))}
                         </div>
                       )}

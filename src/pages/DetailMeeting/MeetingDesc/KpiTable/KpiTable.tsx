@@ -202,13 +202,31 @@ function KpiRow({ kpi, getFormattedValue, onRowClick }: KpiRowProps) {
                 )}
               </span>
             </TooltipTrigger>
-            <TooltipContent>
-              <span>
-                {kpi.validationType === "BETWEEN"
-                  ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(kpi?.value2)}`
-                  : formatToThreeDecimals(kpi?.value1)}
-              </span>
-            </TooltipContent>
+            {(() => {
+              const rawValue = String(kpi.value1 ?? "");
+              const formattedNormal = formatToThreeDecimals(kpi.value1);
+              const formattedCompact = formatCompactNumber(kpi.value1);
+
+              const shouldShowTooltip =
+                formattedCompact !== formattedNormal &&
+                formattedCompact !== rawValue &&
+                formattedCompact !== "" &&
+                formattedNormal !== "";
+
+              return (
+                shouldShowTooltip && (
+                  <TooltipContent>
+                    <span>
+                      {kpi.validationType === "BETWEEN"
+                        ? `${formatToThreeDecimals(kpi?.value1)} - ${formatToThreeDecimals(
+                            kpi?.value2,
+                          )}`
+                        : formattedNormal}
+                    </span>
+                  </TooltipContent>
+                )
+              );
+            })()}
           </Tooltip>
         </TooltipProvider>
       </td>
@@ -1026,7 +1044,7 @@ export default function KPITable({
                 onAdd={handleAddKpis}
                 minSearchLength={2}
                 filterProps={{ pageSize: 20 }}
-                placeholder="Add kpis in meeting"
+                placeholder="Add KPI in meeting"
                 addedKpiIds={addedKpiIds}
               />
             </Suspense>
@@ -1111,7 +1129,11 @@ export default function KPITable({
         </div>
       </div>
 
-      {kpiFrameTyped && kpiFrameTyped.length > 0 && (
+      {!kpiFrameTyped || kpiFrameTyped.length === 0 ? (
+        <div className="text-center py-2 text-gray-500 font-medium">
+          No KPIs Available
+        </div>
+      ) : (
         <>
           <div className="sticky top-0 z-10 bg-white px-4 m-0">
             <div className="flex justify-between">
@@ -1196,10 +1218,10 @@ export default function KPITable({
                   }}
                 >
                   <table className="w-full table-fixed border-collapse text-sm bg-white">
-                    <thead className="bg-primary sticky top-0 z-20">
+                    <thead className="bg-white sticky top-0 z-20  ">
                       <tr>
                         <th
-                          className="w-[55px] p-2 font-semibold text-white text-left h-[51px]"
+                          className="w-[55px] p-2 font-semibold text-primary text-left h-[51px] "
                           onClick={() => handleSort("employeeName")}
                         >
                           <div className="flex items-center">
@@ -1207,7 +1229,7 @@ export default function KPITable({
                           </div>
                         </th>
                         <th
-                          className="w-[200px] p-2 font-semibold text-white text-left h-[51px]"
+                          className="w-[200px] p-2 font-semibold text-primary text-left h-[51px] "
                           onClick={() => handleSort("KPIName")}
                         >
                           <div className="flex items-center">
@@ -1215,14 +1237,14 @@ export default function KPITable({
                           </div>
                         </th>
                         <th
-                          className="w-[130px] p-2 font-semibold text-white text-left h-[51px]"
+                          className="w-[130px] p-2 font-semibold text-primary text-left h-[51px]"
                           onClick={() => handleSort("tag")}
                         >
                           <div className="flex items-center">
                             <span>Tag</span>
                           </div>
                         </th>
-                        <th className="w-[100px] p-2 font-semibold text-white text-left h-[51px]">
+                        <th className="w-[100px] p-2 font-semibold text-primary text-left h-[51px]">
                           Goal
                         </th>
                       </tr>
@@ -1266,14 +1288,14 @@ export default function KPITable({
                       className="border-collapse text-sm table-fixed"
                       style={{ width: `${headers.length * 80}px` }}
                     >
-                      <thead className="sticky top-0 z-20 bg-white h-[51px]">
+                      <thead className="sticky top-0 z-20 bg-white h-[51px] ">
                         <tr className="">
                           {headers.map((header, idx) => {
                             return (
                               <th
                                 key={idx}
                                 className={clsx(
-                                  "border p-2 w-[90px] font-semibold text-gray text-center h-[51px]",
+                                  "border p-2 w-[90px] font-semibold text-primary text-center h-[51px]",
                                   header.isSunday && "bg-gray-100",
                                 )}
                               >

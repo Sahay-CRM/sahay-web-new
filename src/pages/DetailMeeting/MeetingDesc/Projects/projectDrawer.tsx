@@ -13,6 +13,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
 
 import FormSelect from "@/components/shared/Form/FormSelect";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
@@ -588,13 +589,14 @@ export default function ProjectDrawer({
                 />
               )}
             />
-            <button
+            <Button
               type="submit"
-              className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80 disabled:cursor-not-allowed"
+              // className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               disabled={isPending}
             >
-              Submit
-            </button>
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
+              {isPending ? "Submitting..." : "Submit"}
+            </Button>
           </form>
         </div>
       </div>
@@ -634,7 +636,9 @@ export default function ProjectDrawer({
               type="button"
               onClick={onConfirmSubmit}
               disabled={!reasons.trim() || isPending}
+              className="flex items-center gap-2"
             >
+              {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               {isPending ? "Confirming..." : "Confirm"}
             </Button>
           </DialogFooter>
