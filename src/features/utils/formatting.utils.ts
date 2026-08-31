@@ -383,30 +383,8 @@ export function calculatePlannedMinutes(item: DailyPlanItem): number {
     }
   }
 
-  const isRepeatTask = item.isRepeat || !!item.task?.repetitiveTaskId;
-  
-  const isDetailM = Boolean(
-    item.isDetailMeeting ||
-    (item.meetingId && 
-      (
-        item.meeting?.detailMeetingStatus || 
-        item.isJoinLiveMeeting === false || 
-        item.meeting?.isJoinLiveMeeting === false
-      )
-    )
-  );
-
-  let isTimeInMinutes = false;
-  if (item.createdBy === "SYSTEM") {
-    isTimeInMinutes = true;
-  } else if (isRepeatTask) {
-    isTimeInMinutes = true;
-  } else if (derivedType === "MEETING" && !isDetailM) {
-    isTimeInMinutes = true;
-  }
-
   const rawTime = (item.planTime !== undefined && item.planTime !== null) ? item.planTime : (item.estimatedTime || 0);
-  let plannedMinutes = isTimeInMinutes ? rawTime : Math.round(rawTime / 60);
+  let plannedMinutes = rawTime;
 
   if (derivedType === "MEETING" && item.meeting?.meetingDateTime && item.meeting?.endDate) {
     const start = new Date(item.meeting.meetingDateTime).getTime();
