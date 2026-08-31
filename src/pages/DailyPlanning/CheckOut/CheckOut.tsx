@@ -510,14 +510,7 @@ export default function CheckOut() {
             actualH = existingItem.actualHours;
             actualM = existingItem.actualMinutes;
           } else {
-            let actualMinutes = 0;
-            if (item.actualTime) {
-              if (derivedType === "MEETING" && isDetailM) {
-                actualMinutes = item.actualTime;
-              } else {
-                actualMinutes = Math.round(item.actualTime / 60);
-              }
-            }
+            const actualMinutes = item.actualTime || 0;
             actualH = actualMinutes > 0 ? (Math.floor(actualMinutes / 60) || "") : "";
             actualM = actualMinutes > 0 ? ((actualMinutes % 60) || "") : "";
           }
@@ -791,7 +784,7 @@ export default function CheckOut() {
       {
         date: selectedDate,
         type,
-        planTime: totalMinutes * 60, 
+        planTime: totalMinutes,
         taskId,
         ganttItemId,
         isPlaned: false, 
@@ -827,8 +820,8 @@ export default function CheckOut() {
         taskId: item.taskId,
         meetingId: item.meetingId,
         ganttItemId: item.ganttItemId,
-        planTime: item.plannedTimeMinutes * 60, // Convert minutes to seconds
-        actualTime: actualMins * 60, // Convert minutes to seconds
+        planTime: item.plannedTimeMinutes,
+        actualTime: actualMins,
         remarks: item.remarks || item.title,
         isPlaned: !item.isExtra,
         forwardDate: forwardDateVal,

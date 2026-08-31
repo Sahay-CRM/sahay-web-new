@@ -447,7 +447,7 @@ export default function useAddEditCheckInModal({
       updateItem(
         {
           planItemId: initialItem.planItemId,
-          planTime: totalMinutes * 60, // Convert minutes to seconds
+          planTime: totalMinutes,
           remarks: remarks.trim() || undefined,
           isPlaned: true,
         },
@@ -462,7 +462,7 @@ export default function useAddEditCheckInModal({
         {
           date: date || todayDate,
           type,
-          planTime: totalMinutes * 60, // Convert minutes to seconds
+          planTime: totalMinutes,
           remarks: remarks.trim() || undefined,
           taskId: type === "TASK" ? selectedRefId || undefined : undefined,
           meetingId:
@@ -493,7 +493,7 @@ export default function useAddEditCheckInModal({
         {
           date: date || todayDate,
           type: payload.taskId ? "TASK" : payload.meetingId ? "MEETING" : "GANTT",
-          planTime: payload.estimatedTime * 60, // Convert minutes to seconds
+          planTime: payload.estimatedTime,
           remarks: payload.remarks || undefined,
           taskId: payload.taskId,
           meetingId: payload.meetingId,

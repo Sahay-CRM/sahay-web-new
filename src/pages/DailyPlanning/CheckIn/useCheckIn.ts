@@ -110,9 +110,7 @@ export default function useCheckIn() {
         type: item.type || derivedType,
         isDetailMeeting,
         estimatedTime: estTimeMins,
-        actualTime: item.actualTime
-          ? (derivedType === "MEETING" && isDetailMeeting ? item.actualTime : Math.round(item.actualTime / 60))
-          : 0,
+        actualTime: item.actualTime || 0,
       };
     });
   }, [data]);
@@ -233,7 +231,7 @@ export default function useCheckIn() {
         {
           date: selectedDate,
           type: payload.taskId ? "TASK" : payload.meetingId ? "MEETING" : "GANTT",
-          planTime: payload.estimatedTime * 60, // Convert minutes to seconds
+          planTime: payload.estimatedTime,
           remarks: payload.remarks || undefined,
           taskId: payload.taskId,
           meetingId: payload.meetingId,
@@ -258,7 +256,7 @@ export default function useCheckIn() {
       {
         date: selectedDate,
         type: type,
-        planTime: durationMins * 60, // Convert minutes to seconds
+        planTime: durationMins,
         remarks: taskTitle,
         isPlaned: true,
         ganttItemId: type === "GANTT" ? refId : undefined,
