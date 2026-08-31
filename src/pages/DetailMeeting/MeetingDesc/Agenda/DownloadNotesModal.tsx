@@ -38,6 +38,7 @@ interface SelectedFields {
 
 interface SelectedFilters {
   tags: {
+    MeetingNotes: boolean;
     Kpi: boolean;
     Task: boolean;
     Project: boolean;
@@ -49,6 +50,8 @@ interface SelectedFilters {
   };
 }
 
+type NoteCategory = keyof SelectedFilters["tags"] | keyof SelectedFilters["types"];
+
 const FIELD_LABELS: Record<keyof SelectedFields, string> = {
   createdBy: "Created By",
   date: "Date",
@@ -56,6 +59,7 @@ const FIELD_LABELS: Record<keyof SelectedFields, string> = {
 };
 
 const TAG_LABELS: Record<keyof SelectedFilters["tags"], string> = {
+  MeetingNotes: "Meeting Notes",
   Kpi: "KPI",
   Task: "Task",
   Project: "Project",
@@ -65,6 +69,53 @@ const TAG_LABELS: Record<keyof SelectedFilters["tags"], string> = {
 const TYPE_LABELS: Record<keyof SelectedFilters["types"], string> = {
   appreciation: "appreciation",
   updates: "updates",
+};
+
+const getNoteCategory = (
+  note: MeetingNotesRes,
+): NoteCategory => {
+  const noteTagLower = note.noteTag?.toLowerCase().trim() || "";
+  const noteTypeLower = note.noteType?.toLowerCase().trim() || "";
+
+  if (noteTagLower.includes("task") || noteTypeLower.includes("task")) {
+    return "Task";
+  }
+  if (noteTagLower.includes("project") || noteTypeLower.includes("project")) {
+    return "Project";
+  }
+  if (noteTagLower.includes("kpi") || noteTypeLower.includes("kpi")) {
+    return "Kpi";
+  }
+  if (noteTagLower.includes("reminder")) {
+    return "Reminder";
+  }
+  if (noteTypeLower === "appreciation") {
+    return "appreciation";
+  }
+  if (noteTypeLower === "updates") {
+    return "updates";
+  }
+  return "MeetingNotes";
+};
+
+const CATEGORY_ORDER: Array<NoteCategory> = [
+  "MeetingNotes",
+  "appreciation",
+  "updates",
+  "Kpi",
+  "Task",
+  "Project",
+  "Reminder",
+];
+
+const SECTION_HEADERS: Record<NoteCategory, string> = {
+  MeetingNotes: "Meeting Notes",
+  appreciation: "Appreciation",
+  updates: "Updates",
+  Kpi: "KPIs",
+  Task: "Tasks",
+  Project: "Projects",
+  Reminder: "Reminders",
 };
 
 const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
@@ -91,6 +142,7 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
 
   const [selectedFilters, setSelectedFilters] = useState<SelectedFilters>({
     tags: {
+      MeetingNotes: false,
       Kpi: false,
       Task: false,
       Project: false,
@@ -134,50 +186,18 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
       .filter(([, val]) => val)
       .map(([key]) => key as keyof SelectedFilters["types"]);
 
+    const activeCategories = [...activeTags, ...activeTypes];
+
     return notesData
       .filter((note: MeetingNotesRes) => {
         const noteDate = formatUTCDateToLocal(note.createdAt).split(", ")[0]; // Extract only the date part
         const matchesDate = !dateFilter || noteDate === dateFilter;
-        const matchesTag =
-          activeTags.length === 0 ||
-          activeTags.some((tag) => {
-            const tagLower = tag.toLowerCase();
-            const noteTagLower = note.noteTag?.toLowerCase().trim() || "";
-            const noteTypeLower = note.noteType?.toLowerCase().trim() || "";
 
-            // Special handling for Task
-            if (tag === "Task") {
-              return (
-                noteTagLower.includes("task") || noteTypeLower.includes("task")
-              );
-            }
+        const noteCategory = getNoteCategory(note);
+        const matchesCategory =
+          activeCategories.length === 0 || activeCategories.includes(noteCategory);
 
-            // Special handling for Project
-            if (tag === "Project") {
-              return (
-                noteTagLower.includes("project") ||
-                noteTypeLower.includes("project")
-              );
-            }
-
-            // Special handling for KPI
-            if (tag === "Kpi") {
-              return (
-                noteTagLower.includes("kpi") || noteTypeLower.includes("kpi")
-              );
-            }
-
-            // Default exact match for other tags (like Reminder)
-            return noteTagLower.includes(tagLower);
-          });
-
-        const matchesType =
-          activeTypes.length === 0 ||
-          (note.noteType &&
-            activeTypes.includes(
-              note.noteType.toLowerCase() as keyof SelectedFilters["types"],
-            ));
-        return matchesDate && matchesTag && matchesType;
+        return matchesDate && matchesCategory;
       })
       .sort(
         (a, b) =>
@@ -187,6 +207,65 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
 
   const handleDownload = async () => {
     if (filteredNotes.length === 0) return;
+
+    const docSections = CATEGORY_ORDER.flatMap((cat) => {
+      const notesInCat = filteredNotes.filter(
+        (note) => getNoteCategory(note) === cat
+      );
+      if (notesInCat.length === 0) return [];
+
+      return [
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: SECTION_HEADERS[cat],
+              bold: true,
+              size: 24, // 12pt
+            }),
+          ],
+          spacing: { before: 300, after: 100 },
+        }),
+        ...notesInCat.map((note) => {
+          const metadata: string[] = [];
+
+          if (selectedFields.createdBy) {
+            metadata.push(note.employeeName || "Unknown");
+          }
+
+          if (note.createdAt) {
+            const date = new Date(note.createdAt);
+            const datePart = date.toLocaleDateString("en-GB");
+            const timePart = date.toLocaleTimeString("en-GB", {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            });
+            if (selectedFields.date) metadata.push(datePart);
+            if (selectedFields.time) metadata.push(timePart);
+          }
+
+          const headerText =
+            metadata.length > 0 ? `(${metadata.join(" | ")}) ` : "";
+
+          return new Paragraph({
+            children: [
+              new TextRun({
+                text: headerText,
+                bold: true,
+                size: 20,
+              }),
+              new TextRun({
+                text: note.note,
+              }),
+            ],
+            bullet: {
+              level: 0,
+            },
+            spacing: { before: 100 },
+          });
+        }),
+      ];
+    });
 
     const doc = new Document({
       sections: [
@@ -221,47 +300,7 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
               text: "",
               spacing: { before: 400 },
             }),
-            ...filteredNotes.flatMap((note: MeetingNotesRes) => {
-              const metadata: string[] = [];
-
-              if (selectedFields.createdBy) {
-                metadata.push(note.employeeName || "Unknown");
-              }
-
-              if (note.createdAt) {
-                const date = new Date(note.createdAt);
-                const datePart = date.toLocaleDateString("en-GB");
-                const timePart = date.toLocaleTimeString("en-GB", {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                  hour12: true,
-                });
-                if (selectedFields.date) metadata.push(datePart);
-                if (selectedFields.time) metadata.push(timePart);
-              }
-
-              const headerText =
-                metadata.length > 0 ? `(${metadata.join(" | ")}) ` : "";
-
-              return [
-                new Paragraph({
-                  children: [
-                    new TextRun({
-                      text: headerText,
-                      bold: true,
-                      size: 20,
-                    }),
-                    new TextRun({
-                      text: note.note,
-                    }),
-                  ],
-                  bullet: {
-                    level: 0,
-                  },
-                  spacing: { before: 100 },
-                }),
-              ];
-            }),
+            ...docSections,
           ],
         },
       ],
