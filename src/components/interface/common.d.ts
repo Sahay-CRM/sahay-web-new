@@ -86,6 +86,8 @@ interface EmployeeData {
   designation?: Designation | null;
   employee?: EmployeeDataModal;
   isDeactivated?: boolean;
+  timeShiftId?: string | null;
+  timeShift?: CompanyShift | null;
 }
 
 // kk
@@ -590,6 +592,8 @@ interface EmployeeDetailsById {
   photo?: string;
   isSuperAdmin: boolean;
   isDeactivated?: boolean;
+  timeShift?: CompanyShift | null;
+  timeShiftId?: string | null;
   employee?: {
     employeeEmail: string;
     employeeId: string;
@@ -608,6 +612,8 @@ interface AddEmployeeDetailsById {
   reportingManagerId?: string;
   department?: DepartmentData;
   designation?: Designation;
+  timeShiftId?: string;
+  timeShift?: CompanyShift | null;
   employee?: {
     employeeEmail: string;
     employeeId: string;
@@ -1665,7 +1671,20 @@ interface NotesGroupProps {
   groupType: string;
 }
 
+interface CompanyShift {
+  timeShiftId?: string;
+  startTime: string;
+  endTime: string;
+  isDefault: boolean;
+  breakDuration: number;
+  breakStartTime?: string | null;
+  breakEndTime?: string | null;
+  employeeIds: string[];
+}
+
 interface SimpleCompanyDetails {
+  breakDuration?: number;
+  shifts?: CompanyShift[];
   companyId: string;
   companyName: string;
   logo?: string;

@@ -1,12 +1,5 @@
 import React, { useState, useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+import ModalData from "@/components/shared/Modal/ModalData";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -67,8 +60,8 @@ const TAG_LABELS: Record<keyof SelectedFilters["tags"], string> = {
 };
 
 const TYPE_LABELS: Record<keyof SelectedFilters["types"], string> = {
-  appreciation: "appreciation",
-  updates: "updates",
+  appreciation: "Appreciation",
+  updates: "Updates",
 };
 
 const getNoteCategory = (
@@ -170,6 +163,29 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
       ...prev,
       types: { ...prev.types, [type]: !prev.types[type] },
     }));
+  };
+
+  const isAllFiltersSelected = useMemo(() => {
+    const allTags = Object.values(selectedFilters.tags).every(Boolean);
+    const allTypes = Object.values(selectedFilters.types).every(Boolean);
+    return allTags && allTypes;
+  }, [selectedFilters]);
+
+  const toggleSelectAllFilters = () => {
+    const nextValue = !isAllFiltersSelected;
+    setSelectedFilters({
+      tags: {
+        MeetingNotes: nextValue,
+        Kpi: nextValue,
+        Task: nextValue,
+        Project: nextValue,
+        Reminder: nextValue,
+      },
+      types: {
+        appreciation: nextValue,
+        updates: nextValue,
+      },
+    });
   };
 
   const filteredNotes = useMemo(() => {
@@ -320,23 +336,36 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[480px] bg-white text-black p-0 overflow-hidden">
-        <DialogHeader className="px-4 py-2 border-b border-black">
-          <DialogTitle className="text-xl font-bold">
-            Download Meeting Notes
-          </DialogTitle>
-        </DialogHeader>
-
-        <ScrollArea className="max-h-[70vh] px-4">
+    <ModalData
+      isModalOpen={isOpen}
+      modalTitle="Download Meeting Notes"
+      modalClose={onClose}
+      containerClass="max-w-[600px] max-h-[80vh] min-h-[300px]"
+      buttons={[
+        {
+          btnText: "Cancel",
+          btnClick: onClose,
+        },
+        {
+          btnText: "Download",
+          btnClick: () => {
+            if (!isLoading && filteredNotes.length > 0) {
+              handleDownload();
+            }
+          },
+          isLoading: isLoading,
+        },
+      ]}
+    >
+      <ScrollArea className="max-h-[70vh] px-1">
           <div className="space-y-2">
             {/* Fields Section */}
             <section>
-              <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">
+              <h4 className="text-base font-bold text-primary tracking-wide mb-3">
                 Fields to Include
               </h4>
               <div className="grid grid-cols-2 gap-2">
-                <div className="flex items-center p-2 rounded-md bg-gray-50 border border-gray-200 opacity-60">
+                <div className="flex items-center p-2.5 rounded-md bg-gray-50 border border-gray-200 opacity-60">
                   <FormCheckbox
                     id="field-note-fixed"
                     checked={true}
@@ -345,64 +374,94 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
                   />
                   <label
                     htmlFor="field-note-fixed"
-                    className="ml-2 text-sm font-medium flex-grow"
+                    className="ml-2 text-sm font-medium flex-grow cursor-not-allowed select-none"
                   >
                     Note Content (Fixed)
                   </label>
                 </div>
                 {(Object.keys(FIELD_LABELS) as Array<keyof SelectedFields>).map(
-                  (field) => (
-                    <div
-                      key={field}
-                      className="flex items-center p-2 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all"
-                    >
-                      <FormCheckbox
-                        id={`field-${field}`}
-                        checked={selectedFields[field]}
-                        onChange={() => toggleField(field)}
-                        containerClass="mt-0"
-                      />
-                      <label
-                        htmlFor={`field-${field}`}
-                        className="ml-2 text-sm font-medium cursor-pointer flex-grow"
+                  (field) => {
+                    const isChecked = selectedFields[field];
+                    return (
+                      <div
+                        key={field}
+                        className="flex items-center p-2.5 rounded-md border border-gray-200/80 bg-gray-50/60 hover:bg-gray-100/70 transition-all cursor-pointer select-none"
+                        onClick={() => toggleField(field)}
                       >
-                        {FIELD_LABELS[field]}
-                      </label>
-                    </div>
-                  ),
+                        <FormCheckbox
+                          id={`field-${field}`}
+                          checked={isChecked}
+                          onChange={() => {}}
+                          containerClass="mt-0"
+                        />
+                        <label
+                          htmlFor={`field-${field}`}
+                          className="ml-2 text-sm font-medium cursor-pointer flex-grow select-none"
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          {FIELD_LABELS[field]}
+                        </label>
+                      </div>
+                    );
+                  },
                 )}
               </div>
             </section>
 
             {/* Tags and Types Filter Section */}
             <section>
-              <h4 className="text-sm font-bold text-gray-700 uppercase tracking-wider mb-2">
-                Filter
-              </h4>
-              <div className="grid grid-cols-2 gap-2 mb-4">
+              <div className="flex items-center mt-4 justify-between mb-2">
+                <h4 className="text-base font-bold text-primary  tracking-wide">
+                  Filter
+                </h4>
+                <div
+                  className="flex items-center cursor-pointer select-none px-2 py-0.5 rounded hover:bg-gray-100 transition-all"
+                  onClick={toggleSelectAllFilters}
+                >
+                  <FormCheckbox
+                    id="select-all-filters"
+                    checked={isAllFiltersSelected}
+                    onChange={() => {}}
+                    containerClass="mt-0"
+                  />
+                  <label
+                    htmlFor="select-all-filters"
+                    className="ml-2 text-sm font-semibold text-gray-600 cursor-pointer select-none"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Select All
+                  </label>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mb-2">
                 {(
                   Object.keys(TAG_LABELS) as Array<
                     keyof SelectedFilters["tags"]
                   >
-                ).map((tag) => (
-                  <div
-                    key={tag}
-                    className="flex items-center p-2 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all"
-                  >
-                    <FormCheckbox
-                      id={`tag-${tag}`}
-                      checked={selectedFilters.tags[tag]}
-                      onChange={() => toggleTag(tag)}
-                      containerClass="mt-0"
-                    />
-                    <label
-                      htmlFor={`tag-${tag}`}
-                      className="ml-2 text-sm font-medium cursor-pointer flex-grow"
+                ).map((tag) => {
+                  const isChecked = selectedFilters.tags[tag];
+                  return (
+                    <div
+                      key={tag}
+                      className="flex items-center p-2.5 rounded-md border border-gray-200/80 bg-gray-50/60 hover:bg-gray-100/70 transition-all cursor-pointer select-none"
+                      onClick={() => toggleTag(tag)}
                     >
-                      {TAG_LABELS[tag]}
-                    </label>
-                  </div>
-                ))}
+                      <FormCheckbox
+                        id={`tag-${tag}`}
+                        checked={isChecked}
+                        onChange={() => {}}
+                        containerClass="mt-0"
+                      />
+                      <label
+                        htmlFor={`tag-${tag}`}
+                        className="ml-2 text-sm font-medium cursor-pointer flex-grow select-none"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {TAG_LABELS[tag]}
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -410,25 +469,30 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
                   Object.keys(TYPE_LABELS) as Array<
                     keyof SelectedFilters["types"]
                   >
-                ).map((type) => (
-                  <div
-                    key={type}
-                    className="flex items-center p-2 rounded-md hover:bg-gray-50 border border-transparent hover:border-gray-200 transition-all"
-                  >
-                    <FormCheckbox
-                      id={`type-${type}`}
-                      checked={selectedFilters.types[type]}
-                      onChange={() => toggleType(type)}
-                      containerClass="mt-0"
-                    />
-                    <label
-                      htmlFor={`type-${type}`}
-                      className="ml-2 text-sm font-medium cursor-pointer flex-grow"
+                ).map((type) => {
+                  const isChecked = selectedFilters.types[type];
+                  return (
+                    <div
+                      key={type}
+                      className="flex items-center p-2.5 rounded-md border border-gray-200/80 bg-gray-50/60 hover:bg-gray-100/70 transition-all cursor-pointer select-none"
+                      onClick={() => toggleType(type)}
                     >
-                      {TYPE_LABELS[type]}
-                    </label>
-                  </div>
-                ))}
+                      <FormCheckbox
+                        id={`type-${type}`}
+                        checked={isChecked}
+                        onChange={() => {}}
+                        containerClass="mt-0"
+                      />
+                      <label
+                        htmlFor={`type-${type}`}
+                        className="ml-2 text-sm font-medium cursor-pointer flex-grow select-none"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {TYPE_LABELS[type]}
+                      </label>
+                    </div>
+                  );
+                })}
               </div>
             </section>
 
@@ -477,23 +541,7 @@ const DownloadNotesModal: React.FC<DownloadNotesModalProps> = ({
             )}
           </div>
         </ScrollArea>
-
-        <DialogFooter className="p-6 border-t bg-gray-50/50">
-          <div className="flex w-full gap-3 justify-end">
-            <Button variant="outline" onClick={onClose} className="px-6">
-              Cancel
-            </Button>
-            <Button
-              onClick={handleDownload}
-              disabled={isLoading || filteredNotes.length === 0}
-              className="bg-primary hover:bg-primary/90 text-white px-8"
-            >
-              Download
-            </Button>
-          </div>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+    </ModalData>
   );
 };
 

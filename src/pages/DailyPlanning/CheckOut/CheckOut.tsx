@@ -22,6 +22,7 @@ import ModalData from "@/components/shared/Modal/ModalData";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import { format, subDays, addDays } from "date-fns";
 import { formatMinutesToHours, calculatePlannedMinutes } from "@/features/utils/formatting.utils";
+import { calculateWorkingHours } from "../utils/workingHours.utils";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import { getUserId, getUserDetail } from "@/features/selectors/auth.selector";
 import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
@@ -200,28 +201,8 @@ export default function CheckOut() {
   }, [isEditable, items, showValidationErrors]);
 
   const user = useSelector(getUserDetail);
-
-  const companyWorkingMinutes = useMemo(() => {
-    if (!user?.companyStartTime || !user?.companyEndTime) return 0;
-    const [startH, startM] = user.companyStartTime.split(":").map(Number);
-    const [endH, endM] = user.companyEndTime.split(":").map(Number);
-    if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return 0;
-    let diff = (endH * 60 + endM) - (startH * 60 + startM);
-    if (diff < 0) diff += 24 * 60;
-
-    // Subtract break time if defined
-    if (user?.breakStartTime && user?.breakEndTime) {
-      const [breakStartH, breakStartM] = user.breakStartTime.split(":").map(Number);
-      const [breakEndH, breakEndM] = user.breakEndTime.split(":").map(Number);
-      if (!isNaN(breakStartH) && !isNaN(breakStartM) && !isNaN(breakEndH) && !isNaN(breakEndM)) {
-        let breakDiff = (breakEndH * 60 + breakEndM) - (breakStartH * 60 + breakStartM);
-        if (breakDiff < 0) breakDiff += 24 * 60;
-        diff -= breakDiff;
-      }
-    }
-
-    return diff;
-  }, [user?.companyStartTime, user?.companyEndTime, user?.breakStartTime, user?.breakEndTime]);
+  const workingHours = useMemo(() => calculateWorkingHours(user), [user]);
+  const companyWorkingMinutes = workingHours.totalWorkingMinutes;
 
   // Sync rating state with fetched backend rating
   useEffect(() => {
@@ -1319,7 +1300,7 @@ export default function CheckOut() {
                     <div className="flex-1 space-y-1 text-left">
                       <p className="font-bold text-sm leading-none">Overtime </p>
                       <p className="text-xs text-rose-700 leading-relaxed font-medium">
-                        Your total logged time ({formatMinutesToHours(totalActualMinutes)}) exceeds the company's daily working hours ({formatMinutesToHours(companyWorkingMinutes)}).
+                        Your total logged time ({formatMinutesToHours(totalActualMinutes)}) exceeds daily working hours ({formatMinutesToHours(companyWorkingMinutes)}).
                       </p>
                     </div>
                   </div>

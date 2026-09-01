@@ -7,11 +7,12 @@ import {
   Calendar,
   Edit,
   Trash2,
+  Plus,
 } from "lucide-react";
 import useCompany from "./useCompany";
 import { Button } from "@/components/ui/button";
 import FormInputField from "@/components/shared/Form/FormInput/FormInputField";
-import { Controller } from "react-hook-form";
+import { Controller, useFieldArray } from "react-hook-form";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import {
   formatIndianNumber,
@@ -80,10 +81,16 @@ export default function CompanyProfile() {
 
   const timeOptions = generateTimeOptions();
 
+  const { fields, append, remove, insert } = useFieldArray({
+    control,
+    name: "shifts",
+  });
+
   const watchedStartTime = watch("companyStartTime");
   const watchedEndTime = watch("companyEndTime");
   const watchedBreakStartTime = watch("breakStartTime");
   const watchedBreakEndTime = watch("breakEndTime");
+  const watchedShifts = (watch("shifts") as CompanyShift[]) || [];
 
   const companyStartTimeOptions = timeOptions.filter((option) => {
     if (!watchedEndTime) return true;
@@ -136,6 +143,58 @@ export default function CompanyProfile() {
     }
     return true;
   });
+
+  const getStartTimeOptionsForShift = (index: number) => {
+    const shiftEndTime = watch(`shifts.${index}.endTime`);
+    
+    return timeOptions.filter((option) => {
+      const optionMin = toMinutes(option.value);
+      if (optionMin === null) return true;
+
+      if (shiftEndTime) {
+        const endMin = toMinutes(shiftEndTime);
+        if (endMin !== null && optionMin >= endMin) return false;
+      }
+
+      if (watchedStartTime) {
+        const companyStartMin = toMinutes(watchedStartTime);
+        if (companyStartMin !== null && optionMin < companyStartMin) return false;
+      }
+
+      if (watchedEndTime) {
+        const companyEndMin = toMinutes(watchedEndTime);
+        if (companyEndMin !== null && optionMin > companyEndMin) return false;
+      }
+
+      return true;
+    });
+  };
+
+  const getEndTimeOptionsForShift = (index: number) => {
+    const shiftStartTime = watch(`shifts.${index}.startTime`);
+
+    return timeOptions.filter((option) => {
+      const optionMin = toMinutes(option.value);
+      if (optionMin === null) return true;
+
+      if (shiftStartTime) {
+        const startMin = toMinutes(shiftStartTime);
+        if (startMin !== null && optionMin <= startMin) return false;
+      }
+
+      if (watchedStartTime) {
+        const companyStartMin = toMinutes(watchedStartTime);
+        if (companyStartMin !== null && optionMin < companyStartMin) return false;
+      }
+
+      if (watchedEndTime) {
+        const companyEndMin = toMinutes(watchedEndTime);
+        if (companyEndMin !== null && optionMin > companyEndMin) return false;
+      }
+
+      return true;
+    });
+  };
 
   if (!companyData) {
     return (
@@ -617,7 +676,7 @@ export default function CompanyProfile() {
                             onSelect={(val) => {
                               field.onChange(val.value);
                               setTimeout(() => {
-                                trigger(["companyStartTime", "companyEndTime"]);
+                                trigger(["companyStartTime", "companyEndTime", "shifts"]);
                               }, 0);
                             }}
                             label="Company Start Time"
@@ -667,7 +726,7 @@ export default function CompanyProfile() {
                             onSelect={(val) => {
                               field.onChange(val.value);
                               setTimeout(() => {
-                                trigger(["companyStartTime", "companyEndTime"]);
+                                trigger(["companyStartTime", "companyEndTime", "shifts"]);
                               }, 0);
                             }}
                             label="Company End Time"
@@ -1002,7 +1061,307 @@ export default function CompanyProfile() {
               </div>
             </div>
 
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8 md:col-span-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
+                Company Shifts
+              </h2>
+
+              {!isEditing ? (
+                // View Mode
+                <div className="space-y-3">
+                  {watchedShifts && watchedShifts.length > 0 ? (
+                    watchedShifts.map((shift, index) => {
+                      const hr = Math.floor((shift.breakDuration || 0) / 60);
+                      const min = (shift.breakDuration || 0) % 60;
+                      return (
+                        <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200 hover:bg-gray-100 transition-colors">
+                          <div className="flex items-center gap-3">
+                            <div className="bg-primary/10 text-primary p-2 rounded-lg shrink-0">
+                              <Building className="w-4 h-4" />
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-gray-900">
+                                {(formatTo12HourLower(shift.startTime) || shift.startTime)} - {(formatTo12HourLower(shift.endTime) || shift.endTime)}
+                              </p>
+                              <p className="text-sm text-gray-500">
+                                Break: {hr} hr {min} min
+                              </p>
+                            </div>
+                          </div>
+                          {shift.isDefault && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-sm font-semibold bg-green-100 text-green-800 shrink-0">
+                              Default
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="text-center py-6 text-gray-400 text-sm">
+                      No shifts defined. Click Edit Profile to add shifts.
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Edit Mode
+                <div className="space-y-3">
+                  {fields.map((field, index) => {
+                    const shiftErrors = errors.shifts as Array<{ startTime?: { message?: string }; endTime?: { message?: string } }> | undefined;
+                    return (
+                      <div key={field.id} className="flex flex-row flex-wrap sm:flex-nowrap items-end gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                        {/* Start Time */}
+                        <div className="w-36 shrink-0">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">start</label>
+                          <Controller
+                            control={control}
+                            name={`shifts.${index}.startTime` as const}
+                            rules={{
+                              required: "Start time is required",
+                              validate: (val) => {
+                                if (!val) return true;
+                                const valMin = toMinutes(val);
+                                if (valMin === null) return true;
+
+                                // Company operating hours check
+                                if (watchedStartTime) {
+                                  const compStartMin = toMinutes(watchedStartTime);
+                                  if (compStartMin !== null && valMin < compStartMin) {
+                                    return "Must be after company start time";
+                                  }
+                                }
+                                if (watchedEndTime) {
+                                  const compEndMin = toMinutes(watchedEndTime);
+                                  if (compEndMin !== null && valMin > compEndMin) {
+                                    return "Must be before company end time";
+                                  }
+                                }
+
+                                // Shift End Time check
+                                const endVal = watch(`shifts.${index}.endTime`);
+                                if (endVal) {
+                                  const endMin = toMinutes(endVal);
+                                  if (endMin !== null) {
+                                    if (valMin === endMin) {
+                                      return "Start time cannot be equal to End time";
+                                    }
+                                    if (valMin > endMin) {
+                                      return "Start time must be before End time";
+                                    }
+                                  }
+                                }
+                                return true;
+                              },
+                            }}
+                            render={({ field: selectField }) => (
+                              <SearchDropdown
+                                options={getStartTimeOptionsForShift(index)}
+                                selectedValues={selectField.value ? [selectField.value] : []}
+                                onSelect={(val) => {
+                                  selectField.onChange(val.value);
+                                  setTimeout(() => {
+                                    trigger([`shifts.${index}.startTime`, `shifts.${index}.endTime`]);
+                                  }, 0);
+                                }}
+                                placeholder="Select"
+                                isSearchable={false}
+                                isCrossShow={false}
+                                error={shiftErrors?.[index]?.startTime}
+                              />
+                            )}
+                          />
+                        </div>
+
+                        <span className="pb-3 text-gray-400 text-sm font-medium shrink-0">to</span>
+
+                        {/* End Time */}
+                        <div className="w-36 shrink-0">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">end</label>
+                          <Controller
+                            control={control}
+                            name={`shifts.${index}.endTime` as const}
+                            rules={{
+                              required: "End time is required",
+                              validate: (val) => {
+                                if (!val) return true;
+                                const valMin = toMinutes(val);
+                                if (valMin === null) return true;
+
+                                // Company operating hours check
+                                if (watchedStartTime) {
+                                  const compStartMin = toMinutes(watchedStartTime);
+                                  if (compStartMin !== null && valMin < compStartMin) {
+                                    return "Must be after company start time";
+                                  }
+                                }
+                                if (watchedEndTime) {
+                                  const compEndMin = toMinutes(watchedEndTime);
+                                  if (compEndMin !== null && valMin > compEndMin) {
+                                    return "Must be before company end time";
+                                  }
+                                }
+
+                                // Shift Start Time check
+                                const startVal = watch(`shifts.${index}.startTime`);
+                                if (startVal) {
+                                  const startMin = toMinutes(startVal);
+                                  if (startMin !== null) {
+                                    if (valMin === startMin) {
+                                      return "End time cannot be equal to Start time";
+                                    }
+                                    if (startMin > valMin) {
+                                      return "End time must be after Start time";
+                                    }
+                                  }
+                                }
+                                return true;
+                              },
+                            }}
+                            render={({ field: selectField }) => (
+                              <SearchDropdown
+                                options={getEndTimeOptionsForShift(index)}
+                                selectedValues={selectField.value ? [selectField.value] : []}
+                                onSelect={(val) => {
+                                  selectField.onChange(val.value);
+                                  setTimeout(() => {
+                                    trigger([`shifts.${index}.startTime`, `shifts.${index}.endTime`]);
+                                  }, 0);
+                                }}
+                                placeholder="Select"
+                                isSearchable={false}
+                                isCrossShow={false}
+                                error={shiftErrors?.[index]?.endTime}
+                              />
+                            )}
+                          />
+                        </div>
+
+                        {/* Break Hours/Minutes */}
+                        <div className="flex flex-col shrink-0">
+                          <label className="block text-sm font-medium text-gray-700 mb-1">break duration</label>
+                          <div className="flex items-center gap-1.5 pb-2 font-medium text-sm text-gray-700">
+                            <input
+                              type="number"
+                              min={0}
+                              max={23}
+                              value={Math.floor((watch(`shifts.${index}.breakDuration`) || 0) / 60) || ""}
+                              onChange={(e) => {
+                                const hr = parseInt(e.target.value, 10) || 0;
+                                const currentMin = (watch(`shifts.${index}.breakDuration`) || 0) % 60;
+                                setValue(`shifts.${index}.breakDuration` as const, hr * 60 + currentMin);
+                              }}
+                              placeholder="0"
+                              className="w-8 text-center bg-transparent border-b-2 border-gray-400 rounded-none focus:outline-none focus:border-primary px-0.5 py-0.5 text-sm font-normal"
+                            />
+                            <span>hr</span>
+
+                            <input
+                              type="number"
+                              min={0}
+                              max={59}
+                              value={(watch(`shifts.${index}.breakDuration`) || 0) % 60 || ""}
+                              onChange={(e) => {
+                                const min = parseInt(e.target.value, 10) || 0;
+                                const currentHr = Math.floor((watch(`shifts.${index}.breakDuration`) || 0) / 60);
+                                setValue(`shifts.${index}.breakDuration` as const, currentHr * 60 + min);
+                              }}
+                              placeholder="00"
+                              className="w-8 text-center bg-transparent border-b-2 border-gray-400 rounded-none focus:outline-none focus:border-primary px-0.5 py-0.5 text-sm font-normal"
+                            />
+                            <span>min</span>
+                          </div>
+                        </div>
+
+                        {/* Default set */}
+                        <div className="flex items-center gap-1.5 pb-3 shrink-0">
+                          <Controller
+                            control={control}
+                            name={`shifts.${index}.isDefault` as const}
+                            render={({ field: checkField }) => (
+                              <input
+                                id={`shifts-def-${index}`}
+                                type="checkbox"
+                                checked={checkField.value || false}
+                                onChange={(e) => {
+                                  const checked = e.target.checked;
+                                  if (checked) {
+                                    const currentShifts = (watch("shifts") as CompanyShift[]) || [];
+                                    currentShifts.forEach((_, idx) => {
+                                      setValue(`shifts.${idx}.isDefault` as const, idx === index);
+                                    });
+                                  } else {
+                                    checkField.onChange(false);
+                                  }
+                                }}
+                                className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
+                              />
+                            )}
+                          />
+                          <label htmlFor={`shifts-def-${index}`} className="text-sm font-medium text-gray-700 cursor-pointer select-none">
+                            default set
+                          </label>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-2 pb-2 ml-auto shrink-0">
+                          {/* Trash */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              remove(index);
+                            }}
+                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 border border-gray-200 rounded-md transition-colors cursor-pointer flex items-center justify-center bg-white shadow-sm"
+                            title="Delete Shift"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+
+                          {/* Plus */}
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              insert(index + 1, {
+                                startTime: "",
+                                endTime: "",
+                                isDefault: false,
+                                breakDuration: 0,
+                                employeeIds: [],
+                              });
+                            }}
+                            className="p-2 bg-primary text-white rounded-full transition-colors cursor-pointer flex items-center justify-center shadow-sm hover:opacity-90"
+                            title="Add Shift Below"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                  {fields.length === 0 && (
+                    <div className="text-center py-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
+                      <p className="text-sm text-gray-500 mb-2">No shifts defined.</p>
+                      <Button
+                        type="button"
+                        onClick={() => append({
+                          startTime: "",
+                          endTime: "",
+                          isDefault: false,
+                          breakDuration: 0,
+                          employeeIds: []
+                        })}
+                        className="px-3 py-1.5 text-sm bg-primary text-white rounded hover:opacity-90"
+                      >
+                        Add First Shift
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
                 Company Skip Days
               </h2>

@@ -1,6 +1,7 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
+import { useSelector } from "react-redux";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { Card } from "@/components/ui/card";
 import FormImage from "@/components/shared/Form/FormImage/FormImage";
@@ -16,10 +17,38 @@ import { Button } from "@/components/ui/button";
 import { getEmployee, getProfileEmployee } from "@/features/api/companyEmployee";
 import useAddOrUpdateEmployee from "@/features/api/companyEmployee/useAddEmployee";
 import { imageUploadMutation } from "@/features/api/file";
+import { getUserDetail } from "@/features/selectors/auth.selector";
+import { useGetAllCompanyShifts } from "@/features/api/companyShift";
+import { formatTo12HourLower } from "@/features/utils/app.utils";
 
 export default function useAddEmployee() {
   const { id: companyEmployeeId } = useParams();
   const navigate = useNavigate();
+
+  const currentUser = useSelector(getUserDetail);
+  const userType = currentUser?.employeeType?.toUpperCase()?.trim();
+  const canAssignTimeShift =
+    userType === "CONSULTANT" ||
+    userType === "OWNER" ||
+    userType === "SAHAYTEAMMATE" ||
+    currentUser?.isSahayEmployee === true ||
+    currentUser?.isSuperAdmin === true ||
+    String(currentUser?.isSuperAdmin) === "true";
+
+  const { data: shiftsData } = useGetAllCompanyShifts(canAssignTimeShift);
+
+  const shiftOptions = useMemo(() => {
+    if (!shiftsData?.data) return [];
+    return shiftsData.data.map((shift: CompanyShift) => {
+      const start = formatTo12HourLower(shift.startTime) || shift.startTime;
+      const end = formatTo12HourLower(shift.endTime) || shift.endTime;
+      const defaultBadge = shift.isDefault ? " (Default)" : "";
+      return {
+        value: shift.timeShiftId || "",
+        label: `${start} - ${end}${defaultBadge}`,
+      };
+    });
+  }, [shiftsData]);
 
   const [isModalOpen, setModalOpen] = useState(false);
   const [upEmdData, setUpEmpData] = useState<AddEmployeeDetailsById>({
@@ -28,6 +57,7 @@ export default function useAddEmployee() {
     employeeEmail: "",
     employeeMobile: "",
     employeeType: "",
+    timeShiftId: "",
     photo: "",
   });
 
@@ -77,6 +107,8 @@ export default function useAddEmployee() {
         department: data.department,
         designation: data.designation,
         employee: data.reportingManager || data.reportingManagerId,
+        timeShiftId: data.timeShiftId || data.timeShift?.timeShiftId || "",
+        timeShift: data.timeShift,
         photo: data?.photo
           ? `${ImageBaseURL}/share/profilePics/${data.photo}`
           : "",
@@ -104,6 +136,7 @@ export default function useAddEmployee() {
           departmentId: data.department?.departmentId || data.departmentId,
           designationId: data.designation?.designationId || data.designationId,
           reportingManagerId: data?.employee?.employeeId,
+          ...(canAssignTimeShift && { timeShiftId: data.timeShiftId || null }),
           employeeName: data.employeeName,
           employeeEmail: data.employeeEmail,
           employeeMobile: employeeMobile,
@@ -114,6 +147,7 @@ export default function useAddEmployee() {
           departmentId: data.department?.departmentId || data.departmentId,
           designationId: data.designation?.designationId || data.designationId,
           reportingManagerId: data?.employee?.employeeId,
+          ...(canAssignTimeShift && { timeShiftId: data.timeShiftId || null }),
           employeeName: data.employeeName,
           employeeEmail: data.employeeEmail,
           employeeMobile: employeeMobile,
@@ -273,6 +307,24 @@ export default function useAddEmployee() {
               )}
             />
           </div>
+          {canAssignTimeShift && (
+            <div className="col-span-2">
+              <Controller
+                control={control}
+                name="timeShiftId"
+                render={({ field }) => (
+                  <FormSelect
+                    label="Company Time Shift"
+                    placeholder="Select Time Shift"
+                    value={field.value || ""}
+                    onChange={field.onChange}
+                    options={shiftOptions}
+                    error={errors.timeShiftId}
+                  />
+                )}
+              />
+            </div>
+          )}
         </Card>
       </div>
     );

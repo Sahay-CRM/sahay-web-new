@@ -222,6 +222,7 @@ const DashboardLayout = () => {
       const empData = userData.data;
       const updatedEmpData = {
         ...empData,
+        timeShift: empData?.timeShift || null,
         companyStartTime: companyData?.companyStartTime || empData?.company?.companyStartTime || null,
         companyEndTime: companyData?.companyEndTime || empData?.company?.companyEndTime || null,
         breakStartTime: companyData?.breakStartTime || empData?.company?.breakStartTime || null,

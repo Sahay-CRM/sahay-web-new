@@ -156,6 +156,8 @@ export default function useCompany() {
         companyEndTime: companyData.companyEndTime,
         breakStartTime: companyData.breakStartTime,
         breakEndTime: companyData.breakEndTime,
+        breakDuration: companyData.breakDuration,
+        shifts: companyData.shifts || [],
       });
     }
   }, [companyData, reset]);
@@ -277,6 +279,8 @@ export default function useCompany() {
       companyEndTime: data.companyEndTime,
       breakStartTime: data.breakStartTime,
       breakEndTime: data.breakEndTime,
+      breakDuration: data.breakDuration,
+      shifts: data.shifts,
     };
 
     addCompany(payload, {
