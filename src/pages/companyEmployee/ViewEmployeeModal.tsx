@@ -86,6 +86,11 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
           <div>
             <span className="font-medium text-primary">Time Shift : </span>
             {(formatTo12HourLower(modalData.timeShift.startTime) || modalData.timeShift.startTime)} - {(formatTo12HourLower(modalData.timeShift.endTime) || modalData.timeShift.endTime)}
+            {Boolean(modalData.timeShift.breakDuration) && (
+              <span className="text-gray-500 text-sm ml-2">
+                (Break: {Math.floor((modalData.timeShift.breakDuration || 0) / 60)} hr {(modalData.timeShift.breakDuration || 0) % 60} min)
+              </span>
+            )}
           </div>
         )}
       </div>

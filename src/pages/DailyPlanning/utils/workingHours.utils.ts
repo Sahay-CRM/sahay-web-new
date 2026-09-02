@@ -58,8 +58,8 @@ export const calculateWorkingHours = (user?: User | null): WorkingHoursInfo => {
       let diff = endH * 60 + endM - (startH * 60 + startM);
       if (diff < 0) diff += 24 * 60;
 
-      let breakMins = 0;
-      if (user.breakStartTime && user.breakEndTime) {
+      let breakMins = Number(user.breakDuration) || 0;
+      if (!breakMins && user.breakStartTime && user.breakEndTime) {
         const [bStartH, bStartM] = user.breakStartTime.split(":").map(Number);
         const [bEndH, bEndM] = user.breakEndTime.split(":").map(Number);
         if (!isNaN(bStartH) && !isNaN(bStartM) && !isNaN(bEndH) && !isNaN(bEndM)) {

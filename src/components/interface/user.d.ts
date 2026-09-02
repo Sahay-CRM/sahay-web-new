@@ -25,6 +25,7 @@ interface User extends Partial<EmployeeDetailsById> {
   companyEndTime?: string | null;
   breakStartTime?: string | null;
   breakEndTime?: string | null;
+  breakDuration?: number | null;
   timeShift?: CompanyShift | null;
 }
 

@@ -28,6 +28,7 @@ import ImageCropModal from "@/components/shared/Modal/ImageCropModal";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import AddHolidaysForm from "../CompanyHoliday/AddHolidayFormModal";
+import { FormLabel } from "@/components/ui/form";
 
 const toMinutes = (timeStr?: string | null): number | null => {
   if (!timeStr) return null;
@@ -88,8 +89,6 @@ export default function CompanyProfile() {
 
   const watchedStartTime = watch("companyStartTime");
   const watchedEndTime = watch("companyEndTime");
-  const watchedBreakStartTime = watch("breakStartTime");
-  const watchedBreakEndTime = watch("breakEndTime");
   const watchedShifts = (watch("shifts") as CompanyShift[]) || [];
 
   const companyStartTimeOptions = timeOptions.filter((option) => {
@@ -104,44 +103,6 @@ export default function CompanyProfile() {
     const startMin = toMinutes(watchedStartTime);
     const optionMin = toMinutes(option.value);
     return startMin !== null && optionMin !== null && optionMin > startMin;
-  });
-
-  const breakStartTimeOptions = timeOptions.filter((option) => {
-    const optionMin = toMinutes(option.value);
-    if (optionMin === null) return true;
-
-    if (watchedStartTime) {
-      const shiftStartMin = toMinutes(watchedStartTime);
-      if (shiftStartMin !== null && optionMin < shiftStartMin) return false;
-    }
-    if (watchedEndTime) {
-      const shiftEndMin = toMinutes(watchedEndTime);
-      if (shiftEndMin !== null && optionMin > shiftEndMin) return false;
-    }
-    if (watchedBreakEndTime) {
-      const endMin = toMinutes(watchedBreakEndTime);
-      if (endMin !== null && optionMin >= endMin) return false;
-    }
-    return true;
-  });
-
-  const breakEndTimeOptions = timeOptions.filter((option) => {
-    const optionMin = toMinutes(option.value);
-    if (optionMin === null) return true;
-
-    if (watchedStartTime) {
-      const shiftStartMin = toMinutes(watchedStartTime);
-      if (shiftStartMin !== null && optionMin < shiftStartMin) return false;
-    }
-    if (watchedEndTime) {
-      const shiftEndMin = toMinutes(watchedEndTime);
-      if (shiftEndMin !== null && optionMin > shiftEndMin) return false;
-    }
-    if (watchedBreakStartTime) {
-      const startMin = toMinutes(watchedBreakStartTime);
-      if (startMin !== null && optionMin <= startMin) return false;
-    }
-    return true;
   });
 
   const getStartTimeOptionsForShift = (index: number) => {
@@ -647,7 +608,7 @@ export default function CompanyProfile() {
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="w-full sm:w-1/2">
+                  <div className="w-full sm:w-1/3">
                     {isEditing ? (
                       <Controller
                         name="companyStartTime"
@@ -697,7 +658,7 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-full sm:w-1/2">
+                  <div className="w-full sm:w-1/3">
                     {isEditing ? (
                       <Controller
                         name="companyEndTime"
@@ -747,126 +708,63 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                </div>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="w-full sm:w-1/2">
+                  <div className="w-full sm:w-1/3">
                     {isEditing ? (
-                      <Controller
-                        name="breakStartTime"
-                        control={control}
-                        rules={{
-                          validate: (val) => {
-                            if (!val) return true;
-                            const startMin = toMinutes(val);
-                            const endMin = toMinutes(watchedBreakEndTime);
-                            const shiftStartMin = toMinutes(watchedStartTime);
-                            const shiftEndMin = toMinutes(watchedEndTime);
-
-                            if (startMin !== null && endMin !== null) {
-                              if (startMin === endMin) {
-                                return "Break start time cannot be equal to End time";
-                              }
-                              if (startMin > endMin) {
-                                return "Break start time must be before End time";
-                              }
+                      <div className="flex flex-col">
+                        <FormLabel className="mb-3">
+                          Break Duration
+                        </FormLabel>
+                        <div className="flex items-center gap-2 h-10 px-4  bg-white">
+                          <input
+                            type="number"
+                            min={0}
+                            max={23}
+                            value={
+                              Math.floor((Number(watch("breakDuration")) || 0) / 60) || ""
                             }
-
-                            if (startMin !== null) {
-                              if (shiftStartMin !== null && startMin < shiftStartMin) {
-                                return "Break start time must be after shift start time";
-                              }
-                              if (shiftEndMin !== null && startMin > shiftEndMin) {
-                                return "Break start time must be before shift end time";
-                              }
-                            }
-                            return true;
-                          },
-                        }}
-                        render={({ field }) => (
-                          <SearchDropdown
-                            options={breakStartTimeOptions}
-                            selectedValues={field.value ? [field.value] : []}
-                            onSelect={(val) => {
-                              field.onChange(val.value);
-                              setTimeout(() => {
-                                trigger(["breakStartTime", "breakEndTime"]);
-                              }, 0);
+                            onChange={(e) => {
+                              const hr = parseInt(e.target.value, 10) || 0;
+                              const currentMin =
+                                (Number(watch("breakDuration")) || 0) % 60;
+                              setValue("breakDuration", hr * 60 + currentMin);
                             }}
-                            label="Break Start Time"
-                            placeholder="Select Break Start Time"
-                            error={errors.breakStartTime}
-                            isSearchable={false}
+                            placeholder="0"
+                            className="w-10 text-center bg-transparent border-b-2 border-gray-400 rounded-none focus:outline-none focus:border-primary px-0.5 py-0.5 text-sm font-normal [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                           />
-                        )}
-                      />
+                          <span className="text-sm font-medium text-gray-700">hr</span>
+
+                          <input
+                            type="number"
+                            min={0}
+                            max={59}
+                            value={
+                              (Number(watch("breakDuration")) || 0) % 60 || ""
+                            }
+                            onChange={(e) => {
+                              const min = parseInt(e.target.value, 10) || 0;
+                              const currentHr = Math.floor(
+                                (Number(watch("breakDuration")) || 0) / 60
+                              );
+                              setValue("breakDuration", currentHr * 60 + min);
+                            }}
+                            placeholder="00"
+                            className="w-10 text-center bg-transparent border-b-2 border-gray-400 rounded-none focus:outline-none focus:border-primary px-0.5 py-0.5 text-sm font-normal [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <span className="text-sm font-medium text-gray-700">min</span>
+                        </div>
+                      </div>
                     ) : (
                       <>
                         <label className="block text-sm font-medium text-gray-700">
-                          Break Start Time
+                          Break Duration
                         </label>
                         <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                          {formatTo12HourLower(companyData.breakStartTime ?? undefined)}
-                        </p>
-                      </>
-                    )}
-                  </div>
-                  <div className="w-full sm:w-1/2">
-                    {isEditing ? (
-                      <Controller
-                        name="breakEndTime"
-                        control={control}
-                        rules={{
-                          validate: (val) => {
-                            if (!val) return true;
-                            const startMin = toMinutes(watchedBreakStartTime);
-                            const endMin = toMinutes(val);
-                            const shiftStartMin = toMinutes(watchedStartTime);
-                            const shiftEndMin = toMinutes(watchedEndTime);
-
-                            if (startMin !== null && endMin !== null) {
-                              if (startMin === endMin) {
-                                return "Break end time cannot be equal to Start time";
-                              }
-                              if (startMin > endMin) {
-                                return "Break end time must be after Start time";
-                              }
-                            }
-
-                            if (endMin !== null) {
-                              if (shiftStartMin !== null && endMin < shiftStartMin) {
-                                return "Break end time must be after shift start time";
-                              }
-                              if (shiftEndMin !== null && endMin > shiftEndMin) {
-                                return "Break end time must be before shift end time";
-                              }
-                            }
-                            return true;
-                          },
-                        }}
-                        render={({ field }) => (
-                          <SearchDropdown
-                            options={breakEndTimeOptions}
-                            selectedValues={field.value ? [field.value] : []}
-                            onSelect={(val) => {
-                              field.onChange(val.value);
-                              setTimeout(() => {
-                                trigger(["breakStartTime", "breakEndTime"]);
-                              }, 0);
-                            }}
-                            label="Break End Time"
-                            placeholder="Select Break End Time"
-                            error={errors.breakEndTime}
-                            isSearchable={false}
-                          />
-                        )}
-                      />
-                    ) : (
-                      <>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Break End Time
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                          {formatTo12HourLower(companyData.breakEndTime ?? undefined)}
+                          {(() => {
+                            const duration = Number(companyData.breakDuration) || 0;
+                            const hr = Math.floor(duration / 60);
+                            const min = duration % 60;
+                            return `${hr} hr ${min} min`;
+                          })()}
                         </p>
                       </>
                     )}

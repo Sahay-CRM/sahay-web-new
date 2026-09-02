@@ -227,6 +227,7 @@ const DashboardLayout = () => {
         companyEndTime: companyData?.companyEndTime || empData?.company?.companyEndTime || null,
         breakStartTime: companyData?.breakStartTime || empData?.company?.breakStartTime || null,
         breakEndTime: companyData?.breakEndTime || empData?.company?.breakEndTime || null,
+        breakDuration: companyData?.breakDuration ?? empData?.company?.breakDuration ?? null,
         ...(empData?.companyLogo && {
           companyLogo: `${ImageBaseURL}/share/company/logo/${empData.companyLogo}`,
         }),
