@@ -268,11 +268,11 @@ export const useAgenda = ({
   // Mutations
   const { mutate: deleteObjective } = deleteMeetingObjectiveMutation();
   const { mutate: addIssueAgenda } = addMeetingAgendaMutation();
-  const { mutate: updateDetailMeeting } = updateDetailMeetingMutation();
-  const { mutate: editMeetingAgendaTIming } = editAgendaTimingMeetingMutation();
+  const { mutate: updateDetailMeeting, isPending: startDiscussionLoading } = updateDetailMeetingMutation();
+  const { mutate: editMeetingAgendaTIming, isPending: goToConclusionLoading } = editAgendaTimingMeetingMutation();
   const { mutate: addIssue } = addUpdateIssues();
   const { mutate: addObjective } = addUpdateObjective();
-  const { mutate: createMeet, isPending } = createMeetingMutation();
+  const { mutate: createMeet, isPending: startMeetingLoading } = createMeetingMutation();
   const { mutate: endMeet, isPending: endMeetingLoading } =
     endMeetingMutation();
   const { mutate: updateTime } = addMeetingTimeMutation();
@@ -301,7 +301,7 @@ export const useAgenda = ({
     const payload = {
       detailMeetingAgendaIssueId: issueObjectiveId,
       ioType: agendaItem.ioType,
-     isPriority: agendaItem.isPriority,
+      isPriority: !agendaItem.isPriority,
     };
 
     addIssueAgenda(payload, {
@@ -501,13 +501,27 @@ export const useAgenda = ({
     }
   };
 
+  const existingAgendaIds = new Set(
+    (agendaList ?? [])
+      .map((ag) => (ag.ioType === "ISSUE" ? ag.issueId : ag.objectiveId))
+      .filter(Boolean),
+  );
+
+  const existingAgendaNames = new Set(
+    (agendaList ?? [])
+      .map((ag) => ag.name?.trim().toLowerCase())
+      .filter(Boolean),
+  );
+
   const filteredIssues = (issueData?.data ?? []).filter(
     (item) =>
+      !existingAgendaIds.has(item.id) &&
+      !existingAgendaNames.has(item.name?.trim().toLowerCase()) &&
       item.name.toLowerCase().includes(issueInput.toLowerCase()) &&
       issueInput.trim() !== "",
   );
 
-  const searchOptions = (issueData?.data ?? []).map((item) => ({
+  const searchOptions = filteredIssues.map((item) => ({
     name: item.name,
     id: item.id,
     ioType: item.ioType,
@@ -1413,7 +1427,10 @@ export const useAgenda = ({
     tasksFireBase,
     handleStartMeeting,
     handleTogglePriority,
-    isPending,
+    isPending: startMeetingLoading,
+    startMeetingLoading,
+    startDiscussionLoading,
+    goToConclusionLoading,
     handleCloseMeetingWithLog,
     endMeetingLoading,
     conclusionData,

@@ -1,6 +1,11 @@
 import * as React from "react";
-import { format } from "date-fns";
-import { CalendarIcon } from "lucide-react";
+import { format, addMonths, setMonth, setYear } from "date-fns";
+import {
+  CalendarIcon,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
@@ -11,6 +16,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DateRangePickerProps {
@@ -22,6 +34,148 @@ interface DateRangePickerProps {
   isClear?: boolean;
   handleClear?: () => void;
   defaultDate?: { startDate: Date | undefined; deadline: Date | undefined };
+}
+
+const MONTH_NAMES = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+const DATERANGE_FILTER_START_YEAR =
+  Number(import.meta.env.VITE_DATERANGE_FILTER_START_YEAR) || undefined;
+
+function getYearOptions(centerYear: number, forwardSpan = 15) {
+  const startYear = DATERANGE_FILTER_START_YEAR ?? centerYear - forwardSpan;
+  const endYear = centerYear + forwardSpan;
+  const years: number[] = [];
+  for (let y = startYear; y <= endYear; y++) {
+    years.push(y);
+  }
+  return years;
+}
+
+interface MonthYearSelectProps {
+  month: Date;
+  onMonthChange: (month: Date) => void;
+}
+
+function YearGridSelect({
+  year,
+  onYearChange,
+}: {
+  year: number;
+  onYearChange: (year: number) => void;
+}) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const yearOptions = React.useMemo(
+    () => getYearOptions(new Date().getFullYear()),
+    [],
+  );
+
+  return (
+    <Popover open={isOpen} onOpenChange={setIsOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-8 justify-between gap-1 text-sm font-normal"
+        >
+          {year}
+          <ChevronDown className="size-3.5 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent align="start" className="w-56 p-2">
+        <div className="grid max-h-56 grid-cols-4 gap-1 overflow-y-auto ">
+          {yearOptions.map((y) => (
+            <Button
+              key={y}
+              type="button"
+              size="sm"
+              variant={y === year ? "default" : "ghost"}
+              className={cn(
+                "h-8 px-1 text-sm font-normal hover:bg-gray-200",
+                y === year && "bg-primary text-primary-foreground",
+              )}
+              onClick={() => {
+                onYearChange(y);
+                setIsOpen(false);
+              }}
+            >
+              {y}
+            </Button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function MonthYearSelect({ month, onMonthChange }: MonthYearSelectProps) {
+  return (
+    <div className="flex items-center justify-center gap-2">
+      <Select
+        value={String(month.getMonth())}
+        onValueChange={(val) => {
+          onMonthChange(setMonth(month, Number(val)));
+        }}
+      >
+        <SelectTrigger size="sm" className="h-8 w-full text-sm">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {MONTH_NAMES.map((name, idx) => (
+            <SelectItem
+              key={name}
+              value={String(idx)}
+              className="hover:bg-gray-200"
+            >
+              {name}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <YearGridSelect
+        year={month.getFullYear()}
+        onYearChange={(y) => onMonthChange(setYear(month, y))}
+      />
+    </div>
+  );
+}
+
+interface MonthYearCalendarProps {
+  month: Date;
+  selected: DateRange | undefined;
+  onSelect: (range: DateRange | undefined) => void;
+  onMonthChange: (month: Date) => void;
+}
+
+function MonthYearCalendar({
+  month,
+  selected,
+  onSelect,
+  onMonthChange,
+}: MonthYearCalendarProps) {
+  return (
+    <Calendar
+      mode="range"
+      month={month}
+      onMonthChange={onMonthChange}
+      selected={selected}
+      onSelect={onSelect}
+      numberOfMonths={1}
+      hideNavigation
+    />
+  );
 }
 
 export default function DateRangePicker({
@@ -45,6 +199,16 @@ export default function DateRangePicker({
   const [isOpen, setIsOpen] = React.useState(false);
   const isMobile = useIsMobile();
 
+  const [startMonth, setStartMonth] = React.useState<Date>(
+    defaultDate?.startDate || new Date(),
+  );
+  const [endMonth, setEndMonth] = React.useState<Date>(
+    addMonths(defaultDate?.startDate || new Date(), 1),
+  );
+  // Tracks whether the end month was manually chosen by the user, so an
+  // auto-follow of the start month doesn't clobber their choice.
+  const endMonthManuallySet = React.useRef(false);
+
   // If parent gives controlled value, sync it
   React.useEffect(() => {
     if (value) {
@@ -52,6 +216,13 @@ export default function DateRangePicker({
       setTempDate(value);
     }
   }, [value]);
+
+  const resetMonthsFrom = (range: DateRange | undefined) => {
+    const from = range?.from || new Date();
+    setStartMonth(from);
+    setEndMonth(addMonths(from, 1));
+    endMonthManuallySet.current = false;
+  };
 
   // When popover opens, reset tempDate from defaultDate
   const handleOpenChange = (open: boolean) => {
@@ -62,12 +233,44 @@ export default function DateRangePicker({
         to: defaultDate.deadline,
       };
       setTempDate(revert);
+      resetMonthsFrom(revert);
     }
   };
 
   const handleSelect = (range: DateRange | undefined) => {
     setTempDate(range);
     onChange?.(range);
+
+    // Auto-follow: once a start date is picked and no end date exists yet,
+    // point the end calendar at the next month — unless the user has
+    // already changed the end month manually.
+    if (range?.from && !range?.to && !endMonthManuallySet.current) {
+      setStartMonth(range.from);
+      setEndMonth(addMonths(range.from, 1));
+    }
+
+    if (range?.from && range?.to) {
+      endMonthManuallySet.current = false;
+    }
+  };
+
+  const handleStartMonthChange = (month: Date) => {
+    setStartMonth(month);
+  };
+
+  const handleEndMonthChange = (month: Date) => {
+    endMonthManuallySet.current = true;
+    setEndMonth(month);
+  };
+
+  const handlePrev = () => {
+    setStartMonth((prev) => addMonths(prev, -1));
+    setEndMonth((prev) => addMonths(prev, -1));
+  };
+
+  const handleNext = () => {
+    setStartMonth((prev) => addMonths(prev, 1));
+    setEndMonth((prev) => addMonths(prev, 1));
   };
 
   const handleApply = () => {
@@ -97,6 +300,7 @@ export default function DateRangePicker({
       };
       setTempDate(revert);
       setDate(revert);
+      resetMonthsFrom(revert);
     }
     setIsOpen(false);
   };
@@ -109,7 +313,7 @@ export default function DateRangePicker({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-auto min-w-0 px-4 justify-start text-left font-normal",
+              "w-full min-w-0 px-4 justify-start text-left font-normal",
               !date && "text-muted-foreground",
             )}
           >
@@ -135,13 +339,52 @@ export default function DateRangePicker({
           collisionPadding={16}
         >
           <div className="bg-white rounded-2xl border shadow-2xl p-3 animate-in fade-in zoom-in-95 duration-200">
-            <Calendar
-              mode="range"
-              defaultMonth={tempDate?.from}
-              selected={tempDate}
-              onSelect={handleSelect}
-              numberOfMonths={isMobile ? 1 : 2}
-            />
+            <div className="flex items-center justify-between gap-2 px-1 pb-2">
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-9 shrink-0 bg-transparent p-0 opacity-70 hover:opacity-100"
+                onClick={handlePrev}
+              >
+                <ChevronLeft className="size-4" />
+              </Button>
+              <div className="flex flex-1 items-center justify-center gap-4">
+                <MonthYearSelect
+                  month={startMonth}
+                  onMonthChange={handleStartMonthChange}
+                />
+                {!isMobile && (
+                  <MonthYearSelect
+                    month={endMonth}
+                    onMonthChange={handleEndMonthChange}
+                  />
+                )}
+              </div>
+              <Button
+                variant="outline"
+                size="icon"
+                className="size-9 shrink-0 bg-transparent p-0 opacity-70 hover:opacity-100"
+                onClick={handleNext}
+              >
+                <ChevronRight className="size-4" />
+              </Button>
+            </div>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <MonthYearCalendar
+                month={startMonth}
+                onMonthChange={handleStartMonthChange}
+                selected={tempDate}
+                onSelect={handleSelect}
+              />
+              {!isMobile && (
+                <MonthYearCalendar
+                  month={endMonth}
+                  onMonthChange={handleEndMonthChange}
+                  selected={tempDate}
+                  onSelect={handleSelect}
+                />
+              )}
+            </div>
             <div className="flex justify-between gap-2 mt-3 pt-3 border-t">
               <div className="flex gap-2">
                 <Button
