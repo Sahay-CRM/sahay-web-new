@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 
 import {
@@ -95,6 +95,61 @@ export default function useCompany() {
     deleteHoli(id);
   };
 
+  const companyFormValues = useMemo(() => {
+    if (!companyData) return undefined;
+    const rawSkipDays = companyData.kpiSkipDays as
+      | string
+      | string[]
+      | undefined;
+
+    const skipDaysValue = Array.isArray(rawSkipDays)
+      ? rawSkipDays
+      : rawSkipDays
+        ? rawSkipDays.split(",")
+        : [];
+
+    return {
+      companyId: companyData.companyId,
+      companyName: companyData.companyName,
+      annualTurnOver: companyData.annualTurnOver,
+      businessStartDate: companyData.businessStartDate?.split("T")[0],
+      companyAddress: companyData.companyAddress,
+      companyAdminEmail: companyData.companyAdminEmail,
+      companyAdminName: companyData.companyAdminName,
+      companyAdminMobile: companyData.companyAdminMobile,
+      companyBillingName: companyData.companyBillingName,
+      companyGst: companyData.companyGst,
+      companyMobile: companyData.companyMobile?.replace("+91", ""),
+      companyWebsite: companyData.companyWebsite,
+      accountPOC: companyData.accountPOC,
+      accountsPocEmail: companyData.accountsPocEmail,
+      pancardNumber: companyData.pancardNumber,
+      industryId: companyData.Industry?.industryId,
+      cityId: companyData.cityId,
+      stateId: companyData.stateId,
+      validationKey: companyData.validationKey,
+      countryId: companyData.countryId,
+      engagementTypeId: companyData.engagementTypeId,
+      accountPocMobile: companyData.companyMobile?.replace("+91", ""),
+      gstCertificate: companyData?.gstCertificate
+        ? `${ImageBaseURL}/share/company/gst/${companyData.gstCertificate}`
+        : "",
+      pancard: companyData?.pancard
+        ? `${ImageBaseURL}/share/company/pancard/${companyData.pancard}`
+        : "",
+      logo: companyData?.logo
+        ? `${ImageBaseURL}/share/company/logo/${companyData.logo}`
+        : "",
+      kpiSkipDays: skipDaysValue,
+      companyStartTime: companyData.companyStartTime,
+      companyEndTime: companyData.companyEndTime,
+      breakStartTime: companyData.breakStartTime,
+      breakEndTime: companyData.breakEndTime,
+      breakDuration: companyData.breakDuration,
+      shifts: companyData.shifts || [],
+    };
+  }, [companyData]);
+
   const {
     register,
     handleSubmit,
@@ -104,63 +159,15 @@ export default function useCompany() {
     watch,
     reset,
     trigger,
-  } = useForm<SimpleCompanyDetails>();
+  } = useForm<SimpleCompanyDetails>({
+    values: companyFormValues,
+  });
 
   useEffect(() => {
-    if (companyData) {
-      const rawSkipDays = companyData.kpiSkipDays as
-        | string
-        | string[]
-        | undefined;
-
-      const skipDaysValue = Array.isArray(rawSkipDays)
-        ? rawSkipDays
-        : rawSkipDays
-          ? rawSkipDays.split(",")
-          : [];
-
-      reset({
-        companyId: companyData.companyId,
-        companyName: companyData.companyName,
-        annualTurnOver: companyData.annualTurnOver,
-        businessStartDate: companyData.businessStartDate?.split("T")[0],
-        companyAddress: companyData.companyAddress,
-        companyAdminEmail: companyData.companyAdminEmail,
-        companyAdminName: companyData.companyAdminName,
-        companyAdminMobile: companyData.companyAdminMobile,
-        companyBillingName: companyData.companyBillingName,
-        companyGst: companyData.companyGst,
-        companyMobile: companyData.companyMobile?.replace("+91", ""),
-        companyWebsite: companyData.companyWebsite,
-        accountPOC: companyData.accountPOC,
-        accountsPocEmail: companyData.accountsPocEmail,
-        pancardNumber: companyData.pancardNumber,
-        industryId: companyData.Industry?.industryId,
-        cityId: companyData.cityId,
-        stateId: companyData.stateId,
-        validationKey: companyData.validationKey,
-        countryId: companyData.countryId,
-        engagementTypeId: companyData.engagementTypeId,
-        accountPocMobile: companyData.companyMobile?.replace("+91", ""),
-        gstCertificate: companyData?.gstCertificate
-          ? `${ImageBaseURL}/share/company/gst/${companyData.gstCertificate}`
-          : "",
-        pancard: companyData?.pancard
-          ? `${ImageBaseURL}/share/company/pancard/${companyData.pancard}`
-          : "",
-        logo: companyData?.logo
-          ? `${ImageBaseURL}/share/company/logo/${companyData.logo}`
-          : "",
-        kpiSkipDays: skipDaysValue,
-        companyStartTime: companyData.companyStartTime,
-        companyEndTime: companyData.companyEndTime,
-        breakStartTime: companyData.breakStartTime,
-        breakEndTime: companyData.breakEndTime,
-        breakDuration: companyData.breakDuration,
-        shifts: companyData.shifts || [],
-      });
+    if (companyFormValues) {
+      reset(companyFormValues);
     }
-  }, [companyData, reset]);
+  }, [companyFormValues, reset]);
 
   useEffect(() => {
     if (companyData?.imageGst?.fileId) {
@@ -275,12 +282,18 @@ export default function useCompany() {
       superAdmin: data?.superAdmin,
       kpiSkipDays: data.kpiSkipDays,
       validationKey: data.validationKey,
-      companyStartTime: data.companyStartTime,
-      companyEndTime: data.companyEndTime,
-      breakStartTime: data.breakStartTime,
-      breakEndTime: data.breakEndTime,
+      companyStartTime: data.companyStartTime || null,
+      companyEndTime: data.companyEndTime || null,
+      breakStartTime: data.breakStartTime || null,
+      breakEndTime: data.breakEndTime || null,
       breakDuration: data.breakDuration,
-      shifts: data.shifts,
+      shifts: data.shifts
+        ?.filter((s) => s.startTime || s.endTime)
+        .map((s) => ({
+          ...s,
+          startTime: s.startTime || null,
+          endTime: s.endTime || null,
+        })) || [],
     };
 
     addCompany(payload, {

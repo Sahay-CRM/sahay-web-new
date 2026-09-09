@@ -1335,7 +1335,13 @@ export default function Agenda({
               )}
             </div>
             <div
-              className={`mt-1 pr-1 w-full overflow-auto ${meetingStatus === "DISCUSSION" ? "h-[calc(var(--vh,100vh)-230px)]" : "h-[calc(var(--vh,100vh)-260px)]"}`}
+              className={`mt-1 pr-1 w-full overflow-auto ${
+                meetingStatus === "DISCUSSION"
+                  ? "h-[calc(var(--vh,100vh)-230px)]"
+                  : meetingStatus === "CONCLUSION" || meetingStatus === "ENDED"
+                    ? "h-[calc(var(--vh,100vh)-165px)]"
+                    : "h-[calc(var(--vh,100vh)-260px)]"
+              }`}
             >
               {agendaList && agendaList.length > 0 ? (
                 <DndContext
@@ -1698,13 +1704,13 @@ export default function Agenda({
           <div
             className={cn(
               "flex justify-center w-full relative border-primary overflow-hidden",
-              meetingStatus === "DISCUSSION" ||
-                meetingStatus === "CONCLUSION" ||
-                meetingStatus === "ENDED"
-                ? layoutMode === "tab"
-                  ? "h-[calc(var(--vh,100vh)-170px)] border rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
-                  : "h-[calc(var(--vh,100vh)-170px)] border rounded-[10px]"
-                : "h-[calc(var(--vh,100vh)-140px)] p-4"
+              meetingStatus === "CONCLUSION" || meetingStatus === "ENDED"
+                ? "h-[calc(var(--vh,100vh)-205px)] border rounded-[10px]"
+                : meetingStatus === "DISCUSSION"
+                  ? layoutMode === "tab"
+                    ? "h-[calc(var(--vh,100vh)-170px)] border rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
+                    : "h-[calc(var(--vh,100vh)-170px)] border rounded-[10px]"
+                  : "h-[calc(var(--vh,100vh)-140px)] p-4"
             )}
           >
             {meetingStatus === "NOT_STARTED" ? (

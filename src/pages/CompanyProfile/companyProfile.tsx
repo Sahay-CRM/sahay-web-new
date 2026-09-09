@@ -28,7 +28,7 @@ import ImageCropModal from "@/components/shared/Modal/ImageCropModal";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import AddHolidaysForm from "../CompanyHoliday/AddHolidayFormModal";
-import { FormLabel } from "@/components/ui/form";
+// import { FormLabel } from "@/components/ui/form";
 
 const toMinutes = (timeStr?: string | null): number | null => {
   if (!timeStr) return null;
@@ -614,7 +614,6 @@ export default function CompanyProfile() {
                         name="companyStartTime"
                         control={control}
                         rules={{
-                          required: "Company Start Time is required",
                           validate: (val) => {
                             if (!val) return true;
                             const startMin = toMinutes(val);
@@ -637,13 +636,16 @@ export default function CompanyProfile() {
                             onSelect={(val) => {
                               field.onChange(val.value);
                               setTimeout(() => {
-                                trigger(["companyStartTime", "companyEndTime", "shifts"]);
+                                if (watchedEndTime || errors.companyEndTime) {
+                                  trigger("companyEndTime");
+                                }
                               }, 0);
                             }}
                             label="Company Start Time"
                             placeholder="Select Start Time"
                             error={errors.companyStartTime}
                             isSearchable={false}
+                            className="[&_span.text-red-600]:whitespace-nowrap"
                           />
                         )}
                       />
@@ -664,7 +666,6 @@ export default function CompanyProfile() {
                         name="companyEndTime"
                         control={control}
                         rules={{
-                          required: "Company End Time is required",
                           validate: (val) => {
                             if (!val) return true;
                             const startMin = toMinutes(watchedStartTime);
@@ -687,13 +688,16 @@ export default function CompanyProfile() {
                             onSelect={(val) => {
                               field.onChange(val.value);
                               setTimeout(() => {
-                                trigger(["companyStartTime", "companyEndTime", "shifts"]);
+                                if (watchedStartTime || errors.companyStartTime) {
+                                  trigger("companyStartTime");
+                                }
                               }, 0);
                             }}
                             label="Company End Time"
                             placeholder="Select End Time"
                             error={errors.companyEndTime}
                             isSearchable={false}
+                            className="[&_span.text-red-600]:whitespace-nowrap"
                           />
                         )}
                       />
@@ -708,7 +712,7 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-full sm:w-1/3">
+                  {/* <div className="w-full sm:w-1/3">
                     {isEditing ? (
                       <div className="flex flex-col">
                         <FormLabel className="mb-3">
@@ -768,7 +772,68 @@ export default function CompanyProfile() {
                         </p>
                       </>
                     )}
-                  </div>
+                  </div> */}
+                  {/* <div className="w-full sm:w-1/3">
+                    {isEditing ? (
+                      <div className="flex flex-col">
+                        <FormLabel className="mb-3">
+                          Break Duration
+                        </FormLabel>
+                        <div className="flex items-center gap-2 h-10 px-4  bg-white">
+                          <input
+                            type="number"
+                            min={0}
+                            max={23}
+                            value={
+                              Math.floor((Number(watch("breakDuration")) || 0) / 60) || ""
+                            }
+                            onChange={(e) => {
+                              const hr = parseInt(e.target.value, 10) || 0;
+                              const currentMin =
+                                (Number(watch("breakDuration")) || 0) % 60;
+                              setValue("breakDuration", hr * 60 + currentMin);
+                            }}
+                            placeholder="0"
+                            className="w-10 text-center bg-transparent border-b-2 border-gray-400 rounded-none focus:outline-none focus:border-primary px-0.5 py-0.5 text-sm font-normal [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <span className="text-sm font-medium text-gray-700">hr</span>
+
+                          <input
+                            type="number"
+                            min={0}
+                            max={59}
+                            value={
+                              (Number(watch("breakDuration")) || 0) % 60 || ""
+                            }
+                            onChange={(e) => {
+                              const min = parseInt(e.target.value, 10) || 0;
+                              const currentHr = Math.floor(
+                                (Number(watch("breakDuration")) || 0) / 60
+                              );
+                              setValue("breakDuration", currentHr * 60 + min);
+                            }}
+                            placeholder="00"
+                            className="w-10 text-center bg-transparent border-b-2 border-gray-400 rounded-none focus:outline-none focus:border-primary px-0.5 py-0.5 text-sm font-normal [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                          <span className="text-sm font-medium text-gray-700">min</span>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <label className="block text-sm font-medium text-gray-700">
+                          Break Duration
+                        </label>
+                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
+                          {(() => {
+                            const duration = Number(companyData.breakDuration) || 0;
+                            const hr = Math.floor(duration / 60);
+                            const min = duration % 60;
+                            return `${hr} hr ${min} min`;
+                          })()}
+                        </p>
+                      </>
+                    )}
+                  </div> */}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
@@ -960,9 +1025,18 @@ export default function CompanyProfile() {
             </div>
 
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
-                Company Shifts
-              </h2>
+              <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-gray-200">
+                <div className="flex items-center gap-3">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Company Shifts
+                  </h2>
+                  {(watchedStartTime || companyData?.companyStartTime) && (watchedEndTime || companyData?.companyEndTime) && (
+                    <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200">
+                      ({formatTo12HourLower(watchedStartTime || companyData?.companyStartTime)} - {formatTo12HourLower(watchedEndTime || companyData?.companyEndTime)})
+                    </span>
+                  )}
+                </div>
+              </div>
 
               {!isEditing ? (
                 // View Mode
@@ -1006,7 +1080,7 @@ export default function CompanyProfile() {
                   {fields.map((field, index) => {
                     const shiftErrors = errors.shifts as Array<{ startTime?: { message?: string }; endTime?: { message?: string } }> | undefined;
                     return (
-                      <div key={field.id} className="flex flex-row flex-wrap sm:flex-nowrap items-end gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
+                      <div key={field.id} className="flex flex-row flex-wrap sm:flex-nowrap items-start gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
                         {/* Start Time */}
                         <div className="w-36 shrink-0">
                           <label className="block text-sm font-medium text-gray-700 mb-1">start</label>
@@ -1014,7 +1088,6 @@ export default function CompanyProfile() {
                             control={control}
                             name={`shifts.${index}.startTime` as const}
                             rules={{
-                              required: "Start time is required",
                               validate: (val) => {
                                 if (!val) return true;
                                 const valMin = toMinutes(val);
@@ -1057,19 +1130,27 @@ export default function CompanyProfile() {
                                 onSelect={(val) => {
                                   selectField.onChange(val.value);
                                   setTimeout(() => {
-                                    trigger([`shifts.${index}.startTime`, `shifts.${index}.endTime`]);
+                                    const endVal = watch(`shifts.${index}.endTime`);
+                                    if (endVal || shiftErrors?.[index]?.endTime) {
+                                      trigger(`shifts.${index}.endTime`);
+                                    }
                                   }, 0);
                                 }}
                                 placeholder="Select"
                                 isSearchable={false}
                                 isCrossShow={false}
                                 error={shiftErrors?.[index]?.startTime}
+                                className="[&_span.text-red-600]:whitespace-nowrap"
                               />
                             )}
                           />
                         </div>
 
-                        <span className="pb-3 text-gray-400 text-sm font-medium shrink-0">to</span>
+                        {/* "to" separator */}
+                        <div className="flex flex-col shrink-0">
+                          <span className="block text-sm font-medium text-transparent select-none mb-1">.</span>
+                          <span className="text-gray-400 text-sm font-medium h-10 flex items-center">to</span>
+                        </div>
 
                         {/* End Time */}
                         <div className="w-36 shrink-0">
@@ -1078,7 +1159,6 @@ export default function CompanyProfile() {
                             control={control}
                             name={`shifts.${index}.endTime` as const}
                             rules={{
-                              required: "End time is required",
                               validate: (val) => {
                                 if (!val) return true;
                                 const valMin = toMinutes(val);
@@ -1121,13 +1201,17 @@ export default function CompanyProfile() {
                                 onSelect={(val) => {
                                   selectField.onChange(val.value);
                                   setTimeout(() => {
-                                    trigger([`shifts.${index}.startTime`, `shifts.${index}.endTime`]);
+                                    const startVal = watch(`shifts.${index}.startTime`);
+                                    if (startVal || shiftErrors?.[index]?.startTime) {
+                                      trigger(`shifts.${index}.startTime`);
+                                    }
                                   }, 0);
                                 }}
                                 placeholder="Select"
                                 isSearchable={false}
                                 isCrossShow={false}
                                 error={shiftErrors?.[index]?.endTime}
+                                className="[&_span.text-red-600]:whitespace-nowrap"
                               />
                             )}
                           />
@@ -1136,7 +1220,7 @@ export default function CompanyProfile() {
                         {/* Break Hours/Minutes */}
                         <div className="flex flex-col shrink-0">
                           <label className="block text-sm font-medium text-gray-700 mb-1">break duration</label>
-                          <div className="flex items-center gap-1.5 pb-2 font-medium text-sm text-gray-700">
+                          <div className="flex items-center gap-1.5 h-10 font-medium text-sm text-gray-700">
                             <input
                               type="number"
                               min={0}
@@ -1170,68 +1254,74 @@ export default function CompanyProfile() {
                         </div>
 
                         {/* Default set */}
-                        <div className="flex items-center gap-1.5 pb-3 shrink-0">
-                          <Controller
-                            control={control}
-                            name={`shifts.${index}.isDefault` as const}
-                            render={({ field: checkField }) => (
-                              <input
-                                id={`shifts-def-${index}`}
-                                type="checkbox"
-                                checked={checkField.value || false}
-                                onChange={(e) => {
-                                  const checked = e.target.checked;
-                                  if (checked) {
-                                    const currentShifts = (watch("shifts") as CompanyShift[]) || [];
-                                    currentShifts.forEach((_, idx) => {
-                                      setValue(`shifts.${idx}.isDefault` as const, idx === index);
-                                    });
-                                  } else {
-                                    checkField.onChange(false);
-                                  }
-                                }}
-                                className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
-                              />
-                            )}
-                          />
-                          <label htmlFor={`shifts-def-${index}`} className="text-sm font-medium text-gray-700 cursor-pointer select-none">
-                            default set
-                          </label>
+                        <div className="flex flex-col shrink-0">
+                          <span className="block text-sm font-medium text-transparent select-none mb-1">.</span>
+                          <div className="flex items-center gap-1.5 h-10">
+                            <Controller
+                              control={control}
+                              name={`shifts.${index}.isDefault` as const}
+                              render={({ field: checkField }) => (
+                                <input
+                                  id={`shifts-def-${index}`}
+                                  type="checkbox"
+                                  checked={checkField.value || false}
+                                  onChange={(e) => {
+                                    const checked = e.target.checked;
+                                    if (checked) {
+                                      const currentShifts = (watch("shifts") as CompanyShift[]) || [];
+                                      currentShifts.forEach((_, idx) => {
+                                        setValue(`shifts.${idx}.isDefault` as const, idx === index);
+                                      });
+                                    } else {
+                                      checkField.onChange(false);
+                                    }
+                                  }}
+                                  className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary cursor-pointer"
+                                />
+                              )}
+                            />
+                            <label htmlFor={`shifts-def-${index}`} className="text-sm font-medium text-gray-700 cursor-pointer select-none">
+                              default set
+                            </label>
+                          </div>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex items-center gap-2 pb-2 ml-auto shrink-0">
-                          {/* Trash */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              remove(index);
-                            }}
-                            className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 border border-gray-200 rounded-md transition-colors cursor-pointer flex items-center justify-center bg-white shadow-sm"
-                            title="Delete Shift"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                        <div className="flex flex-col ml-auto shrink-0">
+                          <span className="block text-sm font-medium text-transparent select-none mb-1">.</span>
+                          <div className="flex items-center gap-2 h-10">
+                            {/* Trash */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                remove(index);
+                              }}
+                              className="p-2 text-red-500 hover:text-red-700 hover:bg-red-50 border border-gray-200 rounded-md transition-colors cursor-pointer flex items-center justify-center bg-white shadow-sm"
+                              title="Delete Shift"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
 
-                          {/* Plus */}
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              insert(index + 1, {
-                                startTime: "",
-                                endTime: "",
-                                isDefault: false,
-                                breakDuration: 0,
-                                employeeIds: [],
-                              });
-                            }}
-                            className="p-2 bg-primary text-white rounded-full transition-colors cursor-pointer flex items-center justify-center shadow-sm hover:opacity-90"
-                            title="Add Shift Below"
-                          >
-                            <Plus className="w-4 h-4" />
-                          </button>
+                            {/* Plus */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                insert(index + 1, {
+                                  startTime: "",
+                                  endTime: "",
+                                  isDefault: false,
+                                  breakDuration: 0,
+                                  employeeIds: [],
+                                });
+                              }}
+                              className="p-2 bg-primary text-white rounded-full transition-colors cursor-pointer flex items-center justify-center shadow-sm hover:opacity-90"
+                              title="Add Shift Below"
+                            >
+                              <Plus className="w-4 h-4" />
+                            </button>
+                          </div>
                         </div>
                       </div>
                     );

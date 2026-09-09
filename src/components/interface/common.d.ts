@@ -1674,8 +1674,8 @@ interface NotesGroupProps {
 
 interface CompanyShift {
   timeShiftId?: string;
-  startTime: string;
-  endTime: string;
+  startTime?: string | null;
+  endTime?: string | null;
   isDefault: boolean;
   breakDuration: number;
   breakStartTime?: string | null;
@@ -1701,7 +1701,7 @@ interface SimpleCompanyDetails {
   companyAdminMobile: string;
   companyBillingName?: string;
   companyGst?: string;
-  companyMobile: string | null;
+  companyMobile?: string | null;
   companyWebsite?: string;
   accountPOC?: string;
   accountsPocEmail?: string;
@@ -1729,8 +1729,8 @@ interface SimpleCompanyDetails {
   date?: number;
   imageGst?: imageGst;
   imagePancard?: imageGst;
-  companyStartTime?: string;
-  companyEndTime?: string;
+  companyStartTime?: string | null;
+  companyEndTime?: string | null;
   breakStartTime?: string | null;
   breakEndTime?: string | null;
 }
