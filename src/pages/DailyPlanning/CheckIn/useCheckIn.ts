@@ -2,6 +2,7 @@ import { useMemo, useState, useEffect } from "react";
 import { useSelector } from "react-redux";
 import { format, subDays, addDays } from "date-fns";
 import { calculatePlannedMinutes } from "@/features/utils/formatting.utils";
+import { calculateWorkingHours } from "../utils/workingHours.utils";
 
 import { getUserId, getUserDetail, getUserPermission } from "@/features/selectors/auth.selector";
 import useGetDailyPlan from "@/features/api/dailyPlan/useGetDailyPlan";
@@ -72,7 +73,8 @@ export default function useCheckIn() {
   }, [pendingTasksData]);
 
   const user = useSelector(getUserDetail);
-  const startTime = user?.companyStartTime;
+  const workingHours = useMemo(() => calculateWorkingHours(user), [user]);
+  const startTime = workingHours.startTime;
 
   const isEditWindowExpired = useMemo(() => {
     if (selectedDate < todayDate) return true;
@@ -152,29 +154,8 @@ export default function useCheckIn() {
     [items]
   );
 
-  const companyWorkingMinutes = useMemo(() => {
-    if (!user?.companyStartTime || !user?.companyEndTime) return 0;
-    const [startH, startM] = user.companyStartTime.split(":").map(Number);
-    const [endH, endM] = user.companyEndTime.split(":").map(Number);
-    if (isNaN(startH) || isNaN(startM) || isNaN(endH) || isNaN(endM)) return 0;
-    let diff = (endH * 60 + endM) - (startH * 60 + startM);
-    if (diff < 0) diff += 24 * 60;
-
-    // Subtract break time if defined
-    if (user?.breakStartTime && user?.breakEndTime) {
-      const [breakStartH, breakStartM] = user.breakStartTime.split(":").map(Number);
-      const [breakEndH, breakEndM] = user.breakEndTime.split(":").map(Number);
-      if (!isNaN(breakStartH) && !isNaN(breakStartM) && !isNaN(breakEndH) && !isNaN(breakEndM)) {
-        let breakDiff = (breakEndH * 60 + breakEndM) - (breakStartH * 60 + breakStartM);
-        if (breakDiff < 0) breakDiff += 24 * 60;
-        diff -= breakDiff;
-      }
-    }
-
-    return diff;
-  }, [user?.companyStartTime, user?.companyEndTime, user?.breakStartTime, user?.breakEndTime]);
-
-  const isCompanyTimeDefined = Boolean(user?.companyStartTime && user?.companyEndTime);
+  const companyWorkingMinutes = workingHours.totalWorkingMinutes;
+  const isCompanyTimeDefined = workingHours.isWorkingTimeDefined;
 
   const remainingTime = useMemo(() => {
     return Math.max(0, companyWorkingMinutes - totalEstimatedTime);

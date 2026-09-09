@@ -247,8 +247,8 @@ export default function Projects({
   return (
     <div className="flex flex-col">
       <div className="flex gap-5 justify-between mb-5 shrink-0 items-center">
-        <div className="flex items-center">{headerLeft}</div>
-        <div className="flex gap-5 items-center ml-auto">
+        {headerLeft && <div className="flex items-center">{headerLeft}</div>}
+        <div className={`flex gap-5 items-center ${headerLeft ? "ml-auto" : "mr-auto"}`}>
           {isTeamLeader && (
             <>
               <ProjectSearchDropdown
@@ -267,7 +267,7 @@ export default function Projects({
             </>
           )}
         </div>
-        <div>
+        <div className={headerLeft ? "" : "ml-auto"}>
           {canToggleColumns && (
             <TooltipProvider>
               <Tooltip>

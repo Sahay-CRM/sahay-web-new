@@ -397,22 +397,26 @@ export default function ProjectDrawer({
       {/* Drawer */}
       <div
         ref={drawerRef}
-        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-lg z-50 transform transition-transform duration-300 ease-in-out
+        className={`fixed top-0 right-0 h-full w-full max-w-md bg-white shadow-lg z-50 flex flex-col transform transition-transform duration-300 ease-in-out
           ${open ? "translate-x-0" : "translate-x-full"}
         `}
         style={{ pointerEvents: open ? "auto" : "none" }}
       >
-        <div className="h-[calc(100vh-30px)] overflow-scroll">
-          <div className="flex justify-between items-center p-4 border-b">
-            <h2 className="text-lg font-semibold">Company Project</h2>
-            <button
-              onClick={onClose}
-              className="text-gray-500 text-2xl hover:text-gray-700"
-            >
-              &times;
-            </button>
-          </div>
-          <form onSubmit={handleSubmit(onSubmit)} className="p-4 space-y-4">
+        {/* Sticky Header */}
+        <div className="flex justify-between items-center p-4 border-b shrink-0 bg-white">
+          <h2 className="text-lg font-semibold">Company Project</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-500 text-2xl hover:text-gray-700 focus:outline-none"
+          >
+            &times;
+          </button>
+        </div>
+
+        {/* Form with Scrollable Content and Sticky Footer */}
+        <form onSubmit={handleSubmit(onSubmit)} className="flex-1 flex flex-col min-h-0 overflow-hidden">
+          {/* Scrollable Content Body */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-4">
             <div>
               <Controller
                 control={control}
@@ -589,16 +593,19 @@ export default function ProjectDrawer({
                 />
               )}
             />
+          </div>
+
+          {/* Sticky Footer */}
+          <div className="p-4 border-t shrink-0 bg-white">
             <Button
               type="submit"
-              // className="bg-primary text-white px-4 py-2 rounded hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               disabled={isPending}
             >
               {isPending && <Loader2 className="h-4 w-4 animate-spin" />}
               {isPending ? "Submitting..." : "Submit"}
             </Button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
 
       <Dialog open={isConfModalOpen} onOpenChange={setIsConfModalOpen}>

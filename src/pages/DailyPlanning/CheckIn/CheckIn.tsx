@@ -264,8 +264,7 @@ export default function CheckIn() {
               Working Hours Undefined
             </h3>
             <p className="text-slate-500 text-sm leading-relaxed">
-              Company has not defined their start time and end time. Please
-              provide this information first.
+              Please add Company Time and Company Shift first.
             </p>
           </div>
           {canEditCompanyProfile && (
@@ -997,7 +996,7 @@ export default function CheckIn() {
                 setOpenedFromPlanningModal(false);
               }
             }}
-            isPlanningMode={true}
+            isPlanningMode={isPlanningEditable}
             isToday={selectedDate === todayDate}
             hideProjectMeetingAdd={true}
             onPlanningSubmit={async (payload) => {
@@ -1021,7 +1020,7 @@ export default function CheckIn() {
               setIsOpenMeetingDrawer(false);
               setIsAddModalOpen(true);
             }}
-            isPlanningMode={true}
+            isPlanningMode={isPlanningEditable}
             onPlanningSubmit={async (payload) => {
               setIsOpenMeetingDrawer(false);
               await handleDirectSubmitPlanningItem({

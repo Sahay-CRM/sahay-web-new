@@ -86,6 +86,8 @@ interface EmployeeData {
   designation?: Designation | null;
   employee?: EmployeeDataModal;
   isDeactivated?: boolean;
+  timeShiftId?: string | null;
+  timeShift?: CompanyShift | null;
 }
 
 // kk
@@ -570,6 +572,7 @@ interface EmployeeCompany {
   companyEndTime?: string | null;
   breakStartTime?: string | null;
   breakEndTime?: string | null;
+  breakDuration?: number | null;
 }
 
 interface EmployeeDetailsById {
@@ -590,6 +593,8 @@ interface EmployeeDetailsById {
   photo?: string;
   isSuperAdmin: boolean;
   isDeactivated?: boolean;
+  timeShift?: CompanyShift | null;
+  timeShiftId?: string | null;
   employee?: {
     employeeEmail: string;
     employeeId: string;
@@ -608,6 +613,8 @@ interface AddEmployeeDetailsById {
   reportingManagerId?: string;
   department?: DepartmentData;
   designation?: Designation;
+  timeShiftId?: string;
+  timeShift?: CompanyShift | null;
   employee?: {
     employeeEmail: string;
     employeeId: string;
@@ -1665,7 +1672,20 @@ interface NotesGroupProps {
   groupType: string;
 }
 
+interface CompanyShift {
+  timeShiftId?: string;
+  startTime?: string | null;
+  endTime?: string | null;
+  isDefault: boolean;
+  breakDuration: number;
+  breakStartTime?: string | null;
+  breakEndTime?: string | null;
+  employeeIds: string[];
+}
+
 interface SimpleCompanyDetails {
+  breakDuration?: number;
+  shifts?: CompanyShift[];
   companyId: string;
   companyName: string;
   logo?: string;
@@ -1681,7 +1701,7 @@ interface SimpleCompanyDetails {
   companyAdminMobile: string;
   companyBillingName?: string;
   companyGst?: string;
-  companyMobile: string | null;
+  companyMobile?: string | null;
   companyWebsite?: string;
   accountPOC?: string;
   accountsPocEmail?: string;
@@ -1709,8 +1729,8 @@ interface SimpleCompanyDetails {
   date?: number;
   imageGst?: imageGst;
   imagePancard?: imageGst;
-  companyStartTime?: string;
-  companyEndTime?: string;
+  companyStartTime?: string | null;
+  companyEndTime?: string | null;
   breakStartTime?: string | null;
   breakEndTime?: string | null;
 }

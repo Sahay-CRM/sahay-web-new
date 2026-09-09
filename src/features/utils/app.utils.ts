@@ -431,7 +431,7 @@ export const formatAgendaTime = (time: string) => {
   return parts.length > 0 ? parts.join(" ") : "-";
 };
 
-export function formatTo12HourLower(timeStr?: string): string {
+export function formatTo12HourLower(timeStr?: string | null): string {
   if (!timeStr) return "Not set";
   const parts = timeStr.split(":");
   if (parts.length < 2) return timeStr;
@@ -458,6 +458,7 @@ export function generateTimeOptions(): { label: string; value: string }[] {
       options.push({ label, value });
     }
   }
+  options.push({ label: "11:59 PM", value: "23:59" });
   return options;
 }
 

@@ -100,6 +100,7 @@ const Urls = {
   addEmployee: () => `${baseUrl}/company/employee/create`,
   updateEmployee: (id: string) => `${baseUrl}/company/employee/update/${id}`,
   deleteEmployee: (id: string) => `${baseUrl}/company/employee/delete/${id}`,
+  getAllCompanyShifts: () => `${baseUrl}/company/shift/get-all`,
 
   dropdownCoreParameter: () => `${baseUrl}/core-param/get-all`,
 

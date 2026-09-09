@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useSelector } from "react-redux";
 
 import {
@@ -10,7 +10,7 @@ import {
   useGetStateDropdown,
 } from "@/features/api/CompanyProfile";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { docUploadMutation } from "@/features/api/file";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
@@ -18,6 +18,7 @@ import {
   deleteHolidayMutation,
   getholidayDropdown,
 } from "@/features/api/Holiday";
+import { toast } from "sonner";
 
 export default function useCompany() {
   const dataUrlToFile = (dataUrl: string, fileName: string): File => {
@@ -95,6 +96,61 @@ export default function useCompany() {
     deleteHoli(id);
   };
 
+  const companyFormValues = useMemo(() => {
+    if (!companyData) return undefined;
+    const rawSkipDays = companyData.kpiSkipDays as
+      | string
+      | string[]
+      | undefined;
+
+    const skipDaysValue = Array.isArray(rawSkipDays)
+      ? rawSkipDays
+      : rawSkipDays
+        ? rawSkipDays.split(",")
+        : [];
+
+    return {
+      companyId: companyData.companyId,
+      companyName: companyData.companyName,
+      annualTurnOver: companyData.annualTurnOver,
+      businessStartDate: companyData.businessStartDate?.split("T")[0],
+      companyAddress: companyData.companyAddress,
+      companyAdminEmail: companyData.companyAdminEmail,
+      companyAdminName: companyData.companyAdminName,
+      companyAdminMobile: companyData.companyAdminMobile,
+      companyBillingName: companyData.companyBillingName,
+      companyGst: companyData.companyGst,
+      companyMobile: companyData.companyMobile?.replace("+91", ""),
+      companyWebsite: companyData.companyWebsite,
+      accountPOC: companyData.accountPOC,
+      accountsPocEmail: companyData.accountsPocEmail,
+      pancardNumber: companyData.pancardNumber,
+      industryId: companyData.Industry?.industryId,
+      cityId: companyData.cityId,
+      stateId: companyData.stateId,
+      validationKey: companyData.validationKey,
+      countryId: companyData.countryId,
+      engagementTypeId: companyData.engagementTypeId,
+      accountPocMobile: companyData.companyMobile?.replace("+91", ""),
+      gstCertificate: companyData?.gstCertificate
+        ? `${ImageBaseURL}/share/company/gst/${companyData.gstCertificate}`
+        : "",
+      pancard: companyData?.pancard
+        ? `${ImageBaseURL}/share/company/pancard/${companyData.pancard}`
+        : "",
+      logo: companyData?.logo
+        ? `${ImageBaseURL}/share/company/logo/${companyData.logo}`
+        : "",
+      kpiSkipDays: skipDaysValue,
+      companyStartTime: companyData.companyStartTime,
+      companyEndTime: companyData.companyEndTime,
+      breakStartTime: companyData.breakStartTime,
+      breakEndTime: companyData.breakEndTime,
+      breakDuration: companyData.breakDuration,
+      shifts: companyData.shifts || [],
+    };
+  }, [companyData]);
+
   const {
     register,
     handleSubmit,
@@ -104,61 +160,15 @@ export default function useCompany() {
     watch,
     reset,
     trigger,
-  } = useForm<SimpleCompanyDetails>();
+  } = useForm<SimpleCompanyDetails>({
+    values: companyFormValues,
+  });
 
   useEffect(() => {
-    if (companyData) {
-      const rawSkipDays = companyData.kpiSkipDays as
-        | string
-        | string[]
-        | undefined;
-
-      const skipDaysValue = Array.isArray(rawSkipDays)
-        ? rawSkipDays
-        : rawSkipDays
-          ? rawSkipDays.split(",")
-          : [];
-
-      reset({
-        companyId: companyData.companyId,
-        companyName: companyData.companyName,
-        annualTurnOver: companyData.annualTurnOver,
-        businessStartDate: companyData.businessStartDate?.split("T")[0],
-        companyAddress: companyData.companyAddress,
-        companyAdminEmail: companyData.companyAdminEmail,
-        companyAdminName: companyData.companyAdminName,
-        companyAdminMobile: companyData.companyAdminMobile,
-        companyBillingName: companyData.companyBillingName,
-        companyGst: companyData.companyGst,
-        companyMobile: companyData.companyMobile?.replace("+91", ""),
-        companyWebsite: companyData.companyWebsite,
-        accountPOC: companyData.accountPOC,
-        accountsPocEmail: companyData.accountsPocEmail,
-        pancardNumber: companyData.pancardNumber,
-        industryId: companyData.Industry?.industryId,
-        cityId: companyData.cityId,
-        stateId: companyData.stateId,
-        validationKey: companyData.validationKey,
-        countryId: companyData.countryId,
-        engagementTypeId: companyData.engagementTypeId,
-        accountPocMobile: companyData.companyMobile?.replace("+91", ""),
-        gstCertificate: companyData?.gstCertificate
-          ? `${ImageBaseURL}/share/company/gst/${companyData.gstCertificate}`
-          : "",
-        pancard: companyData?.pancard
-          ? `${ImageBaseURL}/share/company/pancard/${companyData.pancard}`
-          : "",
-        logo: companyData?.logo
-          ? `${ImageBaseURL}/share/company/logo/${companyData.logo}`
-          : "",
-        kpiSkipDays: skipDaysValue,
-        companyStartTime: companyData.companyStartTime,
-        companyEndTime: companyData.companyEndTime,
-        breakStartTime: companyData.breakStartTime,
-        breakEndTime: companyData.breakEndTime,
-      });
+    if (companyFormValues) {
+      reset(companyFormValues);
     }
-  }, [companyData, reset]);
+  }, [companyFormValues, reset]);
 
   useEffect(() => {
     if (companyData?.imageGst?.fileId) {
@@ -245,6 +255,45 @@ export default function useCompany() {
 
   // Handle form submission
   const onSubmit = (data: SimpleCompanyDetails) => {
+    if (data.companyStartTime && !data.companyEndTime) {
+      toast.error("Company End time is required");
+      return;
+    }
+    if (!data.companyStartTime && data.companyEndTime) {
+      toast.error("Company Start time is required");
+      return;
+    }
+    if (data.shifts && data.shifts.length > 0) {
+      const seenShifts = new Set<string>();
+      for (let i = 0; i < data.shifts.length; i++) {
+        const s = data.shifts[i];
+        if (s.startTime && !s.endTime) {
+          toast.error(`Shift ${i + 1}: End time is required`);
+          return;
+        }
+        if (!s.startTime && s.endTime) {
+          toast.error(`Shift ${i + 1}: Start time is required`);
+          return;
+        }
+        if (s.startTime && s.endTime) {
+          const key = `${s.startTime}-${s.endTime}`;
+          if (seenShifts.has(key)) {
+            toast.error("Duplicate shift timings are not allowed");
+            return;
+          }
+          seenShifts.add(key);
+        }
+      }
+    }
+
+    const validShifts = (data.shifts || []).filter(
+      (s) => s.startTime && s.endTime
+    );
+    if (validShifts.length === 0) {
+      toast.error("At least one shift is required");
+      return;
+    }
+
     const payload = {
       companyId: data.companyId,
       companyName: data?.companyName,
@@ -273,10 +322,18 @@ export default function useCompany() {
       superAdmin: data?.superAdmin,
       kpiSkipDays: data.kpiSkipDays,
       validationKey: data.validationKey,
-      companyStartTime: data.companyStartTime,
-      companyEndTime: data.companyEndTime,
-      breakStartTime: data.breakStartTime,
-      breakEndTime: data.breakEndTime,
+      companyStartTime: data.companyStartTime || null,
+      companyEndTime: data.companyEndTime || null,
+      breakStartTime: data.breakStartTime || null,
+      breakEndTime: data.breakEndTime || null,
+      breakDuration: data.breakDuration,
+      shifts: data.shifts
+        ?.filter((s) => s.startTime || s.endTime)
+        .map((s) => ({
+          ...s,
+          startTime: s.startTime || null,
+          endTime: s.endTime || null,
+        })) || [],
     };
 
     addCompany(payload, {
@@ -383,6 +440,53 @@ export default function useCompany() {
     setIsEditing(false);
   };
 
+  const onInvalid = (errors: FieldErrors<SimpleCompanyDetails>) => {
+    if (errors.companyName?.message) {
+      toast.error(errors.companyName.message);
+      return;
+    }
+    if (errors.companyBillingName?.message) {
+      toast.error(errors.companyBillingName.message);
+      return;
+    }
+    if (errors.industryId?.message) {
+      toast.error(errors.industryId.message);
+      return;
+    }
+    if (errors.companyAddress?.message) {
+      toast.error(errors.companyAddress.message);
+      return;
+    }
+    if (errors.companyStartTime?.message) {
+      toast.error(errors.companyStartTime.message);
+      return;
+    }
+    if (errors.companyEndTime?.message) {
+      toast.error(errors.companyEndTime.message);
+      return;
+    }
+    if (errors.shifts) {
+      const shiftErrs = errors.shifts as Array<{
+        startTime?: { message?: string };
+        endTime?: { message?: string };
+      }>;
+      if (Array.isArray(shiftErrs)) {
+        for (let i = 0; i < shiftErrs.length; i++) {
+          const err = shiftErrs[i];
+          if (err?.startTime?.message) {
+            toast.error(`Shift ${i + 1}: ${err.startTime.message}`);
+            return;
+          }
+          if (err?.endTime?.message) {
+            toast.error(`Shift ${i + 1}: ${err.endTime.message}`);
+            return;
+          }
+        }
+      }
+    }
+    toast.error("Please fill in all required fields correctly");
+  };
+
   return {
     companyData,
     isEditing,
@@ -395,6 +499,7 @@ export default function useCompany() {
     closeLogoCrop,
     applyCroppedLogo,
     onSubmit,
+    onInvalid,
     control,
     setValue,
     watch,
@@ -426,3 +531,4 @@ export default function useCompany() {
     // formatOptions,
   };
 }
+

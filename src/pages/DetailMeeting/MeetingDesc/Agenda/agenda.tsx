@@ -284,6 +284,9 @@ export default function Agenda({
     projectsFireBase,
     tasksFireBase,
     isPending,
+    startMeetingLoading,
+    startDiscussionLoading,
+    goToConclusionLoading,
     handleStartMeeting,
     handleTogglePriority,
     handleCloseMeetingWithLog,
@@ -1093,7 +1096,7 @@ export default function Agenda({
                         {conclusionTime?.noOfKPIs}
                       </span>
                     </div>
-                    <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
+                    {/* <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                       <span className="font-medium text-sm">
                         Solved Agenda:
                       </span>
@@ -1108,7 +1111,7 @@ export default function Agenda({
                       <span className="font-bold">
                         {conclusionTime?.noOfUnsolvedIOs}
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                 </div>
               </div>
@@ -1121,7 +1124,7 @@ export default function Agenda({
                       variant="outline"
                       className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold flex items-center justify-center gap-2"
                       onClick={handleStartMeetingClick}
-                      isLoading={isPending}
+                      isLoading={startMeetingLoading || isPending}
                     >
                       Start Meeting
                     </Button>
@@ -1149,7 +1152,7 @@ export default function Agenda({
                         variant="outline"
                         className="w-[200px] h-[40px] bg-primary hover:bg-primary hover:text-white text-white rounded-[10px] cursor-pointer text-lg font-semibold"
                         onClick={handleStartDiscussionClick}
-                        isLoading={isPending}
+                        isLoading={startDiscussionLoading}
                       >
                         Start Discussion
                       </Button>
@@ -1332,7 +1335,13 @@ export default function Agenda({
               )}
             </div>
             <div
-              className={`mt-1 pr-1 w-full overflow-auto ${meetingStatus === "DISCUSSION" ? "h-[calc(var(--vh,100vh)-230px)]" : "h-[calc(var(--vh,100vh)-260px)]"}`}
+              className={`mt-1 pr-1 w-full overflow-auto ${
+                meetingStatus === "DISCUSSION"
+                  ? "h-[calc(var(--vh,100vh)-230px)]"
+                  : meetingStatus === "CONCLUSION" || meetingStatus === "ENDED"
+                    ? "h-[calc(var(--vh,100vh)-165px)]"
+                    : "h-[calc(var(--vh,100vh)-260px)]"
+              }`}
             >
               {agendaList && agendaList.length > 0 ? (
                 <DndContext
@@ -1438,7 +1447,7 @@ export default function Agenda({
                             key={config.key}
                             className={`w-32 mx-auto border border-b-0 shadow-border rounded-b-none hover:bg-white cursor-pointer flex items-center ${
                               isActive
-                                ? "bg-white h-[50px] shadow-none border-t-4 border-l-1 border-r-1 border-primary z-10"
+                                ? "bg-white h-[50px] shadow-none border-t-4 border-l border-r border-primary z-10"
                                 : "bg-gray-100 h-12"
                             }`}
                             style={
@@ -1543,7 +1552,7 @@ export default function Agenda({
                       {conclusionTime?.noOfKPIs}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
+                  {/* <div className="flex items-center gap-2 border px-3 py-1 rounded-lg bg-primary text-white">
                     <span className="font-medium text-sm">Solved Agenda:</span>
                     <span className="font-bold">
                       {conclusionTime?.noOfSolvedIOs}
@@ -1556,7 +1565,7 @@ export default function Agenda({
                     <span className="font-bold">
                       {conclusionTime?.noOfUnsolvedIOs}
                     </span>
-                  </div>
+                  </div> */}
                 </div>
               </div>
             )}
@@ -1636,6 +1645,7 @@ export default function Agenda({
                             },
                           });
                         }}
+                        isLoading={goToConclusionLoading}
                       >
                         Go To Conclusion
                       </Button>
@@ -1692,26 +1702,16 @@ export default function Agenda({
             </div>
           </div>
           <div
-            className={`
-    flex justify-center w-full h-[calc(var(--vh,100vh)-140px)] relative border-primary
-
-    ${
-      (meetingStatus === "DISCUSSION" ||
-        meetingStatus === "CONCLUSION" ||
-        meetingStatus === "ENDED") &&
-      (layoutMode === "tab"
-        ? " border-t-1 border-l-1 border-r-1 border-b-1 rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
-        : " border-1 rounded-[10px]")
-    }
-
-    ${
-      meetingStatus !== "DISCUSSION" &&
-      meetingStatus !== "CONCLUSION" &&
-      meetingStatus !== "ENDED"
-        ? "p-4"
-        : ""
-    }
-  `}
+            className={cn(
+              "flex justify-center w-full relative border-primary overflow-hidden",
+              meetingStatus === "CONCLUSION" || meetingStatus === "ENDED"
+                ? "h-[calc(var(--vh,100vh)-205px)] border rounded-[10px]"
+                : meetingStatus === "DISCUSSION"
+                  ? layoutMode === "tab"
+                    ? "h-[calc(var(--vh,100vh)-170px)] border rounded-tr-[10px] rounded-bl-[10px] rounded-br-[10px]"
+                    : "h-[calc(var(--vh,100vh)-170px)] border rounded-[10px]"
+                  : "h-[calc(var(--vh,100vh)-140px)] p-4"
+            )}
           >
             {meetingStatus === "NOT_STARTED" ? (
               hasSummary ? (
@@ -2111,10 +2111,15 @@ export default function Agenda({
                 };
 
                 return (
-                  <div className="h-[calc(var(--vh,100vh)-200px)] flex flex-col overflow-y-auto overflow-x-hidden mt-0 p-4 bg-gray-200 rounded-xl w-full">
+                  <div
+                    className={cn(
+                      "h-full flex flex-col overflow-y-auto overflow-x-hidden w-full",
+                      isStacked ? "p-4 bg-gray-200" : "p-4 bg-white"
+                    )}
+                  >
                     <Suspense fallback={<div>Loading...</div>}>
                       {!isStacked ? (
-                        <div className="w-full bg-white p-5 rounded-xl border border-gray-300 shadow-sm">
+                        <div className="w-full bg-white">
                           {activeTab === "kpis" && agendaSections["kpis"]}
                           {activeTab === "projects" &&
                             agendaSections["projects"]}

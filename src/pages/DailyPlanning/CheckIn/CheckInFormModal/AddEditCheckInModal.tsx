@@ -173,7 +173,7 @@ export default function AddEditCheckInModal({
             <div className="flex-1 space-y-1 text-left">
               <p className="font-semibold text-sm">Overtime Warning</p>
               <p className="text-xs text-rose-700 leading-relaxed font-medium">
-                Your total planned time exceeds the company's daily working hours.
+                Your total planned time exceeds daily working hours.
               </p>
             </div>
           </div>

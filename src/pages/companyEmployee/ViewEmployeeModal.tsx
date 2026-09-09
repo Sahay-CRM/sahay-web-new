@@ -1,6 +1,6 @@
 import ModalData from "@/components/shared/Modal/ModalData";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { formatEmployeeType } from "@/features/utils/app.utils";
+import { formatEmployeeType, formatTo12HourLower } from "@/features/utils/app.utils";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
@@ -80,6 +80,17 @@ const ViewMeetingModal: React.FC<ViewMeetingModalProps> = ({
           <div>
             <span className="font-medium text-primary">Employee Mobile : </span>
             {modalData.employeeMobile}
+          </div>
+        )}
+        {modalData?.timeShift && (
+          <div>
+            <span className="font-medium text-primary">Time Shift : </span>
+            {(formatTo12HourLower(modalData.timeShift.startTime) || modalData.timeShift.startTime)} - {(formatTo12HourLower(modalData.timeShift.endTime) || modalData.timeShift.endTime)}
+            {Boolean(modalData.timeShift.breakDuration) && (
+              <span className="text-gray-500 text-sm ml-2">
+                (Break: {Math.floor((modalData.timeShift.breakDuration || 0) / 60)} hr {(modalData.timeShift.breakDuration || 0) % 60} min)
+              </span>
+            )}
           </div>
         )}
       </div>
