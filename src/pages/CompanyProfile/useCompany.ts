@@ -10,7 +10,7 @@ import {
   useGetStateDropdown,
 } from "@/features/api/CompanyProfile";
 import { getUserPermission } from "@/features/selectors/auth.selector";
-import { useForm } from "react-hook-form";
+import { useForm, FieldErrors } from "react-hook-form";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import { docUploadMutation } from "@/features/api/file";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
@@ -286,6 +286,14 @@ export default function useCompany() {
       }
     }
 
+    const validShifts = (data.shifts || []).filter(
+      (s) => s.startTime && s.endTime
+    );
+    if (validShifts.length === 0) {
+      toast.error("At least one shift is required");
+      return;
+    }
+
     const payload = {
       companyId: data.companyId,
       companyName: data?.companyName,
@@ -432,6 +440,53 @@ export default function useCompany() {
     setIsEditing(false);
   };
 
+  const onInvalid = (errors: FieldErrors<SimpleCompanyDetails>) => {
+    if (errors.companyName?.message) {
+      toast.error(errors.companyName.message);
+      return;
+    }
+    if (errors.companyBillingName?.message) {
+      toast.error(errors.companyBillingName.message);
+      return;
+    }
+    if (errors.industryId?.message) {
+      toast.error(errors.industryId.message);
+      return;
+    }
+    if (errors.companyAddress?.message) {
+      toast.error(errors.companyAddress.message);
+      return;
+    }
+    if (errors.companyStartTime?.message) {
+      toast.error(errors.companyStartTime.message);
+      return;
+    }
+    if (errors.companyEndTime?.message) {
+      toast.error(errors.companyEndTime.message);
+      return;
+    }
+    if (errors.shifts) {
+      const shiftErrs = errors.shifts as Array<{
+        startTime?: { message?: string };
+        endTime?: { message?: string };
+      }>;
+      if (Array.isArray(shiftErrs)) {
+        for (let i = 0; i < shiftErrs.length; i++) {
+          const err = shiftErrs[i];
+          if (err?.startTime?.message) {
+            toast.error(`Shift ${i + 1}: ${err.startTime.message}`);
+            return;
+          }
+          if (err?.endTime?.message) {
+            toast.error(`Shift ${i + 1}: ${err.endTime.message}`);
+            return;
+          }
+        }
+      }
+    }
+    toast.error("Please fill in all required fields correctly");
+  };
+
   return {
     companyData,
     isEditing,
@@ -444,6 +499,7 @@ export default function useCompany() {
     closeLogoCrop,
     applyCroppedLogo,
     onSubmit,
+    onInvalid,
     control,
     setValue,
     watch,
@@ -475,3 +531,4 @@ export default function useCompany() {
     // formatOptions,
   };
 }
+

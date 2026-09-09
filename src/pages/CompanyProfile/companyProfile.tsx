@@ -28,7 +28,6 @@ import ImageCropModal from "@/components/shared/Modal/ImageCropModal";
 import { ImageBaseURL } from "@/features/utils/urls.utils";
 import FormSelect from "@/components/shared/Form/FormSelect";
 import AddHolidaysForm from "../CompanyHoliday/AddHolidayFormModal";
-// import { FormLabel } from "@/components/ui/form";
 
 const toMinutes = (timeStr?: string | null): number | null => {
   if (!timeStr) return null;
@@ -51,6 +50,7 @@ export default function CompanyProfile() {
     closeLogoCrop,
     applyCroppedLogo,
     onSubmit,
+    onInvalid,
     setValue,
     control,
     watch,
@@ -253,7 +253,7 @@ export default function CompanyProfile() {
                       <span>Cancel</span>
                     </Button>
                     <Button
-                      onClick={handleSubmit(onSubmit)}
+                      onClick={handleSubmit(onSubmit, onInvalid)}
                       className="flex-1 sm:w-auto flex items-center justify-center gap-2 bg-primary text-white rounded-lg hover:bg-primary transition-colors"
                     >
                       <Save className="w-4 h-4" />
@@ -266,7 +266,7 @@ export default function CompanyProfile() {
           </div>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)}>
+        <form onSubmit={handleSubmit(onSubmit, onInvalid)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="bg-white rounded-xl shadow-sm border border-gray-200 py-4 px-4 sm:px-8">
               <h2 className="text-lg font-semibold text-gray-900 mb-4 pb-2 border-b border-gray-200">
@@ -361,8 +361,7 @@ export default function CompanyProfile() {
                               field.onChange(value.value);
                               setValue("industryId", value.value);
                             }}
-                            className="mb-0"
-                            labelClass="mb-2"
+                            labelClass="mt-0"
                             onSearchChange={setIsIndSearch}
                           />
                         )}
@@ -429,6 +428,7 @@ export default function CompanyProfile() {
                         })}
                         error={errors.accountPOC}
                         className="m-0"
+                        isMandatory
                       />
                     ) : (
                       <>
@@ -444,6 +444,7 @@ export default function CompanyProfile() {
                   <div className="">
                     {isEditing ? (
                       <FormInputField
+                      isMandatory
                         label="Account's POC Mobile"
                         {...register("accountPocMobile", {
                           required: "Please Enter Account's POC Mobile",
@@ -451,6 +452,7 @@ export default function CompanyProfile() {
                             value: /^[6-9]\d{9}$/,
                             message: "Enter valid mobile number",
                           },
+                        
                         })}
                         selectedCodeValue={"+91"}
                         error={errors.accountPocMobile}
@@ -475,6 +477,7 @@ export default function CompanyProfile() {
                     {isEditing ? (
                       <FormInputField
                         label="Account's POC Email"
+                        isMandatory
                         {...register("accountsPocEmail", {
                           required: "Please Enter Account's POC email",
                           pattern: {
@@ -613,6 +616,7 @@ export default function CompanyProfile() {
                       <Controller
                         name="companyStartTime"
                         control={control}
+                        
                         rules={{
                           validate: (val, formValues) => {
                             const endVal = formValues?.companyEndTime;
@@ -645,6 +649,7 @@ export default function CompanyProfile() {
                                 }
                               }, 0);
                             }}
+                            isMandatory
                             label="Company Start Time"
                             placeholder="Select Start Time"
                             error={errors.companyStartTime}
@@ -701,6 +706,7 @@ export default function CompanyProfile() {
                                 }
                               }, 0);
                             }}
+                            isMandatory
                             label="Company End Time"
                             placeholder="Select End Time"
                             error={errors.companyEndTime}
@@ -722,18 +728,26 @@ export default function CompanyProfile() {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Address
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Address {isEditing && <span className="text-red-500">*</span>}
                   </label>
-
+    
+                  
                   {isEditing ? (
-                    <textarea
-                      {...register("companyAddress", {
-                        required: "Company address is required",
-                      })}
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-                    />
+                    <div>
+                      <textarea
+                        {...register("companyAddress", {
+                          required: "Company address is required",
+                        })}
+                        rows={3}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                      />
+                      {errors.companyAddress && (
+                        <span className="before:content-['*'] text-red-600 text-sm font-normal mt-1 block">
+                          {errors.companyAddress.message}
+                        </span>
+                      )}
+                    </div>
                   ) : (
                     <p className="text-gray-900 bg-gray-50 px-3 py-1 rounded-lg break-words">
                       {companyData.companyAddress}
@@ -914,7 +928,7 @@ export default function CompanyProfile() {
               <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-gray-200">
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg font-semibold text-gray-900">
-                    Company Shifts
+                    Company Shifts <span className="text-red-500">*</span>
                   </h2>
                   {(watchedStartTime || companyData?.companyStartTime) && (watchedEndTime || companyData?.companyEndTime) && (
                     <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200">
@@ -969,7 +983,7 @@ export default function CompanyProfile() {
                       <div key={field.id} className="flex flex-row flex-wrap sm:flex-nowrap items-start gap-3 p-3 border border-gray-200 rounded-lg bg-gray-50">
                         {/* Start Time */}
                         <div className="w-36 shrink-0">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">start</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Start</label>
                           <Controller
                             control={control}
                             name={`shifts.${index}.startTime` as const}
@@ -1053,7 +1067,7 @@ export default function CompanyProfile() {
 
                         {/* End Time */}
                         <div className="w-36 shrink-0">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">end</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">End</label>
                           <Controller
                             control={control}
                             name={`shifts.${index}.endTime` as const}
@@ -1131,7 +1145,7 @@ export default function CompanyProfile() {
 
                         {/* Break Hours/Minutes */}
                         <div className="flex flex-col shrink-0">
-                          <label className="block text-sm font-medium text-gray-700 mb-1">break duration</label>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Break duration</label>
                           <div className="flex items-center gap-1.5 h-10 font-medium text-sm text-gray-700">
                             <input
                               type="number"
@@ -1193,7 +1207,7 @@ export default function CompanyProfile() {
                               )}
                             />
                             <label htmlFor={`shifts-def-${index}`} className="text-sm font-medium text-gray-700 cursor-pointer select-none">
-                              default set
+                              Default set
                             </label>
                           </div>
                         </div>
@@ -1240,17 +1254,21 @@ export default function CompanyProfile() {
                   })}
 
                   {fields.length === 0 && (
-                    <div className="text-center py-4 border border-dashed border-gray-300 rounded-lg bg-gray-50">
-                      <p className="text-sm text-gray-500 mb-2">No shifts defined.</p>
+                    <div className="text-center py-5 border border-dashed border-red-300 rounded-lg bg-red-50/50">
+                      <p className="text-sm font-medium text-red-600 mb-2">
+                        At least one shift is required.
+                      </p>
                       <Button
                         type="button"
-                        onClick={() => append({
-                          startTime: "",
-                          endTime: "",
-                          isDefault: false,
-                          breakDuration: 0,
-                          employeeIds: []
-                        })}
+                        onClick={() =>
+                          append({
+                            startTime: "",
+                            endTime: "",
+                            isDefault: true,
+                            breakDuration: 0,
+                            employeeIds: [],
+                          })
+                        }
                         className="px-3 py-1.5 text-sm bg-primary text-white rounded hover:opacity-90"
                       >
                         Add First Shift
