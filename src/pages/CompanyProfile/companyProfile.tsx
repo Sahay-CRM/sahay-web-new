@@ -608,16 +608,20 @@ export default function CompanyProfile() {
                   </div>
                 </div>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <div className="w-full sm:w-1/3">
+                  <div className="w-full sm:w-1/2">
                     {isEditing ? (
                       <Controller
                         name="companyStartTime"
                         control={control}
                         rules={{
-                          validate: (val) => {
+                          validate: (val, formValues) => {
+                            const endVal = formValues?.companyEndTime;
+                            if (!val && endVal) {
+                              return "Start time is required";
+                            }
                             if (!val) return true;
                             const startMin = toMinutes(val);
-                            const endMin = toMinutes(watchedEndTime);
+                            const endMin = toMinutes(endVal);
                             if (startMin !== null && endMin !== null) {
                               if (startMin === endMin) {
                                 return "Start time cannot be equal to End time";
@@ -636,7 +640,7 @@ export default function CompanyProfile() {
                             onSelect={(val) => {
                               field.onChange(val.value);
                               setTimeout(() => {
-                                if (watchedEndTime || errors.companyEndTime) {
+                                if (watchedEndTime) {
                                   trigger("companyEndTime");
                                 }
                               }, 0);
@@ -660,15 +664,19 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  <div className="w-full sm:w-1/3">
+                  <div className="w-full sm:w-1/2">
                     {isEditing ? (
                       <Controller
                         name="companyEndTime"
                         control={control}
                         rules={{
-                          validate: (val) => {
+                          validate: (val, formValues) => {
+                            const startVal = formValues?.companyStartTime;
+                            if (!val && startVal) {
+                              return "End time is required";
+                            }
                             if (!val) return true;
-                            const startMin = toMinutes(watchedStartTime);
+                            const startMin = toMinutes(startVal);
                             const endMin = toMinutes(val);
                             if (startMin !== null && endMin !== null) {
                               if (startMin === endMin) {
@@ -688,7 +696,7 @@ export default function CompanyProfile() {
                             onSelect={(val) => {
                               field.onChange(val.value);
                               setTimeout(() => {
-                                if (watchedStartTime || errors.companyStartTime) {
+                                if (watchedStartTime) {
                                   trigger("companyStartTime");
                                 }
                               }, 0);
@@ -712,128 +720,6 @@ export default function CompanyProfile() {
                       </>
                     )}
                   </div>
-                  {/* <div className="w-full sm:w-1/3">
-                    {isEditing ? (
-                      <div className="flex flex-col">
-                        <FormLabel className="mb-3">
-                          Break Duration
-                        </FormLabel>
-                        <div className="flex items-center gap-2 h-10 px-4  bg-white">
-                          <input
-                            type="number"
-                            min={0}
-                            max={23}
-                            value={
-                              Math.floor((Number(watch("breakDuration")) || 0) / 60) || ""
-                            }
-                            onChange={(e) => {
-                              const hr = parseInt(e.target.value, 10) || 0;
-                              const currentMin =
-                                (Number(watch("breakDuration")) || 0) % 60;
-                              setValue("breakDuration", hr * 60 + currentMin);
-                            }}
-                            placeholder="0"
-                            className="w-10 text-center bg-transparent border-b-2 border-gray-400 rounded-none focus:outline-none focus:border-primary px-0.5 py-0.5 text-sm font-normal [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <span className="text-sm font-medium text-gray-700">hr</span>
-
-                          <input
-                            type="number"
-                            min={0}
-                            max={59}
-                            value={
-                              (Number(watch("breakDuration")) || 0) % 60 || ""
-                            }
-                            onChange={(e) => {
-                              const min = parseInt(e.target.value, 10) || 0;
-                              const currentHr = Math.floor(
-                                (Number(watch("breakDuration")) || 0) / 60
-                              );
-                              setValue("breakDuration", currentHr * 60 + min);
-                            }}
-                            placeholder="00"
-                            className="w-10 text-center bg-transparent border-b-2 border-gray-400 rounded-none focus:outline-none focus:border-primary px-0.5 py-0.5 text-sm font-normal [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <span className="text-sm font-medium text-gray-700">min</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Break Duration
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                          {(() => {
-                            const duration = Number(companyData.breakDuration) || 0;
-                            const hr = Math.floor(duration / 60);
-                            const min = duration % 60;
-                            return `${hr} hr ${min} min`;
-                          })()}
-                        </p>
-                      </>
-                    )}
-                  </div> */}
-                  {/* <div className="w-full sm:w-1/3">
-                    {isEditing ? (
-                      <div className="flex flex-col">
-                        <FormLabel className="mb-3">
-                          Break Duration
-                        </FormLabel>
-                        <div className="flex items-center gap-2 h-10 px-4  bg-white">
-                          <input
-                            type="number"
-                            min={0}
-                            max={23}
-                            value={
-                              Math.floor((Number(watch("breakDuration")) || 0) / 60) || ""
-                            }
-                            onChange={(e) => {
-                              const hr = parseInt(e.target.value, 10) || 0;
-                              const currentMin =
-                                (Number(watch("breakDuration")) || 0) % 60;
-                              setValue("breakDuration", hr * 60 + currentMin);
-                            }}
-                            placeholder="0"
-                            className="w-10 text-center bg-transparent border-b-2 border-gray-400 rounded-none focus:outline-none focus:border-primary px-0.5 py-0.5 text-sm font-normal [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <span className="text-sm font-medium text-gray-700">hr</span>
-
-                          <input
-                            type="number"
-                            min={0}
-                            max={59}
-                            value={
-                              (Number(watch("breakDuration")) || 0) % 60 || ""
-                            }
-                            onChange={(e) => {
-                              const min = parseInt(e.target.value, 10) || 0;
-                              const currentHr = Math.floor(
-                                (Number(watch("breakDuration")) || 0) / 60
-                              );
-                              setValue("breakDuration", currentHr * 60 + min);
-                            }}
-                            placeholder="00"
-                            className="w-10 text-center bg-transparent border-b-2 border-gray-400 rounded-none focus:outline-none focus:border-primary px-0.5 py-0.5 text-sm font-normal [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                          />
-                          <span className="text-sm font-medium text-gray-700">min</span>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <label className="block text-sm font-medium text-gray-700">
-                          Break Duration
-                        </label>
-                        <p className="text-gray-900 bg-gray-50 px-3 py-2 rounded-lg">
-                          {(() => {
-                            const duration = Number(companyData.breakDuration) || 0;
-                            const hr = Math.floor(duration / 60);
-                            const min = duration % 60;
-                            return `${hr} hr ${min} min`;
-                          })()}
-                        </p>
-                      </>
-                    )}
-                  </div> */}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
@@ -1088,27 +974,33 @@ export default function CompanyProfile() {
                             control={control}
                             name={`shifts.${index}.startTime` as const}
                             rules={{
-                              validate: (val) => {
+                              validate: (val, formValues) => {
+                                const currentShift = formValues?.shifts?.[index];
+                                const endVal = currentShift?.endTime;
+                                if (!val && endVal) {
+                                  return "Start time is required";
+                                }
                                 if (!val) return true;
                                 const valMin = toMinutes(val);
                                 if (valMin === null) return true;
 
                                 // Company operating hours check
-                                if (watchedStartTime) {
-                                  const compStartMin = toMinutes(watchedStartTime);
+                                const compStart = formValues?.companyStartTime;
+                                const compEnd = formValues?.companyEndTime;
+                                if (compStart) {
+                                  const compStartMin = toMinutes(compStart);
                                   if (compStartMin !== null && valMin < compStartMin) {
                                     return "Must be after company start time";
                                   }
                                 }
-                                if (watchedEndTime) {
-                                  const compEndMin = toMinutes(watchedEndTime);
+                                if (compEnd) {
+                                  const compEndMin = toMinutes(compEnd);
                                   if (compEndMin !== null && valMin > compEndMin) {
                                     return "Must be before company end time";
                                   }
                                 }
 
                                 // Shift End Time check
-                                const endVal = watch(`shifts.${index}.endTime`);
                                 if (endVal) {
                                   const endMin = toMinutes(endVal);
                                   if (endMin !== null) {
@@ -1118,6 +1010,13 @@ export default function CompanyProfile() {
                                     if (valMin > endMin) {
                                       return "Start time must be before End time";
                                     }
+                                  }
+                                  const isDuplicate = formValues?.shifts?.some(
+                                    (s: CompanyShift, i: number) =>
+                                      i !== index && s?.startTime === val && s?.endTime === endVal
+                                  );
+                                  if (isDuplicate) {
+                                    return "Duplicate shift timing not allowed";
                                   }
                                 }
                                 return true;
@@ -1131,7 +1030,7 @@ export default function CompanyProfile() {
                                   selectField.onChange(val.value);
                                   setTimeout(() => {
                                     const endVal = watch(`shifts.${index}.endTime`);
-                                    if (endVal || shiftErrors?.[index]?.endTime) {
+                                    if (endVal) {
                                       trigger(`shifts.${index}.endTime`);
                                     }
                                   }, 0);
@@ -1159,27 +1058,33 @@ export default function CompanyProfile() {
                             control={control}
                             name={`shifts.${index}.endTime` as const}
                             rules={{
-                              validate: (val) => {
+                              validate: (val, formValues) => {
+                                const currentShift = formValues?.shifts?.[index];
+                                const startVal = currentShift?.startTime;
+                                if (!val && startVal) {
+                                  return "End time is required";
+                                }
                                 if (!val) return true;
                                 const valMin = toMinutes(val);
                                 if (valMin === null) return true;
 
                                 // Company operating hours check
-                                if (watchedStartTime) {
-                                  const compStartMin = toMinutes(watchedStartTime);
+                                const compStart = formValues?.companyStartTime;
+                                const compEnd = formValues?.companyEndTime;
+                                if (compStart) {
+                                  const compStartMin = toMinutes(compStart);
                                   if (compStartMin !== null && valMin < compStartMin) {
                                     return "Must be after company start time";
                                   }
                                 }
-                                if (watchedEndTime) {
-                                  const compEndMin = toMinutes(watchedEndTime);
+                                if (compEnd) {
+                                  const compEndMin = toMinutes(compEnd);
                                   if (compEndMin !== null && valMin > compEndMin) {
                                     return "Must be before company end time";
                                   }
                                 }
 
                                 // Shift Start Time check
-                                const startVal = watch(`shifts.${index}.startTime`);
                                 if (startVal) {
                                   const startMin = toMinutes(startVal);
                                   if (startMin !== null) {
@@ -1189,6 +1094,13 @@ export default function CompanyProfile() {
                                     if (startMin > valMin) {
                                       return "End time must be after Start time";
                                     }
+                                  }
+                                  const isDuplicate = formValues?.shifts?.some(
+                                    (s: CompanyShift, i: number) =>
+                                      i !== index && s?.startTime === startVal && s?.endTime === val
+                                  );
+                                  if (isDuplicate) {
+                                    return "Duplicate shift timing not allowed";
                                   }
                                 }
                                 return true;
@@ -1202,7 +1114,7 @@ export default function CompanyProfile() {
                                   selectField.onChange(val.value);
                                   setTimeout(() => {
                                     const startVal = watch(`shifts.${index}.startTime`);
-                                    if (startVal || shiftErrors?.[index]?.startTime) {
+                                    if (startVal) {
                                       trigger(`shifts.${index}.startTime`);
                                     }
                                   }, 0);

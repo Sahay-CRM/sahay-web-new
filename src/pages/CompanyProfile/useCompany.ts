@@ -18,6 +18,7 @@ import {
   deleteHolidayMutation,
   getholidayDropdown,
 } from "@/features/api/Holiday";
+import { toast } from "sonner";
 
 export default function useCompany() {
   const dataUrlToFile = (dataUrl: string, fileName: string): File => {
@@ -254,6 +255,37 @@ export default function useCompany() {
 
   // Handle form submission
   const onSubmit = (data: SimpleCompanyDetails) => {
+    if (data.companyStartTime && !data.companyEndTime) {
+      toast.error("Company End time is required");
+      return;
+    }
+    if (!data.companyStartTime && data.companyEndTime) {
+      toast.error("Company Start time is required");
+      return;
+    }
+    if (data.shifts && data.shifts.length > 0) {
+      const seenShifts = new Set<string>();
+      for (let i = 0; i < data.shifts.length; i++) {
+        const s = data.shifts[i];
+        if (s.startTime && !s.endTime) {
+          toast.error(`Shift ${i + 1}: End time is required`);
+          return;
+        }
+        if (!s.startTime && s.endTime) {
+          toast.error(`Shift ${i + 1}: Start time is required`);
+          return;
+        }
+        if (s.startTime && s.endTime) {
+          const key = `${s.startTime}-${s.endTime}`;
+          if (seenShifts.has(key)) {
+            toast.error("Duplicate shift timings are not allowed");
+            return;
+          }
+          seenShifts.add(key);
+        }
+      }
+    }
+
     const payload = {
       companyId: data.companyId,
       companyName: data?.companyName,
