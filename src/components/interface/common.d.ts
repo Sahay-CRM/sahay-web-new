@@ -518,6 +518,7 @@ interface BaseResponse<T> {
   message: string;
   currentPage: number;
   totalCount: number;
+  overDueCount?: number;
   hasMore: boolean;
   pageSize: number;
   totalPage: number;
