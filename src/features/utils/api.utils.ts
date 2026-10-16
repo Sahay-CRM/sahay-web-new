@@ -66,9 +66,9 @@ export default class Api {
     return axiosInstance.post<T>(url!, data, restConfig);
   }
 
-  static delete<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
-    const { url } = config;
-    return axiosInstance.delete<T>(url!);
+ static delete<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {
+    const { url, ...restConfig } = config;
+    return axiosInstance.delete<T>(url!, restConfig);
   }
 
   static put<T>(config: AxiosRequestConfig): Promise<AxiosResponse<T>> {

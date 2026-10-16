@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import FormDateTimePicker from "@/components/shared/FormDateTimePicker/formDateTimePicker";
 import { useAddCompanyTaskSingle } from "./useAddCompanyTaskSingle";
 import { useGetCompanyTaskSearch } from "@/features/api/companyTask";
+import useGetCompanyProjectSearchList from "@/features/api/companyProject/useGetCompanyProjectSearchList";
 import { useBreadcrumbs } from "@/features/context/BreadcrumbContext";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import PageNotAccess from "@/pages/PageNoAccess";
@@ -44,9 +45,9 @@ export default function AddCompanyTaskSingle() {
     onSubmit,
     methods,
     employeedata,
-    projectListdata,
     setPaginationFilterEmployee,
     setPaginationFilterProject,
+    paginationFilterProject,
     setPaginationFilterMeeting,
     meetingData,
     taskId,
@@ -155,6 +156,10 @@ export default function AddCompanyTaskSingle() {
   const { data: taskSearchData } = useGetCompanyTaskSearch(
     shouldSearch ? taskNameValue : "",
   );
+  const { data: projectSearchListData } = useGetCompanyProjectSearchList(
+    paginationFilterProject.search || "",
+    watch("project") || taskDataById?.data?.projectId || undefined,
+  );
 
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
   const searchDropdownRef = useRef<HTMLDivElement>(null);
@@ -201,12 +206,12 @@ export default function AddCompanyTaskSingle() {
   const deadlineVal = watch("taskDeadline");
   const statusVal = watch("taskStatusId");
 
-  const projectOptions = projectListdata?.data
-    ? projectListdata.data.map((p) => ({
-        label: p.projectName || "",
-        value: p.projectId || "",
-      }))
-    : [];
+  const projectList = (projectSearchListData?.data ??
+    []) as ProjectSearchResponse[];
+  const projectOptions = projectList.map((p) => ({
+    label: p.projectName || "",
+    value: p.projectId || "",
+  }));
 
 interface GroupedCompanyMeetings {
   detailMeetings?: CompanyMeetingDataProps[];
@@ -261,7 +266,7 @@ interface GroupedCompanyMeetings {
       }))
     : [];
 
-  const selectedProject = projectListdata?.data?.find((p) => p.projectId === projectVal);
+  const selectedProject = projectList.find((p) => p.projectId === projectVal);
   const selectedMeeting = useMemo(() => {
     if (!meetingData?.data) return null;
     const rawData = meetingData.data as unknown as GroupedCompanyMeetings;

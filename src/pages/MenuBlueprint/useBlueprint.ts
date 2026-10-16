@@ -166,7 +166,7 @@ export default function useBlueprint() {
 
       // 3. Determine Initial Year Columns Range
       const defaultYearsCount = Number(import.meta.env.VITE_BLUEPRINT_YEARS_COUNT) || 5;
-      let maxObjYear = defaultYearsCount;
+      let maxObjYear = 0;
       if (blueprintRes.objectives) {
         blueprintRes.objectives.forEach(obj => {
           obj.goalValues?.forEach(val => {
@@ -175,7 +175,9 @@ export default function useBlueprint() {
           });
         });
       }
-
+      // Fall back to default columns only when no saved year values exist
+      if (maxObjYear === 0) maxObjYear = defaultYearsCount;
+      
       let maxSubYear = 0;
       let minSubYear = 1;
       if (blueprintRes.subjectives) {

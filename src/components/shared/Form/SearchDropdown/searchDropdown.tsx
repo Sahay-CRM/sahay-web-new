@@ -103,6 +103,19 @@ const SearchDropdown = ({
     }
   }, [open]);
 
+  // When the dropdown closes (select, clear, outside click) reset the search
+  // so the parent doesn't keep serving results of the previous search.
+  const lastSentSearchRef = useRef("");
+  useEffect(() => {
+    if (open) return;
+    if (query) setQuery("");
+    if (lastSentSearchRef.current) {
+      lastSentSearchRef.current = "";
+      onSearchChange?.("");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
   return (
     <div className={twMerge("relative w-full", className)}>
       {label && (
@@ -189,6 +202,7 @@ const SearchDropdown = ({
                 value={query}
                 onChange={(e) => {
                   setQuery(e.target.value);
+                  lastSentSearchRef.current = e.target.value;
                   if (onSearchChange) onSearchChange(e.target.value);
                 }}
                 placeholder="Search..."

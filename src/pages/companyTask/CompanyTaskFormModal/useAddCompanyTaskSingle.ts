@@ -1,6 +1,5 @@
 import { useForm } from "react-hook-form";
 import { useState, useEffect } from "react";
-import { useGetCompanyProject } from "@/features/api/companyProject";
 import {
   useGetAllTaskStatus,
   addUpdateCompanyTaskMutation,
@@ -130,14 +129,6 @@ export const useAddCompanyTaskSingle = () => {
   const { data: employeedata, isLoading: employeeLoading } = getEmployee({
     filter: { ...paginationFilterEmployee, isDeactivated: false },
   });
-  const { data: projectListdata, isLoading: projectLoading } = 
-    useGetCompanyProject({
-      filter: {
-        ...paginationFilterProject,
-        projectId: taskDataById?.data?.projectId || undefined,
-      },
-      enable: !!paginationFilterProject,
-    });
   const { data: meetingData, isLoading: meetingLoading } =
     useGetBothCompanyMeeting({
       filter: {
@@ -263,7 +254,6 @@ export const useAddCompanyTaskSingle = () => {
     onSubmit,
     methods,
     employeedata,
-    projectListdata,
     setPaginationFilterEmployee,
     setPaginationFilterProject,
     setPaginationFilterMeeting,
@@ -277,7 +267,6 @@ export const useAddCompanyTaskSingle = () => {
     paginationFilterMeeting,
     isPending,
     taskDataById,
-    projectLoading,
     statusLoading,
     typeLoading,
     employeeLoading,

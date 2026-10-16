@@ -149,17 +149,25 @@ export default function CompanyTaskList() {
                   <div className="z-15 relative flex items-center gap-2">
                     {!showOverdue && (
                       <DateRangePicker
-                        value={{
-                          from: taskDateRange.taskStartDate,
-                          to: taskDateRange.taskDeadline,
-                        }}
+                        value={
+                          taskDateRange.taskStartDate
+                            ? {
+                                from: taskDateRange.taskStartDate,
+                                to: taskDateRange.taskDeadline,
+                              }
+                            : undefined
+                        }
                         onChange={handleDateRangeChange}
                         onApply={handleDateRangeApply}
                         onSaveApply={handleDateRangeSaveApply}
-                        defaultDate={{
-                          startDate: appliedDateRange.taskStartDate,
-                          deadline: appliedDateRange.taskDeadline,
-                        }}
+                        defaultDate={
+                          appliedDateRange.taskStartDate
+                            ? {
+                                startDate: appliedDateRange.taskStartDate,
+                                deadline: appliedDateRange.taskDeadline,
+                              }
+                            : undefined
+                        }
                         isClear
                         handleClear={handleDateRangeReset}
                       />

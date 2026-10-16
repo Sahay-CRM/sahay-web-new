@@ -928,7 +928,7 @@ export default function CompanyProfile() {
               <div className="flex flex-wrap items-center justify-between gap-2 mb-4 pb-2 border-b border-gray-200">
                 <div className="flex items-center gap-3">
                   <h2 className="text-lg font-semibold text-gray-900">
-                    Company Shifts <span className="text-red-500">*</span>
+                    Company Shifts {isEditing && <span className="text-red-500">*</span>}
                   </h2>
                   {(watchedStartTime || companyData?.companyStartTime) && (watchedEndTime || companyData?.companyEndTime) && (
                     <span className="text-xs font-medium text-gray-600 bg-gray-100 px-2.5 py-1 rounded-md border border-gray-200">
