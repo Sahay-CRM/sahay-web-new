@@ -44,47 +44,19 @@ export default function useCompanyTaskList() {
   // LocalStorage key for persisting company task date range
   const COMPANY_TASK_DATE_RANGE_KEY = "companyTaskDateRange";
 
-  // Calculate default 30-day range: 15 days before and after today
-  const today = new Date();
-  const before14 = new Date(today);
-  before14.setDate(today.getDate() - 14);
-  const after14 = new Date(today);
-  after14.setDate(today.getDate() + 14);
-
-  // Helper to safely read date range from localStorage
-  const getStoredDateRange = () => {
-    if (typeof window === "undefined") return null;
+  // Clean up any residual stored date range from earlier builds so default is always blank
+  if (typeof window !== "undefined") {
     try {
-      const raw = window.localStorage.getItem(COMPANY_TASK_DATE_RANGE_KEY);
-      if (!raw) return null;
-
-      const parsed = JSON.parse(raw) as {
-        from?: string;
-        to?: string;
-      };
-
-      if (!parsed.from) return null;
-
-      const from = new Date(parsed.from);
-      const to = parsed.to ? new Date(parsed.to) : undefined;
-
-      if (Number.isNaN(from.getTime())) return null;
-      if (to && Number.isNaN(to.getTime())) return null;
-
-      return {
-        taskStartDate: from,
-        taskDeadline: to ?? from,
-      };
+      window.localStorage.removeItem(COMPANY_TASK_DATE_RANGE_KEY);
     } catch {
-      return null;
+      // ignore
     }
-  };
+  }
 
-  const getInitialDateRange = () =>
-    getStoredDateRange() ?? {
-      taskStartDate: before14,
-      taskDeadline: after14,
-    };
+  const getInitialDateRange = () => ({
+    taskStartDate: undefined,
+    taskDeadline: undefined,
+  });
 
   const [taskDateRange, setTaskDateRange] = useState<{
     taskStartDate: Date | undefined;
@@ -133,18 +105,6 @@ export default function useCompanyTaskList() {
     );
   };
 
-  // Helper function to convert date to YYYY-MM-DD format
-  // const toLocalISOString = (date: Date | undefined) => {
-  //   if (!date) return undefined;
-
-  //   // Use local date methods to avoid timezone conversion
-  //   const year = date.getFullYear();
-  //   const month = String(date.getMonth() + 1).padStart(2, "0");
-  //   const day = String(date.getDate()).padStart(2, "0");
-
-  //   return `${year}-${month}-${day}`;
-  // };
-
   const {
     data: companyTaskData,
     refetch,
@@ -156,10 +116,14 @@ export default function useCompanyTaskList() {
       statusArray: filters.taskStatusName,
       ...(showOverdue
         ? {}
-        : {
+        : appliedDateRange.taskStartDate
+        ? {
             startDate: getUTCStartOfDay(appliedDateRange.taskStartDate),
-            endDate: getUTCEndOfDay(appliedDateRange.taskDeadline),
-          }),
+            endDate: getUTCEndOfDay(
+              appliedDateRange.taskDeadline || appliedDateRange.taskStartDate,
+            ),
+          }
+        : {}),
       overDue: showOverdue,
     },
   });
@@ -381,26 +345,16 @@ export default function useCompanyTaskList() {
 
   // Reset date range and clear only this module's localStorage key
   const handleDateRangeReset = () => {
-    // Recalculate default 30-day window relative to "today"
-    const today = new Date();
-    const before14 = new Date(today);
-    before14.setDate(today.getDate() - 14);
-    const after14 = new Date(today);
-    after14.setDate(today.getDate() + 14);
-
     const defaultRange = {
-      taskStartDate: before14,
-      taskDeadline: after14,
+      taskStartDate: undefined,
+      taskDeadline: undefined,
     };
 
     setTaskDateRange(defaultRange);
     setAppliedDateRange(defaultRange);
 
     // Remove only this page's stored date range
-    saveDateRangeToStorage({
-      taskStartDate: undefined,
-      taskDeadline: undefined,
-    });
+    saveDateRangeToStorage(defaultRange);
 
     // Reset pagination to first page
     setPaginationFilter((prev) => ({
@@ -410,28 +364,7 @@ export default function useCompanyTaskList() {
   };
 
   const handleOverdueToggle = () => {
-    const newOverdueState = !showOverdue;
-    // Reset date range when toggling overdue
-    // if (newOverdueState) {
-    if (!newOverdueState) {
-      // Recalculate dynamically each time based on "today"
-      const today = new Date();
-      const before14 = new Date(today);
-      before14.setDate(today.getDate() - 14);
-      const after14 = new Date(today);
-      after14.setDate(today.getDate() + 14);
-
-      setAppliedDateRange({
-        taskStartDate: before14,
-        taskDeadline: after14,
-      });
-      setTaskDateRange({
-        taskStartDate: before14,
-        taskDeadline: after14,
-      });
-    }
-
-    setShowOverdue(newOverdueState);
+    setShowOverdue((prev) => !prev);
   };
 
   const handleRowsModalOpen = (data: TaskGetPaging) => {

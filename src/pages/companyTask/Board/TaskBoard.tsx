@@ -42,21 +42,21 @@ export default function TaskBoard() {
   }, [setBreadcrumbs]);
 
   // Date Range State
-  const today = new Date();
-  const before14 = new Date(today);
-  before14.setDate(today.getDate() - 14);
-  const after14 = new Date(today);
-  after14.setDate(today.getDate() + 14);
-
   const [taskDateRange, setTaskDateRange] = useState<{
     taskStartDate: Date | undefined;
     taskDeadline: Date | undefined;
   }>({
-    taskStartDate: before14,
-    taskDeadline: after14,
+    taskStartDate: undefined,
+    taskDeadline: undefined,
   });
 
-  const [appliedDateRange, setAppliedDateRange] = useState(taskDateRange);
+  const [appliedDateRange, setAppliedDateRange] = useState<{
+    taskStartDate: Date | undefined;
+    taskDeadline: Date | undefined;
+  }>({
+    taskStartDate: undefined,
+    taskDeadline: undefined,
+  });
   const [filters, setFilters] = useState<{ taskStatusName: string[] }>({
     taskStatusName: [],
   });
@@ -78,8 +78,8 @@ export default function TaskBoard() {
           ? getUTCStartOfDay(appliedDateRange.taskStartDate)
           : undefined,
       endDate:
-        !showOverdue && appliedDateRange.taskDeadline
-          ? getUTCEndOfDay(appliedDateRange.taskDeadline)
+        !showOverdue && (appliedDateRange.taskDeadline || appliedDateRange.taskStartDate)
+          ? getUTCEndOfDay(appliedDateRange.taskDeadline || appliedDateRange.taskStartDate)
           : undefined,
       overDue: showOverdue,
       search: searchTerm,
@@ -95,16 +95,21 @@ export default function TaskBoard() {
   }, [statusData]);
 
   const handleDateRangeApply = (range: DateRange | undefined) => {
-    if (range) {
+    if (range?.from) {
       setAppliedDateRange({
         taskStartDate: range.from,
-        taskDeadline: range.to,
+        taskDeadline: range.to || range.from,
+      });
+    } else {
+      setAppliedDateRange({
+        taskStartDate: undefined,
+        taskDeadline: undefined,
       });
     }
   };
 
   const handleDateRangeReset = () => {
-    const resetRange = { taskStartDate: before14, taskDeadline: after14 };
+    const resetRange = { taskStartDate: undefined, taskDeadline: undefined };
     setTaskDateRange(resetRange);
     setAppliedDateRange(resetRange);
   };
@@ -286,10 +291,14 @@ export default function TaskBoard() {
           <div className="flex items-center gap-3 flex-wrap">
             {!showOverdue && (
               <DateRangePicker
-                value={{
-                  from: taskDateRange.taskStartDate,
-                  to: taskDateRange.taskDeadline,
-                }}
+                value={
+                  taskDateRange.taskStartDate
+                    ? {
+                        from: taskDateRange.taskStartDate,
+                        to: taskDateRange.taskDeadline,
+                      }
+                    : undefined
+                }
                 onChange={(range) => {
                   setTaskDateRange({
                     taskStartDate: range?.from,
@@ -297,10 +306,14 @@ export default function TaskBoard() {
                   });
                 }}
                 onApply={handleDateRangeApply}
-                defaultDate={{
-                  startDate: appliedDateRange.taskStartDate,
-                  deadline: appliedDateRange.taskDeadline,
-                }}
+                defaultDate={
+                  appliedDateRange.taskStartDate
+                    ? {
+                        startDate: appliedDateRange.taskStartDate,
+                        deadline: appliedDateRange.taskDeadline,
+                      }
+                    : undefined
+                }
                 isClear
                 handleClear={handleDateRangeReset}
               />

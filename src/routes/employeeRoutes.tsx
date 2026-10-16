@@ -124,7 +124,7 @@ const RequestMaster = lazy(() => import("../pages/RequestMaster"));
 const AddCompanyTaskListRepeat = lazy(
   () =>
     import(
-      "../pages/CompanyTaskListRepeat/CompanyTaskFormModal/AddRepetitiveCompanyTaskList"
+      "../pages/CompanyTaskListRepeat/CompanyTaskFormModal/AddRepetitiveCompanyTaskSingle"
     ),
 );
 const CompanyTaskRe = lazy(

@@ -5,7 +5,10 @@ import { useMutation } from "@tanstack/react-query";
 export default function useDeleteGoalValue() {
   return useMutation({
     mutationFn: async (variables: { ids: string[]; companyId: string }) => {
-      return Promise.all(variables.ids.map(id => Api.delete({ url: Urls.companyGoalValueDelete(id) })));
+      return Api.delete({
+        url: Urls.companyGoalValueDelete(),
+        data: { valueIds: variables.ids.join(",") },
+      });
     }
   });
 }

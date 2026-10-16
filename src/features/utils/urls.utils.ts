@@ -55,7 +55,6 @@ const Urls = {
   getAllCompanyMeetingByPage: () => `${baseUrl}/company/meeting/get`,
   getCompanyMeetingSearch: () => `${baseUrl}/company/meeting/search`,
   getMeetingSearch: () => `${baseUrl}/company/meeting/get-search`,
-
   getAllCompanyProject: () => `${baseUrl}/company/project/get-all`,
   addCompanyProject: () => `${baseUrl}/company/project/create`,
   updateCompanyProject: (id: string) =>
@@ -63,9 +62,11 @@ const Urls = {
   deleteCompanyProject: (id: string) =>
     `${baseUrl}/company/project/delete/${id}`,
   getCompanyProjectById: (id: string) => `${baseUrl}/company/project/get/${id}`,
-  getCompanySubProjects: (id: string) => `${baseUrl}/company/project/sub/view/${id}`,
+  getCompanySubProjects: (id: string) =>
+    `${baseUrl}/company/project/sub/view/${id}`,
   getAllCompanyProjectByPage: () => `${baseUrl}/company/project/get`,
   getCompanyProjectSearch: () => `${baseUrl}/company/project/search`,
+  getCompanyProjectSearchList: () => `${baseUrl}/company/project/search-list`,
 
   getAllCompanyProjectDropdown: () => `${baseUrl}/company/project/get-all`,
   getAllCorParameter: () => `${baseUrl}/core-param/get`,
@@ -224,7 +225,7 @@ const Urls = {
 
   addMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/add`,
   getMeetingKpisData: () => `${baseUrl}/company/detail-meeting/kpi/get`,
-   getMeetingKpiFrame: () => `${baseUrl}/company/detail-meeting/kpi/get-frame`,
+  getMeetingKpiFrame: () => `${baseUrl}/company/detail-meeting/kpi/get-frame`,
   getMeetingSelectedKpisData: () =>
     `${baseUrl}/company/detail-meeting/kpi/get-data`,
 
@@ -515,8 +516,10 @@ const Urls = {
     `${baseUrl}/company/gantt/workspace/import/${id}`,
   // Phases
   ganttPhaseCreate: () => `${baseUrl}/company/gantt/phase/create`,
-  ganttPhaseUpdate: (id: string) => `${baseUrl}/company/gantt/phase/update/${id}`,
-  ganttPhaseDelete: (id: string) => `${baseUrl}/company/gantt/phase/delete/${id}`,
+  ganttPhaseUpdate: (id: string) =>
+    `${baseUrl}/company/gantt/phase/update/${id}`,
+  ganttPhaseDelete: (id: string) =>
+    `${baseUrl}/company/gantt/phase/delete/${id}`,
   ganttPhaseReorder: () => `${baseUrl}/company/gantt/phase/reorder`,
 
   // Items
@@ -545,9 +548,12 @@ const Urls = {
   // Time Logs
   addTimeLog: () => `${baseUrl}/company/employee/time-log/add`,
   getAllTimeLogs: () => `${baseUrl}/company/employee/time-log/get-all`,
-  getTimeLogById: (id: string) => `${baseUrl}/company/employee/time-log/get/${id}`,
-  updateTimeLog: (id: string) => `${baseUrl}/company/employee/time-log/update/${id}`,
-  deleteTimeLog: (id: string) => `${baseUrl}/company/employee/time-log/delete/${id}`,
+  getTimeLogById: (id: string) =>
+    `${baseUrl}/company/employee/time-log/get/${id}`,
+  updateTimeLog: (id: string) =>
+    `${baseUrl}/company/employee/time-log/update/${id}`,
+  deleteTimeLog: (id: string) =>
+    `${baseUrl}/company/employee/time-log/delete/${id}`,
 
   // Daily Planning
   getDailyPlan: () => `${baseUrl}/company/employee/daily-plan/get`,
@@ -560,8 +566,7 @@ const Urls = {
     `${baseUrl}/company/employee/daily-plan/remove-item/${id}`,
   getDailyPlanItemHistory: () =>
     `${baseUrl}/company/employee/daily-plan/item-history`,
-  getDailyPlanItems: () =>
-    `${baseUrl}/company/employee/daily-plan/get-items`,
+  getDailyPlanItems: () => `${baseUrl}/company/employee/daily-plan/get-items`,
   finalSubmitDailyPlan: () =>
     `${baseUrl}/company/employee/daily-plan/final-submit`,
   checkTodaySubmitPlan: () =>
@@ -573,24 +578,32 @@ const Urls = {
   blueprintCoreValueGetAll: () => `${baseUrl}/blueprint-core-value/get-all`,
   companyCoreValueGetAll: () => `${baseUrl}/company/core-value/get-all`,
   companyCoreValueCreate: () => `${baseUrl}/company/core-value/create`,
-  companyCoreValueDelete: (id: string) => `${baseUrl}/company/core-value/delete/${id}`,
+  companyCoreValueDelete: (id: string) =>
+    `${baseUrl}/company/core-value/delete/${id}`,
   companyMissionGet: () => `${baseUrl}/company/mission/get`,
   companyMissionUpsert: () => `${baseUrl}/company/mission/upsert`,
   companyBlueprintGoalGetAll: () => `${baseUrl}/company/blueprint-goal/get-all`,
   companyBlueprintGoalCreate: () => `${baseUrl}/company/blueprint-goal/create`,
-  companyBlueprintGoalUpdate: (id: string) => `${baseUrl}/company/blueprint-goal/update/${id}`,
-  companyBlueprintGoalDelete: (id: string) => `${baseUrl}/company/blueprint-goal/delete/${id}`,
+  companyBlueprintGoalUpdate: (id: string) =>
+    `${baseUrl}/company/blueprint-goal/update/${id}`,
+  companyBlueprintGoalDelete: (id: string) =>
+    `${baseUrl}/company/blueprint-goal/delete/${id}`,
   companyGoalValueSave: () => `${baseUrl}/company/blueprint-goal/value/save`,
-  companyGoalValueDelete: (id: string) => `${baseUrl}/company/blueprint-goal/value/delete/${id}`,
-  companyBlueprintGoalSaveAll: () => `${baseUrl}/company/blueprint-goal/save-all`,
+  companyGoalValueDelete: () =>
+    `${baseUrl}/company/blueprint-goal/value/delete`,
+  companyBlueprintGoalSaveAll: () =>
+    `${baseUrl}/company/blueprint-goal/save-all`,
 
   // Company Report Endpoints
   companyReportTemplateGet: () => `${baseUrl}/company/report/template/get`,
   companyReportLibraryGet: () => `${baseUrl}/company/report/library/get`,
-  companyReportLibraryCreateFromTemplate: () => `${baseUrl}/company/report/library/create-from-template`,
-  companyReportLibraryUpdate: (id: string) => `${baseUrl}/company/report/library/update/${id}`,
+  companyReportLibraryCreateFromTemplate: () =>
+    `${baseUrl}/company/report/library/create-from-template`,
+  companyReportLibraryUpdate: (id: string) =>
+    `${baseUrl}/company/report/library/update/${id}`,
   companyReportRun: (id: string) => `${baseUrl}/company/report/run/${id}`,
-  companyReportLibraryDelete: (id: string) => `${baseUrl}/company/report/library/delete/${id}`,
+  companyReportLibraryDelete: (id: string) =>
+    `${baseUrl}/company/report/library/delete/${id}`,
   employeeToday: () => `${baseUrl}/company/employeeToday`,
 
   getallIssues: () => `${baseUrl}/company/issue/get-all`,

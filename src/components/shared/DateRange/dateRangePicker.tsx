@@ -5,6 +5,7 @@ import {
   ChevronDown,
   ChevronLeft,
   ChevronRight,
+  X,
 } from "lucide-react";
 import { DateRange } from "react-day-picker";
 
@@ -188,14 +189,22 @@ export default function DateRangePicker({
   handleClear,
   defaultDate,
 }: DateRangePickerProps) {
-  const [date, setDate] = React.useState<DateRange | undefined>({
-    from: defaultDate?.startDate,
-    to: defaultDate?.deadline,
-  });
-  const [tempDate, setTempDate] = React.useState<DateRange | undefined>({
-    from: defaultDate?.startDate,
-    to: defaultDate?.deadline,
-  });
+  const [date, setDate] = React.useState<DateRange | undefined>(
+    defaultDate?.startDate
+      ? {
+          from: defaultDate.startDate,
+          to: defaultDate.deadline,
+        }
+      : undefined,
+  );
+  const [tempDate, setTempDate] = React.useState<DateRange | undefined>(
+    defaultDate?.startDate
+      ? {
+          from: defaultDate.startDate,
+          to: defaultDate.deadline,
+        }
+      : undefined,
+  );
   const [isOpen, setIsOpen] = React.useState(false);
   const isMobile = useIsMobile();
 
@@ -211,11 +220,21 @@ export default function DateRangePicker({
 
   // If parent gives controlled value, sync it
   React.useEffect(() => {
-    if (value) {
+    if (value?.from) {
       setDate(value);
       setTempDate(value);
+    } else if (value === undefined && defaultDate?.startDate) {
+      const d: DateRange = {
+        from: defaultDate.startDate,
+        to: defaultDate.deadline,
+      };
+      setDate(d);
+      setTempDate(d);
+    } else {
+      setDate(undefined);
+      setTempDate(undefined);
     }
-  }, [value]);
+  }, [value, defaultDate?.startDate, defaultDate?.deadline]);
 
   const resetMonthsFrom = (range: DateRange | undefined) => {
     const from = range?.from || new Date();
@@ -227,13 +246,18 @@ export default function DateRangePicker({
   // When popover opens, reset tempDate from defaultDate
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
-    if (open && defaultDate) {
-      const revert: DateRange = {
-        from: defaultDate.startDate,
-        to: defaultDate.deadline,
-      };
-      setTempDate(revert);
-      resetMonthsFrom(revert);
+    if (open) {
+      if (defaultDate?.startDate) {
+        const revert: DateRange = {
+          from: defaultDate.startDate,
+          to: defaultDate.deadline,
+        };
+        setTempDate(revert);
+        resetMonthsFrom(revert);
+      } else {
+        setTempDate(undefined);
+        resetMonthsFrom(undefined);
+      }
     }
   };
 
@@ -286,6 +310,9 @@ export default function DateRangePicker({
   };
 
   const onClear = () => {
+    setDate(undefined);
+    setTempDate(undefined);
+    resetMonthsFrom(undefined);
     if (isClear && handleClear) {
       handleClear();
       setIsOpen(false);
@@ -293,7 +320,7 @@ export default function DateRangePicker({
   };
 
   const onClose = () => {
-    if (defaultDate) {
+    if (defaultDate?.startDate) {
       const revert: DateRange = {
         from: defaultDate.startDate,
         to: defaultDate.deadline,
@@ -301,6 +328,10 @@ export default function DateRangePicker({
       setTempDate(revert);
       setDate(revert);
       resetMonthsFrom(revert);
+    } else {
+      setTempDate(undefined);
+      setDate(undefined);
+      resetMonthsFrom(undefined);
     }
     setIsOpen(false);
   };
@@ -313,22 +344,41 @@ export default function DateRangePicker({
             id="date"
             variant={"outline"}
             className={cn(
-              "w-full min-w-0 px-4 justify-start text-left font-normal",
-              !date && "text-muted-foreground",
+              "w-full min-w-0 px-3 justify-between items-center text-left font-normal gap-2",
+              !date?.from && "text-muted-foreground",
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {date?.from ? (
-              date.to ? (
-                <>
-                  {format(date.from, "dd-MM-yyyy")} -{" "}
-                  {format(date.to, "dd-MM-yyyy")}
-                </>
+            <span className="flex items-center min-w-0">
+              <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
+              {date?.from ? (
+                date.to ? (
+                  <span className="truncate">
+                    {format(date.from, "dd-MM-yyyy")} -{" "}
+                    {format(date.to, "dd-MM-yyyy")}
+                  </span>
+                ) : (
+                  <span className="truncate">{format(date.from, "dd-MM-yyyy")}</span>
+                )
               ) : (
-                format(date.from, "dd-MM-yyyy")
-              )
-            ) : (
-              <span>Pick a date</span>
+                <span>Pick a date</span>
+              )}
+            </span>
+            {isClear && date?.from && (
+              <span
+                role="button"
+                tabIndex={0}
+                className="rounded-full p-0.5 hover:bg-muted text-muted-foreground hover:text-foreground shrink-0 transition-colors"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  setDate(undefined);
+                  setTempDate(undefined);
+                  resetMonthsFrom(undefined);
+                  handleClear?.();
+                }}
+              >
+                <X className="h-4 w-4" />
+              </span>
             )}
           </Button>
         </PopoverTrigger>
