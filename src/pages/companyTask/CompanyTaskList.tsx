@@ -201,9 +201,15 @@ export default function CompanyTaskList() {
                   <Button
                     variant={showOverdue ? "destructive" : "outline"}
                     onClick={handleOverdueToggle}
-                    className="py-2 h-10 w-fit"
+                    className="py-2 h-10 w-fit flex items-center gap-2"
                   >
-                    {showOverdue ? "Show All Tasks" : "Show Overdue"}
+                    <span>{showOverdue ? "Show All Tasks" : "Show Overdue"}</span>
+                    {!showOverdue &&
+                      typeof companyTaskData?.overDueCount === "number" && (
+                        <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-600 transition-colors">
+                          {companyTaskData.overDueCount}
+                        </span>
+                      )}
                   </Button>
                   {canToggleColumns && (
                     <TooltipProvider>
