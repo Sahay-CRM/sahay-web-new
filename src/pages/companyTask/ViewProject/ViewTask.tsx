@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/tooltip";
 
 import { SpinnerIcon } from "@/components/shared/Icons";
+import { useLocation } from "react-router-dom";
 
 export default function CompanyTaskView() {
   const {
@@ -54,7 +55,7 @@ export default function CompanyTaskView() {
     setNewComment,
     currentUserId,
   } = useViewTask();
-
+  const location = useLocation();
   const { setBreadcrumbs } = useBreadcrumbs();
   const companiesList = useSelector(getCompaniesList);
   const currentCompany = companiesList?.find((c) => c.isCurrentCompany);
@@ -194,7 +195,9 @@ export default function CompanyTaskView() {
                 {permission?.Edit && (
                   <Button
                     onClick={() =>
-                      navigate(`/tasks/edit/${taskData?.taskId}`)
+                      navigate(
+                        `/tasks/edit/${taskData?.taskId}${location.search}`,
+                      )
                     }
                   >
                     Edit Task
@@ -304,10 +307,12 @@ export default function CompanyTaskView() {
                     placeholder="Filter Tagged"
                     options={[
                       { label: "All", value: "all" },
-                      ...(assignees.filter((emp: Employee)=> !emp.isDeactivated).map((emp: Employee) => ({
-                        label: emp.employeeName,
-                        value: emp.employeeId,
-                      })) || []),
+                      ...(assignees
+                        .filter((emp: Employee) => !emp.isDeactivated)
+                        .map((emp: Employee) => ({
+                          label: emp.employeeName,
+                          value: emp.employeeId,
+                        })) || []),
                     ]}
                     selectedValues={[filterUserId]}
                     onSelect={(item) => setFilterUserId(item.value)}
@@ -343,8 +348,9 @@ export default function CompanyTaskView() {
                       onOpenAutoFocus={(e) => e.preventDefault()}
                     >
                       <div className="flex flex-col">
-                        {filteredEmployees.filter((emp: Employee) => !emp.isDeactivated).map(
-                          (emp: Employee, index: number) => (
+                        {filteredEmployees
+                          .filter((emp: Employee) => !emp.isDeactivated)
+                          .map((emp: Employee, index: number) => (
                             <button
                               key={emp.employeeId}
                               className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
@@ -360,8 +366,7 @@ export default function CompanyTaskView() {
                               </div>
                               <span>{emp.employeeName}</span>
                             </button>
-                          ),
-                        )}
+                          ))}
                       </div>
                     </PopoverContent>
                   </Popover>
@@ -448,8 +453,11 @@ export default function CompanyTaskView() {
                                   onOpenAutoFocus={(e) => e.preventDefault()}
                                 >
                                   <div className="flex flex-col">
-                                    {filteredEmployees.filter((emp: Employee) => !emp.isDeactivated).map(
-                                      (emp: Employee, index: number) => (
+                                    {filteredEmployees
+                                      .filter(
+                                        (emp: Employee) => !emp.isDeactivated,
+                                      )
+                                      .map((emp: Employee, index: number) => (
                                         <button
                                           key={emp.employeeId}
                                           className={`flex items-center gap-2 px-3 py-2 text-sm text-left transition-colors ${
@@ -469,8 +477,7 @@ export default function CompanyTaskView() {
                                           </div>
                                           <span>{emp.employeeName}</span>
                                         </button>
-                                      ),
-                                    )}
+                                      ))}
                                   </div>
                                 </PopoverContent>
                               </Popover>
