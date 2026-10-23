@@ -23,7 +23,7 @@ import { useGetAdminMeetingTemplatesAll } from "@/features/api/detailMeeting";
 import PageNotAccess from "@/pages/PageNoAccess";
 import { mapPaginationDetails } from "@/lib/mapPaginationDetails";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
-import { getMeetingType } from "@/features/api/meetingType";
+import { useDdMeetingType } from "@/features/api/meetingType";
 
 const MeetingTemplateStep = () => {
   const {
@@ -140,12 +140,11 @@ const MeetingInfoStep = () => {
     register,
     formState: { errors },
     control,
+    setValue,
   } = useFormContext();
 
   // Meeting Type options
-  const { data: meetingTypeData } = getMeetingType({
-    filter: { currentPage: 1, pageSize: 100 },
-  });
+  const { data: meetingTypeData } = useDdMeetingType();
 
   const meetingTypeOptions = useMemo(() => {
     return (
@@ -185,10 +184,8 @@ const MeetingInfoStep = () => {
                     options={meetingTypeOptions}
                     selectedValues={rawVal ? [rawVal] : []}
                     onSelect={(value) => {
-                      const matched = meetingTypeData?.data?.find(
-                        (o) => o.meetingTypeId === value.value,
-                      );
-                      field.onChange(matched || value.value);
+                      field.onChange(value.value);
+                      setValue("meetingTypeName", value.label);
                     }}
                     placeholder="Select Meeting Type..."
                     error={errors.meetingTypeId}

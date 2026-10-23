@@ -18,7 +18,14 @@ import {
   isSameDay,
 } from "@/features/utils/app.utils";
 
+export type TaskTypeFilter = "ALL" | "CHECKINOUT" | "NON_CHECKINOUT";
+
+// A task with a planned duration is a check-in/out task
+export const isCheckInOutTask = (task: RepeatTaskAllRes) =>
+  Number(task.taskDuration ?? task.duration ?? 0) > 0;
+
 export function useRepeatTaskToDo() {
+  const [taskTypeFilter, setTaskTypeFilter] = useState<TaskTypeFilter>("ALL");
   const permission = useSelector(getUserPermission).ROUTINE_TASK;
 
   const userData = useSelector(getUserDetail);
@@ -75,7 +82,8 @@ export function useRepeatTaskToDo() {
   // const todayStr = toLocalISOString(today);
   const shouldUseSelectedRange = permission.Add || permission.Edit;
 
-  const { mutate: updateRepeatTask } = updateRepeatTaskIdMutation();
+  const { mutate: updateRepeatTask, isPending: isUpdating } =
+    updateRepeatTaskIdMutation();
   const { mutate: deleteTaskById } = deleteCompanyTaskMutation();
 
   const { data: employeeList } = useGetEmployeeDd({
@@ -160,14 +168,45 @@ export function useRepeatTaskToDo() {
     });
   };
 
-  const toggleComplete = (taskId: string, isCompleted: boolean) => {
+  const [completeTask, setCompleteTask] = useState<RepeatTaskAllRes | null>(
+    null,
+  );
+
+  const sendComplete = (
+    taskId: string,
+    isCompleted: boolean,
+    actualTime?: number,
+    onSuccess?: () => void,
+  ) => {
     const task = companyTaskData?.data?.find((t) => t.taskId === taskId);
     const payload: RepeatTaskAllRes = { taskId, isCompleted };
 
+    if (actualTime !== undefined) {
+      payload.actualTime = actualTime;
+    }
     if (task?.isNotApplicable) {
       payload.isNotApplicable = false;
     }
-    updateRepeatTask(payload);
+    updateRepeatTask(payload, { onSuccess });
+  };
+
+  // Completing a task asks for actual time first; un-completing goes straight through
+  const toggleComplete = (taskId: string, isCompleted: boolean) => {
+    if (isCompleted) {
+      const task = companyTaskData?.data?.find((t) => t.taskId === taskId);
+      if (task && isCheckInOutTask(task)) {
+        setCompleteTask(task);
+        return;
+      }
+    }
+    sendComplete(taskId, isCompleted);
+  };
+
+  const closeCompleteModal = () => setCompleteTask(null);
+
+  const submitCompleteTime = (actualMinutes: number) => {
+    if (!completeTask?.taskId) return;
+    sendComplete(completeTask.taskId, true, actualMinutes, closeCompleteModal);
   };
 
   const employeeOption = useMemo((): { label: string; value: string; isHeader?: boolean }[] => {
@@ -278,5 +317,11 @@ export function useRepeatTaskToDo() {
     userData,
     shouldDisableCheckbox,
     toggleNotApplicable,
+    completeTask,
+    closeCompleteModal,
+    submitCompleteTime,
+    isUpdating,
+    taskTypeFilter,
+    setTaskTypeFilter,
   };
 }

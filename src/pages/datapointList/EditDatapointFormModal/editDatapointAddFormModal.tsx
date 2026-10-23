@@ -57,6 +57,7 @@ export default function EditDatapointAddFormModal({
     setIsForceDelete,
     methods,
     isGoalValueChanged,
+    isDeactivatedEmployee,
     // skipDaysOption,
   } = useEditDatapointFormModal({ modalClose, kpiId });
 
@@ -83,6 +84,12 @@ export default function EditDatapointAddFormModal({
                   isLoading: isPending,
                 },
               ]
+            : isDeactivatedEmployee
+            ? [{
+                  btnText: "Cancel",
+                  buttonCss: "py-1.5 px-5 border",
+                  btnClick: handleClose,
+                },]
             : [
                 {
                   btnText: "Submit",
@@ -240,9 +247,10 @@ export default function EditDatapointAddFormModal({
                 error={errors.employeeId}
                 isMandatory
                 onSearchChange={setIsEmployeeSearch}
+                />
+              )}
               />
-            )}
-          />
+              
           <FormInputField
             label="Tag"
             placeholder="Enter Tag"
@@ -250,6 +258,11 @@ export default function EditDatapointAddFormModal({
             disabled={assignUserOnly}
             error={errors?.tag}
           />
+          {isDeactivatedEmployee && (
+                <p className="col-span-2 text-sm text-red-500 font-medium">
+                   <span className="font-bold">{datapointApiData?.employeeName}</span> is now a deactivated user. Please select another user to submit.
+                </p>
+              )}  
           {enableEmpTags && (
             <div className="col-span-2">
               <Controller

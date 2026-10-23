@@ -205,9 +205,9 @@ export default function CompanyTaskList() {
                   >
                     <span>{showOverdue ? "Show All Tasks" : "Show Overdue"}</span>
                     {!showOverdue &&
-                      typeof companyTaskData?.overDueCount === "number" && (
+                      typeof (companyTaskData?.overDueCount ?? companyTaskData?.overduecount) === "number" && (
                         <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-600 transition-colors">
-                          {companyTaskData.overDueCount}
+                          {companyTaskData?.overDueCount ?? companyTaskData?.overduecount}
                         </span>
                       )}
                   </Button>

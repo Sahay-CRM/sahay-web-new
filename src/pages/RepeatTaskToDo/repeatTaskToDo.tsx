@@ -1,13 +1,18 @@
 import { useEffect } from "react";
 import { CalendarDays, Pencil, ReceiptText, Trash2, Ban } from "lucide-react";
 
-import { useRepeatTaskToDo } from "./useRepeatTaskToDo";
+import {
+  useRepeatTaskToDo,
+  isCheckInOutTask,
+  type TaskTypeFilter,
+} from "./useRepeatTaskToDo";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import SearchDropdown from "@/components/shared/Form/SearchDropdown";
 import RoutineTaskDrawer from "./routineTaskDrawer";
 import { Button } from "@/components/ui/button";
 import ViewRepeatTask from "./ViewRepeatTask";
+import CompleteTaskTimeModal from "./CompleteTaskTimeModal";
 import { convertToLocalTime } from "@/features/utils/app.utils";
 import { SpinnerIcon } from "@/components/shared/Icons";
 import FormCheckbox from "@/components/shared/Form/FormCheckbox/FormCheckbox";
@@ -69,9 +74,21 @@ export default function RepeatTaskToDo() {
     userData,
     shouldDisableCheckbox,
     toggleNotApplicable,
+    completeTask,
+    closeCompleteModal,
+    submitCompleteTime,
+    isUpdating,
+    taskTypeFilter,
+    setTaskTypeFilter,
   } = useRepeatTaskToDo();
 
-  const tasks = companyTaskData?.data || [];
+  const tasks = (companyTaskData?.data || []).filter((t) =>
+    taskTypeFilter === "ALL"
+      ? true
+      : taskTypeFilter === "CHECKINOUT"
+        ? isCheckInOutTask(t)
+        : !isCheckInOutTask(t),
+  );
 
   const activeTasks = tasks
     .filter((t) => !t.isCompleted && !t.isNotApplicable)
@@ -322,6 +339,29 @@ export default function RepeatTaskToDo() {
           )}
         </div>
 
+        <div className="flex gap-2 mb-3">
+          {(
+            [
+              { value: "ALL", label: "All" },
+              { value: "CHECKINOUT", label: "Check-in/out Tasks" },
+              { value: "NON_CHECKINOUT", label: "Non Check-in/out Tasks" },
+            ] as { value: TaskTypeFilter; label: string }[]
+          ).map((opt) => (
+            <Button
+              key={opt.value}
+              size="sm"
+              className={`h-7 px-3 text-xs rounded-full border ${
+                taskTypeFilter === opt.value
+                  ? ""
+                  : "bg-transparent text-slate-700 hover:bg-slate-100"
+              }`}
+              onClick={() => setTaskTypeFilter(opt.value)}
+            >
+              {opt.label}
+            </Button>
+          ))}
+        </div>
+
         {/* Tasks List - Single Scrollable Section */}
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
@@ -389,6 +429,13 @@ export default function RepeatTaskToDo() {
             onClose={handleClose}
           />
         )}
+        <CompleteTaskTimeModal
+          open={!!completeTask}
+          taskName={completeTask?.taskName}
+          isLoading={isUpdating}
+          onClose={closeCompleteModal}
+          onSubmit={submitCompleteTime}
+        />
         {isViewModalOpen && (
           <ViewRepeatTask
             modalData={modalData}

@@ -6,7 +6,7 @@ export default function useAllCompanyTask({ filter }: FilterDataProps) {
   const query = useQuery({
     queryKey: ["get-all-task-dropdown", filter],
     queryFn: async () => {
-      const { data: resData } = await Api.post<{ data: TaskGetPaging[] }>({
+      const { data: resData } = await Api.post<BaseResponse<TaskGetPaging>>({
         url: Urls.getAllCompanyTask(),
         data: { ...filter },
       });

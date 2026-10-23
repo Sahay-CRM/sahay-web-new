@@ -519,6 +519,7 @@ interface BaseResponse<T> {
   currentPage: number;
   totalCount: number;
   overDueCount?: number;
+  overduecount?: number;
   hasMore: boolean;
   pageSize: number;
   totalPage: number;
@@ -752,6 +753,9 @@ interface RepeatTaskAllRes {
   taskName?: string;
   isCompleted?: boolean;
   isNotApplicable?: boolean;
+  actualTime?: number;
+  duration?: number | null;
+  taskDuration?: number | null;
   taskStatus?: string;
   winLostTask?: number;
   taskStatusId?: string;
@@ -791,6 +795,7 @@ interface Employee {
   };
   reportingManager: string;
   isTeamLeader?: boolean;
+  isDeactivated?: boolean;
 }
 
 interface TaskEmployee {
@@ -1016,6 +1021,7 @@ interface KPIFormData {
   isFocus?: boolean;
   isOwnKpi?: boolean;
   kpiPermission?: string;
+  isDeactivated?: boolean;
 }
 
 interface KPIFormDataProp {
