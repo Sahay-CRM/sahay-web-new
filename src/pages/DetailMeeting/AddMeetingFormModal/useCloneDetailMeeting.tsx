@@ -24,6 +24,7 @@ export default function useCloneDetailMeeting() {
       meetingDateTime: "",
       meetingTimePlanned: "",
       meetingTypeId: "",
+      meetingTypeName: "",
       employeeId: [],
     },
   });
@@ -44,7 +45,10 @@ export default function useCloneDetailMeeting() {
       meetingName: data?.meetingName,
       meetingDescription: data?.meetingDescription,
       meetingDateTime: data?.meetingDateTime,
-      meetingTypeId:  data?.meetingTypeId,
+      meetingTypeId:
+        typeof data?.meetingTypeId === "object" && data?.meetingTypeId !== null
+          ? (data.meetingTypeId as { meetingTypeId?: string })?.meetingTypeId
+          : data?.meetingTypeId,
       joiners: data?.employeeId?.map(
         (ele: { employeeId: string }) => ele?.employeeId,
       ),
@@ -79,6 +83,7 @@ export default function useCloneDetailMeeting() {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const watchedMeetingType = watch("meetingTypeId") as any || "";
+  const watchedMeetingTypeName = watch("meetingTypeName") || "";
   const selectedTemplateName = watch("templateName") || "";
 
   return {
@@ -88,7 +93,10 @@ export default function useCloneDetailMeeting() {
     onSubmit,
     meetingPreview: {
       ...getValues(),
-      meetingTypeName: watchedMeetingType?.meetingTypeName  || selectedTemplateName,
+      meetingTypeName:
+        watchedMeetingTypeName ||
+        watchedMeetingType?.meetingTypeName ||
+        selectedTemplateName,
     },
     trigger,
     methods,

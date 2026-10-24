@@ -86,6 +86,8 @@ export default function TaskBoard() {
     },
   });
 
+  const overdueCount = taskData?.overDueCount ?? taskData?.overduecount;
+
   const statusOptions = useMemo(() => {
     return (statusData?.data ?? []).map((status) => ({
       label: status.taskStatus,
@@ -330,9 +332,14 @@ export default function TaskBoard() {
             <Button
               variant={showOverdue ? "destructive" : "outline"}
               onClick={() => setShowOverdue(!showOverdue)}
-              className="h-10 px-4 text-sm font-medium"
+              className="py-2 h-10 w-fit flex items-center gap-2"
             >
-              {showOverdue ? "Show All Tasks" : "Show Overdue"}
+              <span>{showOverdue ? "Show All Tasks" : "Show Overdue"}</span>
+              {!showOverdue && typeof overdueCount === "number" && (
+                <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-red-100 text-red-600 transition-colors">
+                  {overdueCount}
+                </span>
+              )}
             </Button>
 
             <div className="flex items-center gap-2">

@@ -304,7 +304,7 @@ export default function CompanyTaskView() {
                     placeholder="Filter Tagged"
                     options={[
                       { label: "All", value: "all" },
-                      ...(assignees.map((emp: Employee) => ({
+                      ...(assignees.filter((emp: Employee)=> !emp.isDeactivated).map((emp: Employee) => ({
                         label: emp.employeeName,
                         value: emp.employeeId,
                       })) || []),
@@ -343,7 +343,7 @@ export default function CompanyTaskView() {
                       onOpenAutoFocus={(e) => e.preventDefault()}
                     >
                       <div className="flex flex-col">
-                        {filteredEmployees.map(
+                        {filteredEmployees.filter((emp: Employee) => !emp.isDeactivated).map(
                           (emp: Employee, index: number) => (
                             <button
                               key={emp.employeeId}
@@ -448,7 +448,7 @@ export default function CompanyTaskView() {
                                   onOpenAutoFocus={(e) => e.preventDefault()}
                                 >
                                   <div className="flex flex-col">
-                                    {filteredEmployees.map(
+                                    {filteredEmployees.filter((emp: Employee) => !emp.isDeactivated).map(
                                       (emp: Employee, index: number) => (
                                         <button
                                           key={emp.employeeId}

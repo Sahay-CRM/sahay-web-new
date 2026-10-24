@@ -201,6 +201,11 @@ export default function useEditDatapointFormModal({
   const showBoth = validationType === "6" || validationType === "BETWEEN";
   const showYesNo = validationType === "7" || validationType === "YES_NO";
 
+  const isDeactivatedEmployee =
+    Boolean(
+      (datapointApiData)?.isDeactivated 
+    ) && watch("employeeId") === datapointApiData?.employeeId;
+
   const allOptions = (employeeData?.data || [])
     .filter((item) => !item.isDeactivated)
     .map((emp) => ({
@@ -272,9 +277,9 @@ export default function useEditDatapointFormModal({
   const getEmployeeName = (emp: DataPointEmployee) => {
     if (emp?.employeeName) return emp.employeeName;
     const found = employeeData?.data?.find(
-      (e: EmployeeDetails) => e.employeeId === emp.employeeId,
+      (e: EmployeeDetails) => e.employeeId === emp?.employeeId,
     );
-    return found?.employeeName || emp.employeeId || "";
+    return found?.employeeName || emp?.employeeId || "";
   };
 
   useEffect(() => {
@@ -349,6 +354,7 @@ export default function useEditDatapointFormModal({
     setIsForceDelete,
     methods,
     isGoalValueChanged,
+    isDeactivatedEmployee,
 
     // skipDaysOption,
   };

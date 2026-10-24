@@ -44,6 +44,7 @@ const Urls = {
   getAllMeetingStatus: () => `${baseUrl}/meeting-status/get`,
   ddMeetingStatus: () => `${baseUrl}/meeting-status/get-all`,
   getAllMeetingType: () => `${baseUrl}/meeting-type/get`,
+  ddMeetingType: () => `${baseUrl}/meeting-type/get-all`,
 
   getAllCompanyMeeting: () => `${baseUrl}/company/meeting/get-all`,
   addCompanyMeeting: () => `${baseUrl}/company/meeting/create`,

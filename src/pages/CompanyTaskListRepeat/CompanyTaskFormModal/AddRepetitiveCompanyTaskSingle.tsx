@@ -479,18 +479,52 @@ export default function AddRepetitiveCompanyTaskSingle() {
   }, [projectList, projectVal]);
 
   const meetingOptions = useMemo(() => {
-    const opts = flatMeetings.map((m) => ({
-      label: m.meetingName || "",
-      value: m.meetingId || "",
-    }));
-    if (meetingVal?.meetingId && !opts.some((o) => o.value === meetingVal.meetingId)) {
-      opts.unshift({
+    if (!meetingData?.data) return [];
+    const rawData = meetingData.data as unknown as GroupedCompanyMeetings;
+
+    const normalMeetings = rawData.normalMeetings || [];
+    const detailMeetings = rawData.detailMeetings || [];
+
+    const options: { label: string; value: string; isHeader?: boolean }[] = [];
+
+    if (detailMeetings.length > 0) {
+      options.push({ label: "Detail Meetings", value: "detail-header", isHeader: true });
+      detailMeetings.forEach((m) => {
+        options.push({
+          label: m.meetingName || "",
+          value: m.meetingId || "",
+        });
+      });
+    }
+
+    if (normalMeetings.length > 0) {
+      options.push({ label: "Normal Meetings", value: "normal-header", isHeader: true });
+      normalMeetings.forEach((m) => {
+        options.push({
+          label: m.meetingName || "",
+          value: m.meetingId || "",
+        });
+      });
+    }
+
+    if (options.length === 0 && Array.isArray(meetingData.data)) {
+      (meetingData.data as CompanyMeetingDataProps[]).forEach((m) => {
+        options.push({
+          label: m.meetingName || "",
+          value: m.meetingId || "",
+        });
+      });
+    }
+
+    if (meetingVal?.meetingId && !options.some((o) => o.value === meetingVal.meetingId)) {
+      options.unshift({
         label: meetingVal.meetingName || "",
         value: meetingVal.meetingId,
       });
     }
-    return opts;
-  }, [flatMeetings, meetingVal]);
+
+    return options;
+  }, [meetingData, meetingVal]);
 
   const employeeOptions = useMemo(() => {
     const opts = (employeedata?.data ?? []).map((e) => ({
@@ -521,11 +555,11 @@ export default function AddRepetitiveCompanyTaskSingle() {
       <div className="w-full h-full p-6 flex flex-col overflow-y-auto bg-[#f8f8fb] font-sans">
         {/* Header Row */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
-          <h1 className="text-2xl font-bold text-gray-800">
+          {/* <h1 className="text-2xl font-bold text-gray-800">
             {repetitiveTaskId
               ? "Update Repetition Task"
               : "Create New Repetition Task"}
-          </h1>
+          </h1> */}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
